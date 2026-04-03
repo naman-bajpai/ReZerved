@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getBookings, updateBookingStatus, type Booking } from '../../lib/api';
+import { getBookings, updateBookingStatus, type Booking } from '@/lib/api';
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',

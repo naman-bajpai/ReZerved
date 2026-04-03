@@ -6,42 +6,42 @@
 
 @layer base {
   .theme {
-    --font-heading: var(--font-sans);
+    --font-heading: var(--font-display);
     --font-sans: var(--font-sans)
   }
   :root {
-    --background: oklch(1 0 0);
+    --background: oklch(0.985 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
+    --primary: oklch(0.558 0.22 293.9);
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
     --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --accent: oklch(0.95 0.04 293.9);
+    --accent-foreground: oklch(0.4 0.18 293.9);
     --destructive: oklch(0.577 0.245 27.325);
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
+    --ring: oklch(0.558 0.22 293.9);
+    --chart-1: oklch(0.558 0.22 293.9);
+    --chart-2: oklch(0.48 0.18 240);
+    --chart-3: oklch(0.6 0.15 160);
+    --chart-4: oklch(0.7 0.18 50);
+    --chart-5: oklch(0.65 0.22 20);
+    --radius: 0.75rem;
+    --sidebar: oklch(1 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary: oklch(0.558 0.22 293.9);
     --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-accent: oklch(0.95 0.04 293.9);
+    --sidebar-accent-foreground: oklch(0.4 0.18 293.9);
     --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0)
+    --sidebar-ring: oklch(0.558 0.22 293.9)
   }
   .dark {
     --background: oklch(0.145 0 0);
@@ -77,7 +77,7 @@
     --sidebar-ring: oklch(0.556 0 0)
   }
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   body {
     @apply bg-background text-foreground;
@@ -85,4 +85,15 @@
   html {
     @apply font-sans;
   }
+}
+/* Marketing / dark-surface custom properties */
+:root {
+  --ink:        #09090f;
+  --ink-2:      #13121e;
+  --ink-3:      #1c1a2e;
+  --ink-border: rgba(255,255,255,0.07);
+  --ivory:      #f0ece2;
+  --text-dim:   #9a95ae;
+  --violet:     #7c3aed;
+  --violet-glow: rgba(124,58,237,0.25);
 }
