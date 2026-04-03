@@ -1,0 +1,13 @@
+/.next
+/node_modules
+/package-lock.json
+/package.json
+/README.md
+/tsconfig.json
+/tsconfig.node.json
+/tsconfig.app.json
+/tsconfig.base.json
+/tsconfig.json
+/tsconfig.node.json
+/tsconfig.app.json
+/tsconfig.base.json
