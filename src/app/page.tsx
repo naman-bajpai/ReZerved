@@ -12,193 +12,286 @@ import {
   BarChart3,
   Shield,
   Star,
-  ChevronRight,
   CheckCircle2,
+  Activity,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
-/* ────────────────────────────────────────────────────────────
-   Animated booking-grid hero visual
-   A 7-col × 9-row calendar where cells light up like bookings
-   being filled in by AI in real time.
-──────────────────────────────────────────────────────────── */
-const FILLED = new Set([1,2,4,8,9,11,15,16,18,22,23,25,29,30,32,36,38,43,44,50,51,56,57,58,60,61]);
-const PULSING = [5, 12, 19, 26, 33, 40, 47, 54, 62];
+/* ─────────────────────────────────────────────────────────────
+   Sparkline — animated SVG revenue chart
+───────────────────────────────────────────────────────────── */
+const SPARK = [38, 44, 36, 58, 50, 63, 60, 74, 70, 88, 82, 97, 92, 114];
 
-function BookingGrid() {
+function Sparkline() {
+  const W = 130, H = 34;
+  const min = Math.min(...SPARK), max = Math.max(...SPARK);
+  const pts = SPARK.map((v, i) => {
+    const x = (i / (SPARK.length - 1)) * W;
+    const y = H - ((v - min) / (max - min)) * (H - 4) - 2;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
   return (
-    <div className="w-full select-none">
-      <div className="grid grid-cols-7 gap-1 mb-2.5">
-        {['Mo','Tu','We','Th','Fr','Sa','Su'].map((d) => (
-          <div key={d} className="text-center text-[10px] font-medium tracking-wide" style={{ color: 'var(--text-dim)' }}>{d}</div>
-        ))}
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+      <defs>
+        <linearGradient id="sfill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={`0,${H} ${pts} ${W},${H}`} fill="url(#sfill)" />
+      <polyline
+        points={pts}
+        fill="none"
+        stroke="#a78bfa"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Dashboard panel — hero product mockup
+───────────────────────────────────────────────────────────── */
+const FEED = [
+  { init: 'S', name: 'Sarah M.', svc: 'Haircut + Color', time: 'Today 2:00 pm', amt: '+$165' },
+  { init: 'J', name: 'James T.', svc: 'Deep Tissue · 1h', time: 'Today 4:30 pm', amt: '+$90' },
+  { init: 'M', name: 'Maya K.', svc: 'Brow Shaping', time: 'Tomorrow 10 am', amt: '+$75' },
+];
+
+function DashPanel() {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden w-full"
+      style={{
+        background: 'var(--ink-2)',
+        border: '1px solid var(--ink-border)',
+        boxShadow: '0 40px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03)',
+      }}
+    >
+      {/* Browser chrome */}
+      <div
+        className="flex items-center gap-2 px-4 h-9"
+        style={{ background: '#0d0c18', borderBottom: '1px solid var(--ink-border)' }}
+      >
+        <div className="flex gap-1.5">
+          {['#ef4444', '#eab308', '#22c55e'].map((c) => (
+            <div key={c} className="w-2.5 h-2.5 rounded-full" style={{ background: c, opacity: 0.5 }} />
+          ))}
+        </div>
+        <div
+          className="flex-1 mx-3 px-3 h-5 rounded flex items-center text-[10px]"
+          style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-dim)' }}
+        >
+          bookedup.app/dashboard
+        </div>
+        <div className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#a78bfa' }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+          Live
+        </div>
       </div>
-      <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: 63 }, (_, i) => {
-          const filled = FILLED.has(i);
-          const pulsing = PULSING.includes(i);
-          return (
+
+      {/* Revenue metric + sparkline */}
+      <div className="px-5 pt-4 pb-3.5" style={{ borderBottom: '1px solid var(--ink-border)' }}>
+        <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--text-dim)' }}>
+          This week
+        </p>
+        <div className="flex items-end justify-between mb-2">
+          <motion.p
+            className="text-[2rem] font-bold leading-none"
+            style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', color: 'var(--ivory)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+          >
+            $4,280
+          </motion.p>
+          <motion.div
+            className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold"
+            style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+          >
+            <TrendingUp className="w-3 h-3" />
+            +43%
+          </motion.div>
+        </div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.0 }}>
+          <Sparkline />
+        </motion.div>
+      </div>
+
+      {/* Booking feed */}
+      <div className="px-5 py-3.5">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+            Upcoming
+          </p>
+          <Activity className="w-3 h-3" style={{ color: 'var(--text-dim)' }} />
+        </div>
+        <div className="space-y-3">
+          {FEED.map((b, i) => (
             <motion.div
-              key={i}
-              className="h-8 rounded-md relative overflow-hidden"
-              style={{
-                background: filled
-                  ? 'rgba(124,58,237,0.5)'
-                  : pulsing
-                    ? 'rgba(124,58,237,0.12)'
-                    : 'rgba(255,255,255,0.03)',
-                border: filled
-                  ? '1px solid rgba(167,139,250,0.35)'
-                  : pulsing
-                    ? '1px solid rgba(124,58,237,0.3)'
-                    : '1px solid rgba(255,255,255,0.05)',
-              }}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.012, duration: 0.3, ease: 'easeOut' }}
+              key={b.name}
+              className="flex items-center gap-2.5"
+              initial={{ opacity: 0, x: 14 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.15 + i * 0.18, duration: 0.35, ease: 'easeOut' }}
             >
-              {pulsing && (
-                <motion.div
-                  className="absolute inset-0 rounded-md"
-                  style={{ background: 'rgba(124,58,237,0.4)' }}
-                  animate={{ opacity: [0, 0.8, 0] }}
-                  transition={{
-                    duration: 2.2,
-                    delay: PULSING.indexOf(i) * 0.7,
-                    repeat: Infinity,
-                    repeatDelay: 1,
-                  }}
-                />
-              )}
-              {filled && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-1 h-1 rounded-full bg-violet-300/60" />
-                </div>
-              )}
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                style={{ background: 'rgba(124,58,237,0.18)', color: '#a78bfa' }}
+              >
+                {b.init}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold leading-none" style={{ color: 'var(--ivory)' }}>{b.name}</p>
+                <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>{b.svc}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-xs font-bold" style={{ color: '#a78bfa' }}>{b.amt}</p>
+                <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>{b.time}</p>
+              </div>
             </motion.div>
-          );
-        })}
+          ))}
+        </div>
+      </div>
+
+      {/* Status bar */}
+      <div
+        className="px-5 py-2.5 flex items-center justify-between"
+        style={{ borderTop: '1px solid var(--ink-border)', background: '#0d0c18' }}
+      >
+        <span className="text-[10px]" style={{ color: 'var(--text-dim)' }}>3 slots auto-filled today</span>
+        <div className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#a78bfa' }}>
+          <Zap className="w-2.5 h-2.5" />
+          Autopilot on
+        </div>
       </div>
     </div>
   );
 }
 
-/* Floating notification card that slides in */
-function BookingNotif({ name, service, price, delay }: { name: string; service: string; price: string; delay: number }) {
-  return (
-    <motion.div
-      className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl"
-      style={{
-        background: 'var(--ink-3)',
-        border: '1px solid var(--ink-border)',
-        backdropFilter: 'blur(12px)',
-      }}
-      initial={{ opacity: 0, x: 24 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay, duration: 0.5, ease: 'easeOut' }}
-    >
-      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.2)' }}>
-        <CalendarDays className="w-3.5 h-3.5" style={{ color: '#a78bfa' }} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-semibold leading-none" style={{ color: 'var(--ivory)' }}>{name}</p>
-        <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-dim)' }}>{service}</p>
-      </div>
-      <span className="ml-auto text-xs font-bold shrink-0" style={{ color: '#a78bfa' }}>{price}</span>
-    </motion.div>
-  );
-}
-
-/* ────────────────────────────────────────────────────────────
-   Fade-up section wrapper
-──────────────────────────────────────────────────────────── */
-function FadeUp({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+/* ─────────────────────────────────────────────────────────────
+   Scroll-reveal wrapper
+───────────────────────────────────────────────────────────── */
+function FadeUp({ children, delay = 0, className = '' }: {
+  children: React.ReactNode; delay?: number; className?: string;
+}) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
   return (
     <motion.div
       ref={ref}
+      className={className}
       initial={{ opacity: 0, y: 28 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
     >
       {children}
     </motion.div>
   );
 }
 
-/* ────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────
    Feature card
-──────────────────────────────────────────────────────────── */
-function FeatureCard({
-  icon: Icon, title, desc, delay,
-}: { icon: React.ElementType; title: string; desc: string; delay: number }) {
+───────────────────────────────────────────────────────────── */
+function Feat({ icon: Icon, title, desc, delay }: {
+  icon: React.ElementType; title: string; desc: string; delay: number;
+}) {
   return (
     <FadeUp delay={delay}>
       <div
-        className="rounded-2xl p-6 h-full transition-colors group"
-        style={{ background: 'var(--ink-2)', border: '1px solid var(--ink-border)' }}
+        className="rounded-2xl p-6 h-full"
+        style={{ background: 'var(--ink-2)', border: '1px solid var(--ink-border)', transition: 'border-color 0.2s, transform 0.2s' }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(124,58,237,0.28)';
+          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--ink-border)';
+          (e.currentTarget as HTMLDivElement).style.transform = 'none';
+        }}
       >
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center mb-5"
-          style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.25)' }}
+          className="w-9 h-9 rounded-xl flex items-center justify-center mb-4"
+          style={{
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.22), rgba(76,29,149,0.1))',
+            border: '1px solid rgba(124,58,237,0.2)',
+          }}
         >
-          <Icon className="w-5 h-5" style={{ color: '#a78bfa' }} strokeWidth={1.8} />
+          <Icon className="w-4 h-4" style={{ color: '#a78bfa' }} strokeWidth={1.8} />
         </div>
-        <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--ivory)' }}>{title}</h3>
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-dim)' }}>{desc}</p>
+        <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--ivory)' }}>{title}</h3>
+        <p className="text-[13px]" style={{ color: 'var(--text-dim)', lineHeight: 1.65 }}>{desc}</p>
       </div>
     </FadeUp>
   );
 }
 
-/* ────────────────────────────────────────────────────────────
-   Main landing page
-──────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   Landing page
+───────────────────────────────────────────────────────────── */
 export default function LandingPage() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--ink)' }}>
 
-      {/* ── Navbar ── */}
+      {/* Dot-grid background texture */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.038) 1px, transparent 1px)',
+          backgroundSize: '30px 30px',
+        }}
+      />
+
+      {/* ── Nav ── */}
       <nav
-        className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 md:px-12 h-16"
+        className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-6 md:px-10"
         style={{
           borderBottom: '1px solid var(--ink-border)',
-          backdropFilter: 'blur(16px)',
-          background: 'rgba(9,9,15,0.85)',
+          backdropFilter: 'blur(24px) saturate(160%)',
+          background: 'rgba(9,9,15,0.82)',
         }}
       >
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--violet)' }}>
-            <Zap className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+          <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'var(--violet)' }}>
+            <Zap className="w-3 h-3 text-white" strokeWidth={2.5} />
           </div>
-          <span className="font-bold text-sm tracking-tight" style={{ color: 'var(--ivory)' }}>BookedUp</span>
+          <span className="text-sm font-bold tracking-tight" style={{ color: 'var(--ivory)' }}>BookedUp</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-7">
           {['Features', 'Pricing', 'Blog'].map((item) => (
-            <a key={item} href="#" className="text-sm transition-colors" style={{ color: 'var(--text-dim)' }}
-               onMouseEnter={e => (e.currentTarget.style.color = 'var(--ivory)')}
-               onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-dim)')}>
+            <a
+              key={item}
+              href="#"
+              className="text-[13px] transition-colors duration-150"
+              style={{ color: 'var(--text-dim)' }}
+              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'var(--ivory)')}
+              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'var(--text-dim)')}
+            >
               {item}
             </a>
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link href="/login">
-            <button className="text-sm px-4 py-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-dim)' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--ivory)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-dim)')}>
+            <button
+              className="text-[13px] px-3.5 py-1.5 rounded-lg transition-colors"
+              style={{ color: 'var(--text-dim)' }}
+              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'var(--ivory)')}
+              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'var(--text-dim)')}
+            >
               Sign in
             </button>
           </Link>
           <Link href="/signup">
             <button
-              className="text-sm px-4 py-1.5 rounded-lg font-medium transition-opacity hover:opacity-90"
-              style={{ background: 'var(--violet)', color: '#fff' }}
+              className="text-[13px] px-4 py-1.5 rounded-lg font-semibold transition-opacity hover:opacity-85"
+              style={{ background: 'var(--violet)', color: '#fff', boxShadow: '0 0 18px rgba(124,58,237,0.35)' }}
             >
               Get started
             </button>
@@ -207,312 +300,254 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Hero ── */}
-      <section className="relative pt-32 pb-20 px-6 md:px-12 overflow-hidden">
-        {/* Background glow blobs */}
+      <section className="relative z-10 pt-28 pb-20 px-6 md:px-10 overflow-hidden">
+        {/* Ambient glow blobs */}
         <div
-          className="pointer-events-none absolute top-0 right-[10%] w-[600px] h-[600px] rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)',
-            filter: 'blur(40px)',
-          }}
+          className="pointer-events-none absolute -top-24 right-[8%] w-[800px] h-[800px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.09) 0%, transparent 62%)', filter: 'blur(64px)' }}
         />
         <div
-          className="pointer-events-none absolute bottom-0 left-[5%] w-[400px] h-[400px] rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(76,29,149,0.08) 0%, transparent 70%)',
-            filter: 'blur(40px)',
-          }}
+          className="pointer-events-none absolute top-[45%] -left-[8%] w-[500px] h-[500px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(76,29,149,0.06) 0%, transparent 70%)', filter: 'blur(64px)' }}
         />
 
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-          {/* Left: copy */}
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-8"
-                style={{
-                  background: 'rgba(124,58,237,0.12)',
-                  border: '1px solid rgba(124,58,237,0.3)',
-                  color: '#a78bfa',
-                }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-                AI-powered revenue optimization
-              </div>
-            </motion.div>
-
-            <motion.h1
-              className="mb-6 leading-[1.1] tracking-tight"
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(2.6rem, 5vw, 4.2rem)',
-                color: 'var(--ivory)',
-                fontStyle: 'italic',
-                fontWeight: 600,
-              }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
-            >
-              Turn your calendar<br />
-              <span style={{ color: '#a78bfa' }}>into a revenue</span><br />
-              machine.
-            </motion.h1>
-
-            <motion.p
-              className="text-base leading-relaxed mb-8 max-w-md"
-              style={{ color: 'var(--text-dim)' }}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              BookedUp uses AI to fill gaps in your schedule, recover
-              no-shows, and surface your most profitable clients —
-              all on autopilot.
-            </motion.p>
-
-            <motion.div
-              className="flex flex-wrap gap-3 mb-10"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              <Link href="/signup">
-                <button
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 hover:translate-y-[-1px] active:translate-y-0"
-                  style={{ background: 'var(--violet)', color: '#fff', boxShadow: '0 0 24px rgba(124,58,237,0.35)' }}
-                >
-                  Start free trial
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </Link>
-              <button
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                style={{
-                  background: 'var(--ink-3)',
-                  border: '1px solid var(--ink-border)',
-                  color: 'var(--ivory)',
-                }}
-              >
-                Watch demo
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </motion.div>
-
-            <motion.div
-              className="flex flex-wrap gap-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.45, duration: 0.5 }}
-            >
-              {[
-                { icon: CheckCircle2, text: 'No credit card required' },
-                { icon: Shield, text: 'SOC 2 compliant' },
-                { icon: Star, text: '4.9 / 5 from 800+ reviews' },
-              ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-dim)' }}>
-                  <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: '#a78bfa' }} />
-                  {text}
-                </div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Right: animated product visual */}
+        <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
+          {/* Badge */}
           <motion.div
-            className="relative"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.25, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold mb-7"
+            style={{
+              background: 'rgba(124,58,237,0.1)',
+              border: '1px solid rgba(124,58,237,0.25)',
+              color: '#a78bfa',
+            }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
           >
-            <div
-              className="rounded-2xl p-5 relative"
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+            AI-powered revenue intelligence
+          </motion.div>
+
+          {/* Headline — Fraunces italic at scale */}
+          <motion.h1
+            className="mb-6 max-w-4xl"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(3.4rem, 7.5vw, 6.2rem)',
+              fontWeight: 700,
+              fontStyle: 'italic',
+              color: 'var(--ivory)',
+              lineHeight: 1.02,
+              letterSpacing: '-0.025em',
+            }}
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          >
+            Your calendar
+            <br />
+            is{' '}
+            <span
               style={{
-                background: 'var(--ink-2)',
-                border: '1px solid var(--ink-border)',
-                boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)',
+                background: 'linear-gradient(95deg, #c4b5fd 0%, #7c3aed 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
               }}
             >
-              {/* Mini header */}
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-xs font-semibold" style={{ color: 'var(--ivory)' }}>April 2026</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-dim)' }}>AI filling your schedule</p>
-                </div>
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-                  style={{ background: 'rgba(124,58,237,0.15)', color: '#a78bfa' }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-                  Live
-                </div>
-              </div>
+              leaking money.
+            </span>
+          </motion.h1>
 
-              <BookingGrid />
+          <motion.p
+            className="text-base md:text-[1.1rem] mb-8 max-w-[460px]"
+            style={{ color: 'var(--text-dim)', lineHeight: 1.72 }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            BookedUp uses AI to detect gaps, recover no-shows, and fill
+            your schedule automatically — so you earn more without working more.
+          </motion.p>
 
-              {/* Floating notification cards */}
-              <div className="mt-4 space-y-2">
-                <BookingNotif name="Sarah M." service="Haircut + Color · 2h" price="+$165" delay={1.2} />
-                <BookingNotif name="James T." service="Deep Tissue Massage · 1h" price="+$90" delay={1.8} />
-              </div>
-
-              {/* Revenue pill */}
-              <motion.div
-                className="absolute -top-4 -right-4 px-3.5 py-2 rounded-xl"
+          {/* CTAs */}
+          <motion.div
+            className="flex flex-wrap justify-center gap-3 mb-9"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <Link href="/signup">
+              <button
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 hover:-translate-y-px active:translate-y-0"
                 style={{
-                  background: 'linear-gradient(135deg, #7c3aed, #4c1d95)',
-                  boxShadow: '0 8px 24px rgba(124,58,237,0.4)',
+                  background: 'var(--violet)',
+                  color: '#fff',
+                  boxShadow: '0 0 36px rgba(124,58,237,0.42), 0 2px 10px rgba(0,0,0,0.35)',
                 }}
-                initial={{ opacity: 0, y: 8, rotate: -3 }}
-                animate={{ opacity: 1, y: 0, rotate: -3 }}
-                transition={{ delay: 0.9, duration: 0.5 }}
               >
-                <p className="text-[10px] font-medium text-violet-200">This week</p>
-                <p className="text-lg font-bold text-white leading-none mt-0.5">+$1,840</p>
-              </motion.div>
-            </div>
-
-            {/* Glow behind card */}
-            <div
-              className="absolute inset-0 -z-10 rounded-2xl"
+                Start free trial
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </Link>
+            <button
+              className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-colors"
               style={{
-                background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.2) 0%, transparent 70%)',
+                background: 'var(--ink-3)',
+                border: '1px solid var(--ink-border)',
+                color: 'var(--ivory)',
+              }}
+            >
+              Watch 2-min demo
+            </button>
+          </motion.div>
+
+          {/* Trust badges */}
+          <motion.div
+            className="flex flex-wrap justify-center gap-5 mb-14"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.44 }}
+          >
+            {[
+              { icon: CheckCircle2, text: 'No credit card required' },
+              { icon: Shield, text: 'SOC 2 compliant' },
+              { icon: Star, text: '4.9 / 5 · 800+ reviews' },
+            ].map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-dim)' }}>
+                <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: '#a78bfa' }} />
+                {text}
+              </div>
+            ))}
+          </motion.div>
+
+          {/* Dashboard mockup */}
+          <motion.div
+            className="w-full max-w-xl relative"
+            initial={{ opacity: 0, y: 48, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.52, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <DashPanel />
+            {/* Glow below panel */}
+            <div
+              className="absolute -inset-x-8 -bottom-10 -z-10 h-28 pointer-events-none"
+              style={{
+                background: 'radial-gradient(ellipse at 50% 100%, rgba(124,58,237,0.3) 0%, transparent 70%)',
                 filter: 'blur(24px)',
-                transform: 'translateY(20px)',
               }}
             />
           </motion.div>
         </div>
       </section>
 
-      {/* ── Stats band ── */}
+      {/* ── Stats ── */}
       <FadeUp>
-        <div
-          className="mx-6 md:mx-12 rounded-2xl px-8 py-6 mb-20"
-          style={{ background: 'var(--ink-2)', border: '1px solid var(--ink-border)' }}
-        >
-          <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 divide-y md:divide-y-0 md:divide-x"
-            style={{ '--tw-divide-opacity': 1 } as React.CSSProperties}>
-            {[
-              { value: '$2.4M+', label: 'Revenue generated' },
-              { value: '47K+',   label: 'Bookings processed' },
-              { value: '2,400+', label: 'Active businesses' },
-              { value: '43%',    label: 'Avg revenue increase' },
-            ].map(({ value, label }, i) => (
-              <div key={label} className={`${i > 0 ? 'pt-6 md:pt-0 md:pl-6' : ''} text-center md:text-left`}>
-                <p
-                  className="text-2xl font-bold"
-                  style={{ fontFamily: 'var(--font-display)', color: '#a78bfa', fontStyle: 'italic' }}
-                >
-                  {value}
-                </p>
-                <p className="text-sm mt-1" style={{ color: 'var(--text-dim)' }}>{label}</p>
-              </div>
-            ))}
+        <div className="relative z-10 px-6 md:px-10 mb-20">
+          {/* gap-px trick: wrapper bg shows through as hairline dividers */}
+          <div
+            className="max-w-5xl mx-auto rounded-2xl overflow-hidden"
+            style={{ background: 'var(--ink-border)', border: '1px solid var(--ink-border)' }}
+          >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px">
+              {[
+                { v: '$2.4M+', l: 'Revenue recovered' },
+                { v: '47K+',   l: 'Bookings processed' },
+                { v: '2,400+', l: 'Active businesses' },
+                { v: '43%',    l: 'Avg revenue lift' },
+              ].map(({ v, l }) => (
+                <div key={l} className="px-7 py-7" style={{ background: 'var(--ink-2)' }}>
+                  <p
+                    className="text-[1.6rem] font-bold mb-1"
+                    style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', color: '#a78bfa' }}
+                  >
+                    {v}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{l}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </FadeUp>
 
       {/* ── Features ── */}
-      <section className="px-6 md:px-12 mb-24">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative z-10 px-6 md:px-10 mb-24">
+        <div className="max-w-5xl mx-auto">
           <FadeUp className="mb-12 text-center">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#a78bfa' }}>
-              Everything you need
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: '#a78bfa' }}>
+              Platform
             </p>
             <h2
-              className="text-3xl md:text-4xl"
               style={{
                 fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
                 fontStyle: 'italic',
+                fontWeight: 700,
                 color: 'var(--ivory)',
-                fontWeight: 600,
+                lineHeight: 1.12,
               }}
             >
-              Built for service professionals
+              Every tool you need.
+              <br />
+              <span style={{ color: 'var(--text-dim)', fontWeight: 400 }}>Nothing you don't.</span>
             </h2>
           </FadeUp>
 
-          <div className="grid md:grid-cols-3 gap-5">
-            <FeatureCard
-              icon={CalendarDays}
-              title="Smart AI Scheduling"
-              desc="BookedUp spots empty slots and proactively messages clients to fill them — before you even notice the gap."
-              delay={0}
-            />
-            <FeatureCard
-              icon={Users}
-              title="Client Intelligence"
-              desc="Know exactly who your top earners are, how often they book, and when to expect them back."
-              delay={0.1}
-            />
-            <FeatureCard
-              icon={BarChart3}
-              title="Revenue Analytics"
-              desc="Real-time breakdowns of what services, days, and channels are driving the most income."
-              delay={0.2}
-            />
-            <FeatureCard
-              icon={TrendingUp}
-              title="No-Show Recovery"
-              desc="Automated follow-ups that re-book no-shows and turn missed appointments into rescheduled revenue."
-              delay={0.3}
-            />
-            <FeatureCard
-              icon={Zap}
-              title="Instant Booking Links"
-              desc="Share a link on Instagram, WhatsApp, or anywhere. Clients book in seconds, you get notified instantly."
-              delay={0.4}
-            />
-            <FeatureCard
-              icon={Shield}
-              title="Secure & Compliant"
-              desc="SOC 2 Type II, GDPR-ready, and encrypted end-to-end. Your clients' data is safe with us."
-              delay={0.5}
-            />
+          <div className="grid md:grid-cols-3 gap-3.5">
+            <Feat icon={CalendarDays} title="AI Schedule Filling"   desc="Detects gaps in real-time and messages clients to fill them before the slot goes cold."       delay={0} />
+            <Feat icon={TrendingUp}   title="No-Show Recovery"      desc="Automated re-booking sequences that turn missed appointments into rescheduled revenue."       delay={0.07} />
+            <Feat icon={Users}        title="Client Intelligence"   desc="Know your most valuable clients, predict churn, and know exactly when to reach out."          delay={0.14} />
+            <Feat icon={BarChart3}    title="Revenue Analytics"     desc="Real-time income breakdowns by service, day, and channel. Know what's actually working."      delay={0.21} />
+            <Feat icon={Zap}          title="Instant Booking Links" desc="One link for Instagram, WhatsApp, anywhere. Clients book in seconds. You get paid faster."  delay={0.28} />
+            <Feat icon={Shield}       title="Enterprise Security"   desc="SOC 2 Type II certified, GDPR-ready, end-to-end encrypted. Your data is never for sale."     delay={0.35} />
           </div>
         </div>
       </section>
 
       {/* ── How it works ── */}
-      <section className="px-6 md:px-12 mb-24">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative z-10 px-6 md:px-10 mb-24">
+        <div className="max-w-5xl mx-auto">
           <FadeUp className="mb-12 text-center">
             <h2
-              className="text-3xl md:text-4xl"
               style={{
                 fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
                 fontStyle: 'italic',
+                fontWeight: 700,
                 color: 'var(--ivory)',
-                fontWeight: 600,
               }}
             >
-              Up and running in 5 minutes
+              Live in 5 minutes.
             </h2>
           </FadeUp>
-          <div className="grid md:grid-cols-3 gap-8">
+
+          <div className="grid md:grid-cols-3 gap-10 md:gap-8 relative">
+            {/* Connecting line between step circles */}
+            <div
+              className="hidden md:block absolute top-[18px] left-[calc(16.7%+16px)] right-[calc(16.7%+16px)] h-px"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.35) 20%, rgba(124,58,237,0.35) 80%, transparent)',
+              }}
+            />
             {[
-              { step: '01', title: 'Connect', desc: 'Link your existing calendar, Instagram DMs, or WhatsApp business account.' },
-              { step: '02', title: 'Optimize', desc: 'AI analyzes your schedule, pricing, and client patterns to spot opportunities.' },
-              { step: '03', title: 'Grow', desc: 'Watch your calendar fill up and revenue climb without lifting a finger.' },
-            ].map(({ step, title, desc }, i) => (
-              <FadeUp key={step} delay={i * 0.1}>
-                <div className="flex gap-5">
-                  <div
-                    className="text-3xl font-bold shrink-0 leading-none"
-                    style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', color: 'rgba(124,58,237,0.3)' }}
-                  >
-                    {step}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-base mb-1.5" style={{ color: 'var(--ivory)' }}>{title}</h3>
-                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-dim)' }}>{desc}</p>
-                  </div>
+              { n: '01', t: 'Connect', d: 'Sync your calendar, Instagram DMs, or WhatsApp business account in two clicks.' },
+              { n: '02', t: 'Analyze', d: 'AI maps your schedule, client history, and pricing gaps to build your revenue model.' },
+              { n: '03', t: 'Grow',    d: 'Your calendar fills automatically. More clients, fewer gaps, zero extra effort.' },
+            ].map(({ n, t, d }, i) => (
+              <FadeUp key={n} delay={i * 0.1}>
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold mb-4 relative z-10"
+                  style={{
+                    background: 'var(--ink-3)',
+                    border: '1px solid rgba(124,58,237,0.3)',
+                    color: '#a78bfa',
+                  }}
+                >
+                  {n}
                 </div>
+                <h3 className="font-semibold text-sm mb-2" style={{ color: 'var(--ivory)' }}>{t}</h3>
+                <p className="text-[13px]" style={{ color: 'var(--text-dim)', lineHeight: 1.65 }}>{d}</p>
               </FadeUp>
             ))}
           </div>
@@ -520,53 +555,67 @@ export default function LandingPage() {
       </section>
 
       {/* ── Testimonials ── */}
-      <section className="px-6 md:px-12 mb-24">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative z-10 px-6 md:px-10 mb-24">
+        <div className="max-w-5xl mx-auto">
           <FadeUp className="mb-10 text-center">
             <h2
-              className="text-2xl md:text-3xl"
               style={{
                 fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)',
                 fontStyle: 'italic',
+                fontWeight: 700,
                 color: 'var(--ivory)',
-                fontWeight: 600,
               }}
             >
-              Loved by service pros worldwide
+              Trusted by service pros.
             </h2>
           </FadeUp>
-          <div className="grid md:grid-cols-3 gap-5">
+
+          <div className="grid md:grid-cols-3 gap-3.5">
             {[
               {
-                quote: "I went from 60% to 92% calendar utilization in one month. BookedUp pays for itself ten times over.",
-                name: "Amara Chen",
-                role: "Hair Stylist, Brooklyn NY",
+                q: 'I went from 60% to 92% utilization in one month. BookedUp pays for itself ten times over.',
+                name: 'Amara Chen',   role: 'Hair Stylist, Brooklyn', stat: '+53%',  statL: 'utilization',
               },
               {
-                quote: "The no-show recovery alone recovered $800 last month. I didn't even know that money was on the table.",
-                name: "Marcus Rivera",
-                role: "Personal Trainer, LA",
+                q: "The no-show recovery alone recovered $800 last month. I didn't even know that money was on the table.",
+                name: 'Marcus Rivera', role: 'Personal Trainer, LA', stat: '$800',  statL: 'recovered',
               },
               {
-                quote: "Finally a tool that understands service businesses. The client frequency alerts are game-changing.",
-                name: "Priya Mehta",
-                role: "Esthetician, Chicago",
+                q: 'Finally a tool that gets service businesses. The client frequency alerts are genuinely game-changing.',
+                name: 'Priya Mehta',  role: 'Esthetician, Chicago',  stat: '4.9★', statL: 'client rating',
               },
-            ].map(({ quote, name, role }, i) => (
+            ].map(({ q, name, role, stat, statL }, i) => (
               <FadeUp key={name} delay={i * 0.1}>
                 <div
-                  className="rounded-2xl p-6 h-full"
+                  className="rounded-2xl p-6 h-full relative overflow-hidden"
                   style={{ background: 'var(--ink-2)', border: '1px solid var(--ink-border)' }}
                 >
-                  <div className="flex gap-0.5 mb-4">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <Star key={j} className="w-3.5 h-3.5 fill-current" style={{ color: '#a78bfa' }} />
-                    ))}
+                  {/* Decorative large quote mark */}
+                  <div
+                    className="absolute top-3 right-5 text-6xl leading-none select-none pointer-events-none"
+                    style={{ fontFamily: 'Georgia, serif', color: 'rgba(124,58,237,0.08)' }}
+                  >
+                    "
                   </div>
-                  <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--ivory)', opacity: 0.85 }}>
-                    "{quote}"
+
+                  <div className="mb-4">
+                    <p
+                      className="text-2xl font-bold"
+                      style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', color: '#a78bfa' }}
+                    >
+                      {stat}
+                    </p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-dim)' }}>
+                      {statL}
+                    </p>
+                  </div>
+
+                  <p className="text-[13px] mb-5" style={{ color: 'var(--ivory)', opacity: 0.82, lineHeight: 1.65 }}>
+                    "{q}"
                   </p>
-                  <div className="flex items-center gap-3">
+
+                  <div className="flex items-center gap-2.5">
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                       style={{ background: 'rgba(124,58,237,0.2)', color: '#a78bfa' }}
@@ -576,6 +625,11 @@ export default function LandingPage() {
                     <div>
                       <p className="text-xs font-semibold" style={{ color: 'var(--ivory)' }}>{name}</p>
                       <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>{role}</p>
+                    </div>
+                    <div className="ml-auto flex gap-0.5">
+                      {Array.from({ length: 5 }).map((_, j) => (
+                        <Star key={j} className="w-3 h-3 fill-current" style={{ color: '#a78bfa' }} />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -587,51 +641,72 @@ export default function LandingPage() {
 
       {/* ── Final CTA ── */}
       <FadeUp>
-        <section className="px-6 md:px-12 pb-24">
+        <section className="relative z-10 px-6 md:px-10 pb-24">
           <div
-            className="max-w-7xl mx-auto rounded-3xl p-12 md:p-16 text-center relative overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, #3b0764 0%, #1e1b4b 50%, #0c0c1a 100%)',
-              border: '1px solid rgba(124,58,237,0.3)',
-            }}
+            className="max-w-5xl mx-auto rounded-3xl p-14 md:p-20 text-center relative overflow-hidden"
+            style={{ background: 'var(--ink-2)', border: '1px solid rgba(124,58,237,0.18)' }}
           >
             <div
-              className="pointer-events-none absolute inset-0"
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.16) 0%, transparent 55%)' }}
+            />
+            <div
+              className="absolute inset-0 pointer-events-none"
               style={{
-                background: 'radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.3) 0%, transparent 60%)',
+                backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)',
+                backgroundSize: '22px 22px',
               }}
             />
             <div className="relative z-10">
-              <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#a78bfa' }}>
-                Ready to grow?
-              </p>
-              <h2
-                className="text-3xl md:text-5xl mb-4"
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold mb-5"
                 style={{
-                  fontFamily: 'var(--font-display)',
-                  fontStyle: 'italic',
-                  color: 'var(--ivory)',
-                  fontWeight: 700,
+                  background: 'rgba(124,58,237,0.12)',
+                  border: '1px solid rgba(124,58,237,0.25)',
+                  color: '#a78bfa',
                 }}
               >
-                Fill your calendar.<br />Keep it full.
+                <Zap className="w-3 h-3" />
+                Start earning more today
+              </div>
+
+              <h2
+                className="mb-4"
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'clamp(2.4rem, 5.5vw, 4.5rem)',
+                  fontStyle: 'italic',
+                  fontWeight: 700,
+                  color: 'var(--ivory)',
+                  lineHeight: 1.06,
+                }}
+              >
+                Fill your calendar.
+                <br />
+                <span style={{ color: '#a78bfa' }}>Keep it full.</span>
               </h2>
-              <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: 'rgba(240,236,226,0.6)' }}>
-                Join 2,400+ service professionals who use BookedUp to earn more without working more.
+
+              <p className="text-sm mb-8 max-w-sm mx-auto" style={{ color: 'var(--text-dim)', lineHeight: 1.72 }}>
+                Join 2,400+ service professionals earning more with BookedUp.
               </p>
+
               <Link href="/signup">
                 <button
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 hover:translate-y-[-1px]"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 hover:-translate-y-px"
                   style={{
-                    background: 'var(--ivory)',
-                    color: 'var(--ink)',
-                    boxShadow: '0 0 32px rgba(240,236,226,0.15)',
+                    background: 'var(--violet)',
+                    color: '#fff',
+                    boxShadow: '0 0 48px rgba(124,58,237,0.5)',
                   }}
                 >
                   Start for free
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </Link>
+
+              <p className="mt-3.5 text-xs" style={{ color: 'var(--text-dim)' }}>
+                No credit card required · Cancel anytime
+              </p>
             </div>
           </div>
         </section>
@@ -639,22 +714,27 @@ export default function LandingPage() {
 
       {/* ── Footer ── */}
       <footer
-        className="px-6 md:px-12 pb-8 pt-6"
+        className="relative z-10 px-6 md:px-10 pb-8 pt-6"
         style={{ borderTop: '1px solid var(--ink-border)' }}
       >
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'var(--violet)' }}>
-              <Zap className="w-3 h-3 text-white" strokeWidth={2.5} />
+            <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: 'var(--violet)' }}>
+              <Zap className="w-2.5 h-2.5 text-white" strokeWidth={2.5} />
             </div>
             <span className="text-sm font-semibold" style={{ color: 'var(--ivory)' }}>BookedUp</span>
           </div>
-          <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
-            © 2026 BookedUp. All rights reserved.
-          </p>
+          <p className="text-xs" style={{ color: 'var(--text-dim)' }}>© 2026 BookedUp. All rights reserved.</p>
           <div className="flex gap-6">
             {['Privacy', 'Terms', 'Contact'].map((item) => (
-              <a key={item} href="#" className="text-xs transition-colors" style={{ color: 'var(--text-dim)' }}>
+              <a
+                key={item}
+                href="#"
+                className="text-xs transition-colors"
+                style={{ color: 'var(--text-dim)' }}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'var(--ivory)')}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'var(--text-dim)')}
+              >
                 {item}
               </a>
             ))}
