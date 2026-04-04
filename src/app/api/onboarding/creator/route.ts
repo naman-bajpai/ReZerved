@@ -40,11 +40,15 @@ export async function POST(req: NextRequest) {
     const { data: prof, error: profErr } = await supabase
       .from('profiles')
       .update({ business_id: biz.id, updated_at: new Date().toISOString() })
-      .eq('id', profile.id)
+      .eq('user_id', profile.user_id)
       .select()
       .single();
 
-    if (profErr) throw profErr;
+    if (profErr) {
+      console.error('profiles update error:', profErr);
+      throw profErr;
+    }
+    console.log('profiles updated:', prof);
 
     return NextResponse.json(
       { profile: { id: prof.id, business_id: prof.business_id, is_admin: prof.is_admin }, business: biz },

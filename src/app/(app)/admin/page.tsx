@@ -1,18 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Shield, Users } from 'lucide-react';
 import { getAdminUsers, getMe, type AdminUser } from '@/lib/api';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 
 export default function AdminPage() {
   const [allowed, setAllowed] = useState<boolean | null>(null);
@@ -47,78 +42,120 @@ export default function AdminPage() {
 
   if (loading || allowed === null) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-48" />
+        <Skeleton className="h-4 w-64" />
+        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     );
   }
 
   if (!allowed) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Access denied</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Admin access is restricted. Ask your team to add your Auth0 user to{' '}
-          <code className="text-foreground">ADMIN_EMAILS</code> or <code className="text-foreground">ADMIN_AUTH0_SUBS</code>{' '}
-          in the backend environment.
-        </CardContent>
-      </Card>
+      <div className="max-w-lg">
+        <Card className="border-orange-100/80 bg-white/88 shadow-[0_18px_44px_-32px_rgba(236,72,153,0.16)]">
+          <CardHeader>
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center ring-1 ring-destructive/20">
+                <Shield className="w-4 h-4 text-destructive" strokeWidth={1.8} />
+              </div>
+              <CardTitle className="text-base">Access Denied</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            Admin access is restricted. Ask your team to add your email to{' '}
+            <code className="text-foreground bg-muted px-1.5 py-0.5 rounded text-xs font-mono">ADMIN_EMAILS</code>{' '}
+            in the environment.
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Registered users</h1>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <h2 className="text-3xl font-bold tracking-tight font-[family-name:var(--font-display)]">Admin</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          All profiles synced from Auth0 (creators and admins).
+          All registered users across the platform.
         </p>
-      </div>
+      </motion.div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Users ({users.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Business ID</TableHead>
-                <TableHead>Joined</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.name || '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.email || '—'}</TableCell>
-                  <TableCell>
-                    {u.is_admin ? (
-                      <Badge>Admin</Badge>
-                    ) : (
-                      <Badge variant="secondary">Creator</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {u.business_id || '—'}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {new Date(u.created_at).toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2.5">
+              <CardTitle className="text-sm font-semibold tracking-tight">Users</CardTitle>
+              <Badge variant="secondary" className="text-[10px] font-semibold px-2 py-0.5">
+                <Users className="w-3 h-3 mr-0.5" strokeWidth={2} />
+                {users.length}
+              </Badge>
+            </div>
+          </CardHeader>
+          <Separator />
+          <CardContent className="px-0 py-0">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/50">
+                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Name</th>
+                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Email</th>
+                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Role</th>
+                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Business</th>
+                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u, i) => (
+                  <motion.tr
+                    key={u.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 + i * 0.03 }}
+                    className="border-b border-border/30 hover:bg-accent/30 transition-colors"
+                  >
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-full bg-[linear-gradient(135deg,rgba(249,115,22,0.14),rgba(236,72,153,0.14))] flex items-center justify-center text-[10px] font-bold text-rose-600 shrink-0 ring-1 ring-rose-100/90">
+                          {(u.name || u.email || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-semibold">{u.name || '\u2014'}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 text-muted-foreground">{u.email || '\u2014'}</td>
+                    <td className="px-5 py-3.5">
+                      {u.is_admin ? (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-200/80">
+                          Admin
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-muted text-muted-foreground ring-1 ring-border">
+                          Creator
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5 font-mono text-xs text-muted-foreground/60 max-w-[120px] truncate">
+                      {u.business_id || '\u2014'}
+                    </td>
+                    <td className="px-5 py-3.5 text-muted-foreground text-sm">
+                      {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

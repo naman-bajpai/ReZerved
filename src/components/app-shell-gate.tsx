@@ -31,12 +31,20 @@ export function AppShellGate({ children }: { children: React.ReactNode }) {
         if (!me.profile.business_id && pathname !== '/onboarding') {
           router.replace('/onboarding');
         } else if (me.profile.business_id && pathname === '/onboarding') {
-          router.replace('/dashboard');
+          // business already set — hard redirect so fresh data is loaded
+          window.location.href = '/dashboard';
+        } else {
+          if (!cancelled) setReady(true);
         }
-      } catch {
-        /* network / 401 — still show shell so user can retry */
-      } finally {
-        if (!cancelled) setReady(true);
+      } catch (err: any) {
+        if (cancelled) return;
+        // 401 means session expired — send to login
+        if (err?.status === 401) {
+          router.replace(`/login?returnTo=${encodeURIComponent(pathname || '/dashboard')}`);
+        } else {
+          // Other errors (network etc.) — still render so user isn't stuck
+          setReady(true);
+        }
       }
     })();
 

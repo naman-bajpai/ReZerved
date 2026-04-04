@@ -10,6 +10,9 @@ import { Pool } from 'pg';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  // Prefer IPv4 — many networks break IPv6 (EHOSTUNREACH to AWS 2600:... hosts).
+  // @ts-expect-error pg passes this to net.connect; not in older @types/pg PoolConfig
+  family: 4,  
 });
 
 export const auth = betterAuth({
@@ -35,6 +38,45 @@ export const auth = betterAuth({
           },
         }
       : {}),
+  },
+
+  user: {
+    fields: {
+      emailVerified: "email_verified",
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+    },
+  },
+  session: {
+    fields: {
+      expiresAt: "expires_at",
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+      ipAddress: "ip_address",
+      userAgent: "user_agent",
+      userId: "user_id",
+    },
+  },
+  account: {
+    fields: {
+      accountId: "account_id",
+      providerId: "provider_id",
+      userId: "user_id",
+      accessToken: "access_token",
+      refreshToken: "refresh_token",
+      idToken: "id_token",
+      accessTokenExpiresAt: "access_token_expires_at",
+      refreshTokenExpiresAt: "refresh_token_expires_at",
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+    },
+  },
+  verification: {
+    fields: {
+      expiresAt: "expires_at",
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+    },
   },
 
   plugins: [dash()],

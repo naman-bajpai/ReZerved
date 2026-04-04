@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
     }
 
     const profile = await getProfile(session.user.id);
+    console.log('[/api/me] user_id:', session.user.id, '→ profile:', profile);
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 401 });
     }

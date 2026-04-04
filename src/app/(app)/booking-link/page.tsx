@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Link2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Link2, ExternalLink } from 'lucide-react';
 import { getMe, patchBookingLink } from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,46 +48,61 @@ export default function BookingLinkPage() {
 
   return (
     <div className="max-w-xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <Link2 className="w-6 h-6 text-primary" />
-          Public booking link
-        </h1>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <h2 className="text-3xl font-bold tracking-tight font-[family-name:var(--font-display)]">
+          Booking Link
+        </h2>
         <p className="text-sm text-muted-foreground mt-1">
           Paste your Google Calendar booking page, Cal.com, Calendly, or any URL where clients can
           schedule. Your AI can reference this when chatting in DMs.
         </p>
-      </div>
+      </motion.div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Booking URL</CardTitle>
-          <CardDescription>
-            This does not replace in-app availability — it is the link you promote in your bio for
-            external booking flows.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSave} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="url">HTTPS link</Label>
-              <Input
-                id="url"
-                type="url"
-                placeholder="https://cal.com/yourname or Google appointment URL"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                disabled={loading}
-                className="font-mono text-sm"
-              />
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <Card className="border-orange-100/80 bg-white/88 shadow-[0_18px_44px_-32px_rgba(236,72,153,0.16)]">
+          <CardHeader>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,rgba(249,115,22,0.14),rgba(236,72,153,0.14),rgba(124,58,237,0.14))] ring-1 ring-rose-100/80">
+                <ExternalLink className="w-4 h-4 text-rose-500" strokeWidth={1.8} />
+              </div>
+              <div>
+                <CardTitle className="text-base">Booking URL</CardTitle>
+                <CardDescription className="text-xs">
+                  The link you promote in your bio for external booking flows.
+                </CardDescription>
+              </div>
             </div>
-            <Button type="submit" disabled={saving || loading}>
-              {saving ? 'Saving…' : 'Save'}
-            </Button>
-            {message && <p className="text-sm text-muted-foreground">{message}</p>}
-          </form>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSave} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="url" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">HTTPS link</Label>
+                <Input
+                  id="url"
+                  type="url"
+                  placeholder="https://cal.com/yourname or Google appointment URL"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  disabled={loading}
+                  className="font-mono text-sm"
+                />
+              </div>
+              <Button type="submit" disabled={saving || loading}>
+                {saving ? 'Saving\u2026' : 'Save'}
+              </Button>
+              {message && <p className="text-sm text-muted-foreground">{message}</p>}
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

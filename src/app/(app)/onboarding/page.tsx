@@ -21,8 +21,7 @@ export default function OnboardingPage() {
     setLoading(true);
     try {
       await onboardingCreator({ business_name: businessName.trim(), timezone });
-      router.replace('/dashboard');
-      router.refresh();
+      window.location.href = '/dashboard';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -34,7 +33,7 @@ export default function OnboardingPage() {
     <div className="max-w-lg mx-auto">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="flex items-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-[linear-gradient(135deg,#f97316_0%,#ec4899_100%)] flex items-center justify-center shadow-[0_16px_30px_-20px_rgba(236,72,153,0.45)]">
             <Zap className="w-4 h-4 text-primary-foreground" strokeWidth={2.5} />
           </div>
           <div>
@@ -72,7 +71,7 @@ export default function OnboardingPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-10 rounded-lg text-sm font-semibold bg-primary text-primary-foreground flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
+            className="w-full h-10 rounded-lg text-sm font-semibold bg-[linear-gradient(135deg,#f97316_0%,#ec4899_100%)] text-primary-foreground flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
           >
             {loading ? (
               <span className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
