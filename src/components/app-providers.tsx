@@ -3,6 +3,14 @@
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
 import { useEffect } from 'react';
 import { setApiTokenGetter } from '@/lib/api';
+import { isAuth0Configured } from '@/lib/auth0-config';
+
+function ClearApiTokenOnMount() {
+  useEffect(() => {
+    setApiTokenGetter(null);
+  }, []);
+  return null;
+}
 
 const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN || '';
 const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || '';
@@ -37,16 +45,12 @@ function TokenBridge({ children }: { children: React.ReactNode }) {
 }
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
-  if (!domain || !clientId) {
+  if (!isAuth0Configured()) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-6 text-center text-sm text-muted-foreground">
-        <p>
-          Missing <code className="text-foreground">NEXT_PUBLIC_AUTH0_DOMAIN</code> or{' '}
-          <code className="text-foreground">NEXT_PUBLIC_AUTH0_CLIENT_ID</code>. Copy{' '}
-          <code className="text-foreground">.env.local.example</code> to{' '}
-          <code className="text-foreground">.env.local</code> and add Auth0 values.
-        </p>
-      </div>
+      <>
+        <ClearApiTokenOnMount />
+        {children}
+      </>
     );
   }
 

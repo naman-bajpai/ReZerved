@@ -2,7 +2,9 @@
  * BookedUp API client — Bearer token from Auth0, or legacy X-Business-ID for local dev.
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Empty string = same origin (Next.js API routes at /api/*)
+// Set NEXT_PUBLIC_API_URL only if you need to point to an external backend.
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 const LEGACY_BUSINESS_ID = process.env.NEXT_PUBLIC_BUSINESS_ID || '';
 
 export type ApiTokenGetter = () => Promise<string | null>;
