@@ -1,27 +1,105 @@
 /**
- * BookedUp API client
- * Wraps all backend API calls with the business ID header.
+ * BookedUp API client — Bearer token from Auth0, or legacy X-Business-ID for local dev.
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-const BUSINESS_ID = process.env.NEXT_PUBLIC_BUSINESS_ID || '';
+const LEGACY_BUSINESS_ID = process.env.NEXT_PUBLIC_BUSINESS_ID || '';
+
+export type ApiTokenGetter = () => Promise<string | null>;
+
+let getAccessToken: ApiTokenGetter | null = null;
+
+export function setApiTokenGetter(fn: ApiTokenGetter | null) {
+  getAccessToken = fn;
+}
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = getAccessToken ? await getAccessToken() : null;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  } else if (LEGACY_BUSINESS_ID) {
+    headers['X-Business-ID'] = LEGACY_BUSINESS_ID;
+  }
+
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Business-ID': BUSINESS_ID,
-      ...options.headers,
-    },
+    headers,
   });
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `API error ${res.status}`);
+    const message = (err as { error?: string }).error || `API error ${res.status}`;
+    const e = new Error(message) as Error & { status?: number; code?: string };
+    e.status = res.status;
+    if ((err as { code?: string }).code) e.code = (err as { code?: string }).code!;
+    throw e;
   }
 
   return res.json();
+}
+
+// ─── Session / onboarding ───────────────────────────────────────────────────
+
+export async function getMe() {
+  return apiFetch<{
+    profile: {
+      id: string;
+      email: string | null;
+      name: string | null;
+      picture_url: string | null;
+      is_admin: boolean;
+      business_id: string | null;
+      created_at: string;
+    };
+    business: {
+      id: string;
+      name: string;
+      timezone: string;
+      external_booking_url: string | null;
+    } | null;
+  }>('/api/me');
+}
+
+export async function onboardingCreator(body: { business_name: string; timezone?: string }) {
+  return apiFetch<{
+    profile: { id: string; business_id: string; is_admin: boolean };
+    business: { id: string; name: string; timezone: string; external_booking_url: string | null };
+  }>('/api/onboarding/creator', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function patchBookingLink(external_booking_url: string | null) {
+  return apiFetch<{ business: { id: string; external_booking_url: string | null } }>(
+    '/api/creator/booking-link',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ external_booking_url }),
+    }
+  );
+}
+
+export async function getAdminUsers() {
+  return apiFetch<{ users: AdminUser[]; count: number }>('/api/admin/users');
+}
+
+export interface AdminUser {
+  id: string;
+  auth0_sub: string;
+  email: string | null;
+  name: string | null;
+  picture_url: string | null;
+  is_admin: boolean;
+  business_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // ─── Bookings ─────────────────────────────────────────────────────────────────
@@ -31,7 +109,11 @@ export async function getBookings(params: { status?: string; date?: string } = {
   return apiFetch<{ bookings: Booking[]; count: number }>(`/api/bookings?${q}`);
 }
 
-export async function updateBookingStatus(id: string, status: 'confirmed' | 'cancelled' | 'no_show', reason?: string) {
+export async function updateBookingStatus(
+  id: string,
+  status: 'confirmed' | 'cancelled' | 'no_show',
+  reason?: string
+) {
   return apiFetch<{ booking: Booking }>(`/api/bookings/${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ status, reason }),
