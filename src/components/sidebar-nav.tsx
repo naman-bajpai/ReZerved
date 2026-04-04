@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useAuth0 } from '@auth0/auth0-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
@@ -20,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { getMe } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { authClient } from '@/lib/auth-client';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -33,7 +33,8 @@ const navItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { logout, user } = useAuth0();
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -51,6 +52,14 @@ export function SidebarNav() {
     };
   }, []);
 
+  async function handleSignOut() {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => router.push('/'),
+      },
+    });
+  }
+
   return (
     <aside className="w-64 bg-card border-r border-border flex flex-col px-3 py-5 fixed h-full">
       <div className="px-3 mb-6">
@@ -61,7 +70,7 @@ export function SidebarNav() {
           <div className="min-w-0">
             <h1 className="text-base font-bold leading-none text-foreground truncate">BookedUp</h1>
             <p className="text-[10px] text-muted-foreground mt-0.5 leading-none truncate">
-              {user?.email || 'AI Revenue Optimizer'}
+              {session?.user?.email || 'AI Revenue Optimizer'}
             </p>
           </div>
         </div>
@@ -122,7 +131,7 @@ export function SidebarNav() {
           variant="outline"
           size="sm"
           className="w-full justify-start gap-2 text-muted-foreground"
-          onClick={() => logout({ logoutParams: { returnTo: typeof window !== 'undefined' ? window.location.origin : '/' } })}
+          onClick={handleSignOut}
         >
           <LogOut className="w-4 h-4" />
           Sign out

@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken, syncProfile } from '@/lib/server/auth';
+import { getSession, getProfile } from '@/lib/server/auth';
 import supabase from '@/lib/server/supabase';
 
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    const session = await getSession(req);
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await verifyToken(authHeader.slice(7));
-    const profile = await syncProfile(payload);
+    const profile = await getProfile(session.user.id);
+    if (!profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 401 });
+    }
 
     if (profile.business_id) {
       return NextResponse.json({ error: 'Profile already linked to a business' }, { status: 400 });
@@ -22,9 +24,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'business_name is required' }, { status: 400 });
     }
 
-    const tz = typeof body.timezone === 'string' && body.timezone.trim()
-      ? body.timezone.trim()
-      : 'America/New_York';
+    const tz =
+      typeof body.timezone === 'string' && body.timezone.trim()
+        ? body.timezone.trim()
+        : 'America/New_York';
 
     const { data: biz, error: bizErr } = await supabase
       .from('businesses')
@@ -47,8 +50,9 @@ export async function POST(req: NextRequest) {
       { profile: { id: prof.id, business_id: prof.business_id, is_admin: prof.is_admin }, business: biz },
       { status: 201 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('POST /api/onboarding/creator error:', err);
-    return NextResponse.json({ error: err.message || 'Onboarding failed' }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Onboarding failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

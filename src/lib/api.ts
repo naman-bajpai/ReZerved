@@ -1,5 +1,5 @@
 /**
- * BookedUp API client — Bearer token from Auth0, or legacy X-Business-ID for local dev.
+ * BookedUp API client — session cookie (Better Auth) or legacy X-Business-ID for local dev.
  */
 
 // Empty string = same origin (Next.js API routes at /api/*)
@@ -7,30 +7,19 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 const LEGACY_BUSINESS_ID = process.env.NEXT_PUBLIC_BUSINESS_ID || '';
 
-export type ApiTokenGetter = () => Promise<string | null>;
-
-let getAccessToken: ApiTokenGetter | null = null;
-
-export function setApiTokenGetter(fn: ApiTokenGetter | null) {
-  getAccessToken = fn;
-}
-
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getAccessToken ? await getAccessToken() : null;
-
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  } else if (LEGACY_BUSINESS_ID) {
+  if (LEGACY_BUSINESS_ID) {
     headers['X-Business-ID'] = LEGACY_BUSINESS_ID;
   }
 
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: 'include',
     headers,
   });
 
@@ -94,7 +83,7 @@ export async function getAdminUsers() {
 
 export interface AdminUser {
   id: string;
-  auth0_sub: string;
+  user_id: string;
   email: string | null;
   name: string | null;
   picture_url: string | null;

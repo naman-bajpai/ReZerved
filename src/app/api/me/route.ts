@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticate, syncProfile, verifyToken } from '@/lib/server/auth';
+import { getSession, getProfile } from '@/lib/server/auth';
 import supabase from '@/lib/server/supabase';
 
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Missing or invalid Authorization header' }, { status: 401 });
+    const session = await getSession(req);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await verifyToken(authHeader.slice(7));
-    const profile = await syncProfile(payload);
+    const profile = await getProfile(session.user.id);
+    if (!profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 401 });
+    }
 
     let business = null;
     if (profile.business_id) {

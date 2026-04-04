@@ -1,38 +1,15 @@
 /**
  * Server-side auth helpers for Next.js API routes.
- * Validates Auth0 Bearer JWTs and syncs profiles to Supabase.
+ * Uses Better Auth sessions (cookie-based) instead of Auth0 JWTs.
  */
 
-import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 import supabase from './supabase';
-
-// Lazily initialised JWKS set
-let JWKS: ReturnType<typeof createRemoteJWKSet> | null = null;
-
-function getJWKS() {
-  if (!JWKS) {
-    const domain = process.env.AUTH0_DOMAIN;
-    if (!domain) throw new Error('AUTH0_DOMAIN is not set');
-    JWKS = createRemoteJWKSet(
-      new URL(`https://${domain}/.well-known/jwks.json`)
-    );
-  }
-  return JWKS;
-}
-
-export interface JWTPayload {
-  sub: string;
-  email?: string;
-  name?: string;
-  nickname?: string;
-  picture?: string;
-  [key: string]: unknown;
-}
 
 export interface Profile {
   id: string;
-  auth0_sub: string;
+  user_id: string;
   email: string | null;
   name: string | null;
   picture_url: string | null;
@@ -50,73 +27,56 @@ export interface Business {
   business_id: string; // alias for id, kept for compat
 }
 
-// ─── JWT Verification ─────────────────────────────────────────────────────────
+// ─── Session & Profile Lookup ─────────────────────────────────────────────────
 
-export async function verifyToken(token: string): Promise<JWTPayload> {
-  const domain = process.env.AUTH0_DOMAIN;
-  const audience = process.env.AUTH0_AUDIENCE;
-  if (!domain || !audience) throw new Error('AUTH0_DOMAIN and AUTH0_AUDIENCE are required');
-
-  const { payload } = await jwtVerify(token, getJWKS(), {
-    audience,
-    issuer: `https://${domain}/`,
-  });
-
-  return payload as unknown as JWTPayload;
+/**
+ * Get the current Better Auth session from request headers.
+ * Returns null if no valid session exists.
+ */
+export async function getSession(req: NextRequest) {
+  return auth.api.getSession({ headers: req.headers });
 }
 
-// ─── Profile Sync ─────────────────────────────────────────────────────────────
-
-export async function syncProfile(jwtPayload: JWTPayload): Promise<Profile> {
-  const { sub, email = null, name = null, nickname = null, picture = null } = jwtPayload;
-  const resolvedName = name || nickname || null;
-  const pictureUrl = picture || null;
-
-  const adminSubs = (process.env.ADMIN_AUTH0_SUBS || '').split(',').map((s) => s.trim()).filter(Boolean);
-  const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-  const grantAdmin =
-    adminSubs.includes(sub) || (email ? adminEmails.includes(String(email).toLowerCase()) : false);
-
-  const { data: existing, error: findErr } = await supabase
+/**
+ * Fetch the profile row for a given Better Auth user ID.
+ */
+export async function getProfile(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('auth0_sub', sub)
+    .eq('user_id', userId)
     .maybeSingle();
 
-  if (findErr) throw findErr;
+  if (error) throw error;
 
-  if (existing) {
-    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (email && email !== existing.email) updates.email = email;
-    if (resolvedName && resolvedName !== existing.name) updates.name = resolvedName;
-    if (pictureUrl && pictureUrl !== existing.picture_url) updates.picture_url = pictureUrl;
-    if (grantAdmin && !existing.is_admin) updates.is_admin = true;
+  // Sync admin status if ADMIN_EMAILS changed since profile was created
+  if (data) {
+    const adminEmails = (process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+    const shouldBeAdmin = data.email
+      ? adminEmails.includes(String(data.email).toLowerCase())
+      : false;
 
-    const { data: updated, error: upErr } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', existing.id)
-      .select()
-      .single();
-
-    if (upErr) throw upErr;
-    return updated as Profile;
+    if (shouldBeAdmin && !data.is_admin) {
+      const { data: updated } = await supabase
+        .from('profiles')
+        .update({ is_admin: true, updated_at: new Date().toISOString() })
+        .eq('id', data.id)
+        .select()
+        .single();
+      return updated as Profile;
+    }
   }
 
-  const { data: created, error: insErr } = await supabase
-    .from('profiles')
-    .insert({ auth0_sub: sub, email, name: resolvedName, picture_url: pictureUrl, is_admin: grantAdmin })
-    .select()
-    .single();
-
-  if (insErr) throw insErr;
-  return created as Profile;
+  return data as Profile | null;
 }
 
 // ─── Middleware Helpers ───────────────────────────────────────────────────────
 
 /**
- * Extract and validate Bearer token from the request, returning the synced profile.
+ * Extract and validate session from the request, returning the profile.
  * Also supports legacy X-Business-ID header for dev environments.
  */
 export async function authenticate(
@@ -127,14 +87,12 @@ export async function authenticate(
     return { profile: null, legacy: true, legacyBusinessId: legacyHeader };
   }
 
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw new AuthError('Missing or invalid Authorization header', 401);
-  }
+  const session = await getSession(req);
+  if (!session) throw new AuthError('Unauthorized', 401);
 
-  const token = authHeader.slice(7);
-  const payload = await verifyToken(token);
-  const profile = await syncProfile(payload);
+  const profile = await getProfile(session.user.id);
+  if (!profile) throw new AuthError('Profile not found', 401);
+
   return { profile, legacy: false, legacyBusinessId: null };
 }
 
@@ -186,15 +144,12 @@ type BusinessHandler = (
   ctx?: { params?: Record<string, string> }
 ) => Promise<NextResponse>;
 
-/** Wrap a handler with JWT auth + profile sync. */
+/** Wrap a handler with session auth + profile lookup. */
 export function withAuth(handler: AuthedHandler) {
   return async (req: NextRequest, ctx?: { params?: Record<string, string> }) => {
     try {
-      const { profile, legacy, legacyBusinessId } = await authenticate(req);
-      if (legacy) {
-        // Legacy dev path: profile is null but we need to pass something
-        return handler(req, null as unknown as Profile, ctx);
-      }
+      const { profile, legacy: isLegacy } = await authenticate(req);
+      if (isLegacy) return handler(req, null as unknown as Profile, ctx);
       return handler(req, profile!, ctx);
     } catch (err) {
       return authErrResponse(err);
@@ -202,7 +157,7 @@ export function withAuth(handler: AuthedHandler) {
   };
 }
 
-/** Wrap a handler with JWT auth + profile sync + business lookup. */
+/** Wrap a handler with session auth + profile + business lookup. */
 export function withBusiness(handler: BusinessHandler) {
   return async (req: NextRequest, ctx?: { params?: Record<string, string> }) => {
     try {
