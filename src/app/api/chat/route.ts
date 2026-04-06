@@ -110,8 +110,9 @@ Rules:
       history.push(assistantMessage);
 
       for (const toolCall of assistantMessage.tool_calls) {
-        const fnName = toolCall.function.name;
-        const args = JSON.parse(toolCall.function.arguments);
+        const tc = toolCall as { function: { name: string; arguments: string } };
+        const fnName = tc.function.name;
+        const args = JSON.parse(tc.function.arguments);
         let result: any;
 
         try {

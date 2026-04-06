@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, getProfile } from '@/lib/server/auth';
 import supabase from '@/lib/server/supabase';
+import { slugify, ensureUniqueSlug } from '@/lib/server/guest-auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,10 +44,12 @@ export async function POST(req: NextRequest) {
         ? body.timezone.trim()
         : 'America/New_York';
 
+    const slug = await ensureUniqueSlug(slugify(name));
+
     const { data: biz, error: bizErr } = await supabase
       .from('businesses')
-      .insert({ name, owner_name: profile.name || null, timezone: tz })
-      .select('id, name, timezone, external_booking_url')
+      .insert({ name, owner_name: profile.name || null, timezone: tz, slug })
+      .select('id, name, timezone, external_booking_url, slug')
       .single();
 
     if (bizErr) throw bizErr;

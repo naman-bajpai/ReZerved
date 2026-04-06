@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     if (profile.business_id) {
       const { data } = await supabase
         .from('businesses')
-        .select('id, name, timezone, external_booking_url, instagram_page_id, owner_name')
+        .select('id, name, timezone, external_booking_url, instagram_page_id, owner_name, slug')
         .eq('id', profile.business_id)
         .maybeSingle();
       business = data;

@@ -1,144 +1,364 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Users, Search } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Users, Search, TrendingUp, CalendarDays, Clock, Star,
+  ChevronRight, DollarSign, AlertCircle, ArrowUpRight,
+  Sparkles, Phone, X,
+} from 'lucide-react';
 import { getClients, type Client } from '@/lib/api';
 
+function fmtCurrency(v: number | string) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(v || 0));
+}
+
+/* ─── Segment config ─────────────────────────────────────── */
+function getSegment(client: Client): { label: string; color: string; bg: string } {
+  const spend = Number(client.avg_spend || 0);
+  const freq = client.typical_frequency_days || 999;
+  const lastDays = client.last_booked_at
+    ? Math.floor((Date.now() - new Date(client.last_booked_at).getTime()) / 86400000)
+    : 999;
+
+  if (spend >= 100 && freq <= 28)    return { label: 'Champion',  color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' };
+  if (lastDays > 60)                  return { label: 'At Risk',   color: '#f87171', bg: 'rgba(248,113,113,0.1)' };
+  if (lastDays > 30)                  return { label: 'Lapsing',   color: '#fb7185', bg: 'rgba(251,113,133,0.1)' };
+  if (spend >= 60)                    return { label: 'Loyal',     color: '#34d399', bg: 'rgba(52,211,153,0.1)' };
+  return                               { label: 'New',        color: '#a78bfa', bg: 'rgba(167,139,250,0.1)' };
+}
+
+/* ─── Avatar ─────────────────────────────────────────────── */
+const AVATAR_COLORS = [
+  ['rgba(245,158,11,0.18)', '#f59e0b'],
+  ['rgba(52,211,153,0.18)', '#34d399'],
+  ['rgba(251,113,133,0.18)', '#fb7185'],
+  ['rgba(167,139,250,0.18)', '#a78bfa'],
+];
+
+function Avatar({ name, size = 40, idx = 0 }: { name: string; size?: number; idx?: number }) {
+  const [bg, color] = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+  return (
+    <div
+      className="rounded-full flex-shrink-0 flex items-center justify-center font-bold"
+      style={{ width: size, height: size, background: bg, color, fontSize: size * 0.35, border: `1px solid ${color}25` }}
+    >
+      {(name || 'U').charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
+/* ─── Client card ───────────────────────────────────────── */
+function ClientCard({ client, idx, onSelect }: {
+  client: Client; idx: number; onSelect: (c: Client) => void;
+}) {
+  const seg = getSegment(client);
+  const lastBooked = client.last_booked_at
+    ? Math.floor((Date.now() - new Date(client.last_booked_at).getTime()) / 86400000)
+    : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: idx * 0.04, ease: [0.22, 1, 0.36, 1] }}
+      className="group flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all"
+      style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}
+      whileHover={{ borderColor: `${seg.color}20`, y: -1, background: 'rgba(255,255,255,0.035)', transition: { duration: 0.2 } }}
+      onClick={() => onSelect(client)}
+    >
+      <Avatar name={client.name || 'U'} idx={idx} />
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <p className="text-[14px] font-semibold truncate" style={{ color: '#f4f4f5' }}>{client.name || 'Unknown'}</p>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: seg.bg, color: seg.color }}>
+            {seg.label}
+          </span>
+        </div>
+        <p className="text-[12px] truncate" style={{ color: 'rgba(244,244,245,0.4)' }}>
+          {client.phone || 'No contact info'}
+        </p>
+      </div>
+
+      {/* Avg spend */}
+      <div className="text-right flex-shrink-0 hidden sm:block">
+        <p className="text-[14px] font-bold font-mono-nums" style={{ color: '#f59e0b' }}>
+          {fmtCurrency(client.avg_spend || 0)}
+        </p>
+        <p className="text-[11px] mt-0.5" style={{ color: 'rgba(244,244,245,0.3)' }}>avg spend</p>
+      </div>
+
+      {/* Last booked */}
+      <div className="text-right flex-shrink-0 hidden md:block">
+        <p className="text-[13px] font-medium" style={{ color: 'rgba(244,244,245,0.55)' }}>
+          {lastBooked !== null ? (lastBooked === 0 ? 'Today' : `${lastBooked}d ago`) : 'Never'}
+        </p>
+        <p className="text-[11px] mt-0.5" style={{ color: 'rgba(244,244,245,0.3)' }}>last visited</p>
+      </div>
+
+      {/* Frequency */}
+      <div className="flex-shrink-0 hidden lg:block">
+        {client.typical_frequency_days ? (
+          <span className="text-[11px] font-semibold px-2.5 py-1.5 rounded-xl" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.15)' }}>
+            Every {client.typical_frequency_days}d
+          </span>
+        ) : (
+          <span style={{ color: 'rgba(244,244,245,0.2)' }}>—</span>
+        )}
+      </div>
+
+      <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: 'rgba(244,244,245,1)' }} />
+    </motion.div>
+  );
+}
+
+/* ─── Client detail panel ────────────────────────────────── */
+function ClientPanel({ client, onClose }: { client: Client; onClose: () => void }) {
+  const seg = getSegment(client);
+  const lastBooked = client.last_booked_at
+    ? Math.floor((Date.now() - new Date(client.last_booked_at).getTime()) / 86400000)
+    : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 24 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      className="fixed right-0 top-0 h-full w-[320px] flex flex-col z-40 overflow-y-auto"
+      style={{ background: '#0d0d12', borderLeft: '1px solid rgba(255,255,255,0.07)', boxShadow: '-16px 0 48px rgba(0,0,0,0.5)' }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-[14px] font-semibold" style={{ color: '#f4f4f5' }}>Client Profile</p>
+        <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(244,244,245,0.4)' }}>
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Profile */}
+      <div className="px-5 py-5 flex flex-col items-center text-center" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <Avatar name={client.name || 'U'} size={56} idx={0} />
+        <h3 className="text-[16px] font-bold mt-3 mb-1" style={{ color: '#f4f4f5' }}>{client.name}</h3>
+        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full mb-3" style={{ background: seg.bg, color: seg.color }}>
+          {seg.label}
+        </span>
+        {client.phone && (
+          <div className="flex items-center gap-1.5 text-[12px]" style={{ color: 'rgba(244,244,245,0.45)' }}>
+            <Phone className="w-3 h-3" />
+            {client.phone}
+          </div>
+        )}
+      </div>
+
+      {/* Stats */}
+      <div className="px-5 py-4 grid grid-cols-2 gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        {[
+          { label: 'Avg Spend', value: fmtCurrency(client.avg_spend || 0), color: '#f59e0b' },
+          { label: 'Last Visit', value: lastBooked !== null ? `${lastBooked}d ago` : 'Never', color: 'rgba(244,244,245,0.7)' },
+          { label: 'Frequency', value: client.typical_frequency_days ? `${client.typical_frequency_days}d` : '—', color: '#a78bfa' },
+          { label: 'Total Visits', value: '12', color: '#34d399' },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <p className="text-[15px] font-bold font-mono-nums mb-0.5" style={{ color }}>{value}</p>
+            <p className="text-[10px]" style={{ color: 'rgba(244,244,245,0.3)' }}>{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Retention opportunity */}
+      {lastBooked !== null && lastBooked > 28 && (
+        <div className="mx-5 mt-4 rounded-xl p-4" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.14)' }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-3.5 h-3.5" style={{ color: '#f59e0b' }} />
+            <span className="text-[12px] font-semibold" style={{ color: '#f59e0b' }}>Retention Opportunity</span>
+          </div>
+          <p className="text-[12px] mb-3" style={{ color: 'rgba(244,244,245,0.55)' }}>
+            {client.name?.split(' ')[0]} hasn't visited in {lastBooked} days. Send a win-back message?
+          </p>
+          <button className="w-full py-2 rounded-lg text-[12px] font-semibold transition-all" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
+            Send re-engagement SMS
+          </button>
+        </div>
+      )}
+
+      {/* Notes placeholder */}
+      <div className="mx-5 mt-4 mb-5">
+        <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgba(244,244,245,0.3)' }}>Notes</p>
+        <textarea
+          placeholder="Add client notes…"
+          rows={4}
+          className="w-full resize-none rounded-xl px-3 py-2.5 text-[12px] outline-none transition-all"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(244,244,245,0.7)', caretColor: '#f59e0b' }}
+        />
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── Skeleton ───────────────────────────────────────────── */
+function SkeletonRow() {
+  return (
+    <div className="flex items-center gap-4 px-5 py-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+      <div className="skeleton w-10 h-10 rounded-full flex-shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="skeleton h-4 w-36 rounded" />
+        <div className="skeleton h-3 w-24 rounded" />
+      </div>
+      <div className="skeleton h-4 w-16 rounded hidden sm:block" />
+    </div>
+  );
+}
+
+/* ─── Page ───────────────────────────────────────────────── */
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [segment, setSegment] = useState('all');
+  const [selected, setSelected] = useState<Client | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(true);
       getClients({ search: search || undefined })
-        .then((d) => setClients(d.clients))
+        .then(d => setClients(d.clients))
         .catch(console.error)
         .finally(() => setLoading(false));
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
 
+  const filtered = clients.filter(c => {
+    if (segment === 'all') return true;
+    const s = getSegment(c);
+    return s.label.toLowerCase() === segment;
+  });
+
+  const segCounts = {
+    all: clients.length,
+    champion: clients.filter(c => getSegment(c).label === 'Champion').length,
+    loyal: clients.filter(c => getSegment(c).label === 'Loyal').length,
+    'at risk': clients.filter(c => getSegment(c).label === 'At Risk').length,
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-7 pb-12">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="flex items-center justify-between"
       >
-        <h2 className="text-3xl font-bold tracking-tight font-[family-name:var(--font-display)]">Clients</h2>
-        <p className="text-sm text-muted-foreground mt-1">{clients.length} client{clients.length !== 1 ? 's' : ''}</p>
+        <div>
+          <h1 className="text-[26px] font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
+            Clients
+          </h1>
+          <p className="text-[14px] mt-1" style={{ color: 'rgba(244,244,245,0.4)' }}>
+            {clients.length} client{clients.length !== 1 ? 's' : ''} · manage relationships
+          </p>
+        </div>
       </motion.div>
 
-      {/* Search */}
+      {/* Segment + Search bar */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.4, delay: 0.08 }}
+        className="flex flex-wrap items-center gap-3"
       >
-        <Card className="border-orange-100/80 bg-white/88 shadow-[0_18px_44px_-32px_rgba(236,72,153,0.16)]">
-          <CardContent className="py-3.5">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" strokeWidth={1.8} />
-              <input
-                type="text"
-                placeholder="Search by name or phone..."
-                className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2.5 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/30 transition-shadow"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          {[
+            { val: 'all', label: 'All', count: segCounts.all },
+            { val: 'champion', label: 'Champions', count: segCounts.champion },
+            { val: 'loyal', label: 'Loyal', count: segCounts.loyal },
+            { val: 'at risk', label: 'At Risk', count: segCounts['at risk'] },
+          ].map(({ val, label, count }) => (
+            <button key={val} onClick={() => setSegment(val)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
+              style={segment === val ? {
+                background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)'
+              } : { color: 'rgba(244,244,245,0.45)' }}
+            >
+              {label}
+              {count > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(244,244,245,0.5)' }}>
+                  {count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative ml-auto">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'rgba(244,244,245,0.3)' }} />
+          <input
+            value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search clients…"
+            className="pl-9 pr-4 py-2 rounded-xl text-[12px] outline-none w-52 transition-all"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(244,244,245,0.8)', caretColor: '#f59e0b' }}
+          />
+        </div>
       </motion.div>
 
-      {/* Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <Card className="border-orange-100/80 bg-white/88 shadow-[0_18px_44px_-32px_rgba(236,72,153,0.16)]">
-          <CardContent className="px-0 py-0">
-            {loading ? (
-              <div className="p-12 space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            ) : clients.length === 0 ? (
-              <div className="text-center py-16">
-                <Users className="w-10 h-10 text-muted-foreground/25 mx-auto mb-3" strokeWidth={1.5} />
-                <p className="text-sm text-muted-foreground font-medium">No clients found</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">Try a different search term</p>
-              </div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/50">
-                    <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Name</th>
-                    <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Phone</th>
-                    <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Avg Spend</th>
-                    <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Last Booked</th>
-                    <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Frequency</th>
-                    <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clients.map((c, i) => (
-                    <motion.tr
-                      key={c.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.15 + i * 0.03 }}
-                      className="border-b border-border/30 hover:bg-accent/30 transition-colors"
-                    >
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-7 h-7 rounded-full bg-[linear-gradient(135deg,rgba(249,115,22,0.14),rgba(236,72,153,0.14))] flex items-center justify-center text-[10px] font-bold text-rose-600 shrink-0 ring-1 ring-rose-100/90">
-                            {(c.name || 'U').charAt(0).toUpperCase()}
-                          </div>
-                          <span className="font-semibold">{c.name || '\u2014'}</span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5 text-muted-foreground">{c.phone || c.instagram_id || '\u2014'}</td>
-                      <td className="px-5 py-3.5">
-                        {c.avg_spend ? (
-                          <span className="font-bold text-rose-600 font-[family-name:var(--font-display)]">
-                            ${Number(c.avg_spend).toFixed(0)}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground/50">&mdash;</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3.5 text-muted-foreground">
-                        {c.last_booked_at
-                          ? new Date(c.last_booked_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                          : 'Never'}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        {c.typical_frequency_days ? (
-                          <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md">
-                            Every {c.typical_frequency_days}d
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground/50">&mdash;</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3.5 text-muted-foreground/70 text-xs max-w-[200px] truncate">{c.notes || '\u2014'}</td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+      {/* Table header */}
+      {!loading && filtered.length > 0 && (
+        <div className="grid px-5" style={{ gridTemplateColumns: '1fr auto auto auto auto' }}>
+          {['Client', 'Avg Spend', 'Last Visit', 'Frequency', ''].map((h, i) => (
+            <p key={i} className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(244,244,245,0.25)', display: i >= 2 ? 'none' : undefined }}>
+              {h}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {/* List */}
+      <div className="space-y-2">
+        {loading ? (
+          [...Array(6)].map((_, i) => <SkeletonRow key={i} />)
+        ) : filtered.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-20 text-center"
+          >
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <Users className="w-7 h-7" style={{ color: 'rgba(244,244,245,0.2)' }} strokeWidth={1.5} />
+            </div>
+            <p className="text-[15px] font-semibold mb-1" style={{ color: 'rgba(244,244,245,0.5)' }}>
+              {search ? 'No clients found' : 'No clients yet'}
+            </p>
+            <p className="text-[13px]" style={{ color: 'rgba(244,244,245,0.25)' }}>
+              {search ? 'Try a different search' : 'Clients will appear when they book'}
+            </p>
+          </motion.div>
+        ) : (
+          <AnimatePresence>
+            {filtered.map((client, i) => (
+              <ClientCard key={client.id} client={client} idx={i} onSelect={setSelected} />
+            ))}
+          </AnimatePresence>
+        )}
+      </div>
+
+      {/* Detail panel */}
+      <AnimatePresence>
+        {selected && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-30"
+              style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+              onClick={() => setSelected(null)}
+            />
+            <ClientPanel client={selected} onClose={() => setSelected(null)} />
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

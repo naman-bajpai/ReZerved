@@ -4,30 +4,108 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
-  LayoutDashboard,
-  CalendarDays,
-  Users,
-  Sparkles,
-  Clock,
-  BarChart3,
-  Link2,
-  Shield,
-  LogOut,
-  ChevronRight,
+  LayoutDashboard, CalendarDays, Users, Sparkles, Clock,
+  BarChart3, Link2, Shield, LogOut, MessageSquare, Settings,
+  TrendingUp, ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getMe } from '@/lib/api';
 import { authClient } from '@/lib/auth-client';
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/bookings', label: 'Bookings', icon: CalendarDays },
-  { href: '/clients', label: 'Clients', icon: Users },
-  { href: '/services', label: 'Services', icon: Sparkles },
-  { href: '/availability', label: 'Availability', icon: Clock },
-  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/booking-link', label: 'Booking Link', icon: Link2 },
+const NAV = [
+  { href: '/dashboard',      label: 'Overview',       icon: LayoutDashboard,  group: 'main' },
+  { href: '/conversations',  label: 'Conversations',  icon: MessageSquare,    group: 'main', badge: '3' },
+  { href: '/bookings',       label: 'Bookings',       icon: CalendarDays,     group: 'main' },
+  { href: '/clients',        label: 'Clients',        icon: Users,            group: 'main' },
+  { href: '/analytics',      label: 'Analytics',      icon: BarChart3,        group: 'main' },
+  { href: '/services',       label: 'Services',       icon: Sparkles,         group: 'business' },
+  { href: '/availability',   label: 'Availability',   icon: Clock,            group: 'business' },
+  { href: '/booking-link',   label: 'Booking Link',   icon: Link2,            group: 'business' },
+  { href: '/settings',       label: 'Settings',       icon: Settings,         group: 'settings' },
 ];
+
+function Logo() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+      <defs>
+        <linearGradient id="snl" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#f59e0b"/>
+          <stop offset="1" stopColor="#fb7185"/>
+        </linearGradient>
+      </defs>
+      <rect width="32" height="32" rx="10" fill="url(#snl)"/>
+      <rect x="8" y="12" width="16" height="12" rx="2.5" fill="white" fillOpacity="0.95"/>
+      <rect x="8" y="10" width="16" height="5" rx="2.5" fill="white" fillOpacity="0.65"/>
+      <rect x="12" y="8" width="3" height="5" rx="1.5" fill="white"/>
+      <rect x="17" y="8" width="3" height="5" rx="1.5" fill="white"/>
+      <path d="M12 18.5l2.5 2.5 5.5-6" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+type NavItemProps = {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  active: boolean;
+  badge?: string;
+};
+
+function NavItem({ href, label, icon: Icon, active, badge }: NavItemProps) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200',
+        active
+          ? 'text-white'
+          : 'text-[rgba(255,255,255,0.42)] hover:text-[rgba(255,255,255,0.8)] hover:bg-[rgba(255,255,255,0.04)]'
+      )}
+    >
+      {active && (
+        <div
+          className="absolute inset-0 rounded-xl transition-all duration-200"
+          style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.18)' }}
+        />
+      )}
+
+      {/* Active left accent */}
+      {active && (
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full" style={{ background: 'linear-gradient(180deg, #f59e0b, #fb7185)' }} />
+      )}
+
+      <Icon
+        className={cn(
+          'relative w-[17px] h-[17px] flex-shrink-0 transition-colors duration-200',
+          active ? 'text-amber-400' : 'text-[rgba(255,255,255,0.28)] group-hover:text-[rgba(255,255,255,0.55)]'
+        )}
+        strokeWidth={active ? 2.2 : 1.8}
+      />
+      <span className="relative flex-1 leading-none">{label}</span>
+      {badge && (
+        <span className="relative flex-shrink-0 text-[11px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
+          {badge}
+        </span>
+      )}
+      {active && (
+        <ChevronRight className="relative w-3 h-3 text-[rgba(255,255,255,0.2)] flex-shrink-0" />
+      )}
+    </Link>
+  );
+}
+
+function NavSection({ label, children }: { label?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-0.5">
+      {label && (
+        <p className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold" style={{ color: 'rgba(255,255,255,0.2)' }}>
+          {label}
+        </p>
+      )}
+      {children}
+    </div>
+  );
+}
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -40,43 +118,51 @@ export function SidebarNav() {
     (async () => {
       try {
         const me = await getMe();
-        if (!cancelled) setIsAdmin(me.profile.is_admin);
+        if (!cancelled) setIsAdmin(me.profile?.is_admin ?? false);
       } catch {
         if (!cancelled) setIsAdmin(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   async function handleSignOut() {
     await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => router.push('/'),
-      },
+      fetchOptions: { onSuccess: () => router.push('/') },
     });
   }
 
   const initials = session?.user?.name
-    ? session.user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    ? session.user.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
     : session?.user?.email?.[0]?.toUpperCase() || 'U';
 
+  const mainNav   = NAV.filter(n => n.group === 'main');
+  const bizNav    = NAV.filter(n => n.group === 'business');
+  const settNav   = NAV.filter(n => n.group === 'settings');
+
   return (
-    <aside className="w-[260px] border-r border-[--sidebar-border] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,247,237,0.88)_45%,rgba(253,242,248,0.84)_100%)] backdrop-blur-sm flex flex-col fixed h-full overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.12),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.10),transparent_28%)] pointer-events-none" />
+    <aside
+      className="fixed left-0 top-0 h-full flex flex-col overflow-hidden"
+      style={{
+        width: 256,
+        background: '#0a0a0f',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        boxShadow: '4px 0 24px rgba(0,0,0,0.4)',
+      }}
+    >
+      {/* Ambient glow */}
+      <div className="absolute top-0 left-0 w-48 h-48 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 20%, rgba(245,158,11,0.04) 0%, transparent 70%)' }} />
+      <div className="absolute bottom-0 right-0 w-48 h-48 pointer-events-none" style={{ background: 'radial-gradient(circle at 80% 80%, rgba(251,113,133,0.03) 0%, transparent 70%)' }} />
 
       {/* Brand */}
-      <div className="relative px-5 pt-6 pb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-[linear-gradient(135deg,#f97316_0%,#ec4899_100%)] flex items-center justify-center shadow-lg shadow-orange-500/15">
-            <span className="text-sm font-bold text-white font-[family-name:var(--font-display)]">B</span>
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-[15px] font-semibold leading-none text-[--sidebar-foreground] tracking-tight font-[family-name:var(--font-display)]">
+      <div className="relative px-4 pt-5 pb-4">
+        <div className="flex items-center gap-3 px-2">
+          <Logo />
+          <div>
+            <h1 className="text-[14px] font-bold leading-none text-white tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
               BookedUp
             </h1>
-            <p className="text-[10px] text-[--sidebar-foreground]/45 mt-1 leading-none tracking-wide uppercase">
+            <p className="text-[9px] uppercase tracking-[0.15em] mt-1 leading-none font-semibold" style={{ color: 'rgba(245,158,11,0.5)' }}>
               Revenue Optimizer
             </p>
           </div>
@@ -84,89 +170,70 @@ export function SidebarNav() {
       </div>
 
       {/* Divider */}
-      <div className="mx-5 h-px bg-[--sidebar-border]" />
+      <div className="mx-4 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
 
-      {/* Nav */}
-      <nav className="flex flex-col gap-0.5 flex-1 overflow-y-auto px-3 py-4">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 relative',
-                active
-                  ? 'bg-white/75 text-[--sidebar-accent-foreground] shadow-[0_10px_24px_-18px_rgba(236,72,153,0.4)]'
-                  : 'text-[--sidebar-foreground]/62 hover:text-[--sidebar-foreground] hover:bg-white/55'
-              )}
-            >
-              {active && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full bg-[linear-gradient(180deg,#f97316,#ec4899)]" />
-              )}
-              <Icon
-                className={cn(
-                  'w-[18px] h-[18px] shrink-0 transition-colors duration-200',
-                  active ? 'text-[--sidebar-primary]' : 'text-[--sidebar-foreground]/40 group-hover:text-[--sidebar-foreground]/72'
-                )}
-                strokeWidth={active ? 2.2 : 1.8}
-              />
-              {label}
-              {active && (
-                <ChevronRight className="w-3.5 h-3.5 ml-auto text-[--sidebar-foreground]/30" strokeWidth={2} />
-              )}
-            </Link>
-          );
-        })}
+      {/* AI status pill */}
+      <div className="px-4 pt-4">
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.12)' }}>
+          <div className="live-dot" />
+          <p className="text-[11px] font-medium" style={{ color: 'rgba(52,211,153,0.8)' }}>AI Booking Agent active</p>
+        </div>
+      </div>
 
-        {isAdmin && (
-          <>
-            <div className="mx-3 my-2 h-px bg-[--sidebar-border]" />
-            <Link
-              href="/admin"
-              className={cn(
-                'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 relative',
-                pathname === '/admin'
-                  ? 'bg-white/75 text-[--sidebar-accent-foreground] shadow-[0_10px_24px_-18px_rgba(236,72,153,0.4)]'
-                  : 'text-[--sidebar-foreground]/62 hover:text-[--sidebar-foreground] hover:bg-white/55'
-              )}
-            >
-              {pathname === '/admin' && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full bg-[linear-gradient(180deg,#f97316,#ec4899)]" />
-              )}
-              <Shield
-                className={cn(
-                  'w-[18px] h-[18px] shrink-0',
-                  pathname === '/admin' ? 'text-[--sidebar-primary]' : 'text-[--sidebar-foreground]/40'
-                )}
-                strokeWidth={pathname === '/admin' ? 2.2 : 1.8}
-              />
-              Admin
-            </Link>
-          </>
-        )}
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+        <NavSection>
+          {mainNav.map(({ href, label, icon, badge }) => (
+            <NavItem key={href} href={href} label={label} icon={icon} active={pathname === href} badge={badge} />
+          ))}
+        </NavSection>
+
+        <NavSection label="Business">
+          {bizNav.map(({ href, label, icon }) => (
+            <NavItem key={href} href={href} label={label} icon={icon} active={pathname === href} />
+          ))}
+        </NavSection>
+
+        <NavSection label="Account">
+          {settNav.map(({ href, label, icon }) => (
+            <NavItem key={href} href={href} label={label} icon={icon} active={pathname === href} />
+          ))}
+          {isAdmin && (
+            <NavItem href="/admin" label="Admin" icon={Shield} active={pathname === '/admin'} />
+          )}
+        </NavSection>
       </nav>
 
-      {/* Bottom section */}
-      <div className="relative px-3 pb-4 space-y-3">
-        <div className="mx-2 h-px bg-[--sidebar-border]" />
-
-        {/* User card */}
-        <div className="flex items-center gap-3 rounded-xl bg-white/55 px-3 py-2 ring-1 ring-white/70">
-          <div className="w-8 h-8 rounded-full bg-[linear-gradient(135deg,rgba(249,115,22,0.14),rgba(236,72,153,0.16))] flex items-center justify-center shrink-0 ring-1 ring-orange-200/70">
-            <span className="text-[11px] font-bold text-[--sidebar-primary]">{initials}</span>
+      {/* Bottom — User card */}
+      <div className="relative px-3 pb-4">
+        <div className="h-px mb-3" style={{ background: 'rgba(255,255,255,0.06)' }} />
+        <div
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 group"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          {/* Avatar */}
+          <div
+            className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold"
+            style={{
+              background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,113,133,0.2))',
+              color: '#f59e0b',
+              border: '1px solid rgba(245,158,11,0.2)',
+            }}
+          >
+            {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-medium text-[--sidebar-foreground]/80 truncate leading-none">
-              {session?.user?.name || 'Account'}
+            <p className="text-[12px] font-medium truncate leading-none" style={{ color: 'rgba(255,255,255,0.75)' }}>
+              {session?.user?.name || 'My Account'}
             </p>
-            <p className="text-[10px] text-[--sidebar-foreground]/35 truncate mt-0.5 leading-none">
+            <p className="text-[10px] truncate mt-0.5 leading-none" style={{ color: 'rgba(255,255,255,0.28)' }}>
               {session?.user?.email || ''}
             </p>
           </div>
           <button
             onClick={handleSignOut}
-            className="p-1.5 rounded-md hover:bg-white/75 transition-colors text-[--sidebar-foreground]/35 hover:text-[--sidebar-foreground]/60"
+            className="flex-shrink-0 p-1.5 rounded-lg transition-colors hover:bg-[rgba(255,255,255,0.07)]"
+            style={{ color: 'rgba(255,255,255,0.25)' }}
             title="Sign out"
           >
             <LogOut className="w-3.5 h-3.5" strokeWidth={1.8} />

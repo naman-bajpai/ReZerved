@@ -6,11 +6,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: 'oklch(var(--background) / <alpha-value>)',
-        foreground: 'oklch(var(--foreground) / <alpha-value>)',
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
         card: {
-          DEFAULT: 'oklch(var(--card) / <alpha-value>)',
-          foreground: 'oklch(var(--card-foreground) / <alpha-value>)',
+          DEFAULT: 'var(--card)',
+          foreground: 'var(--card-foreground)',
         },
         primary: {
           DEFAULT: 'var(--primary)',
@@ -35,10 +35,30 @@ const config: Config = {
         input: 'var(--input)',
         ring: 'var(--ring)',
       },
+      fontFamily: {
+        sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui'],
+        display: ['var(--font-display)', 'ui-serif', 'Georgia'],
+        mono: ['var(--font-mono)', 'JetBrains Mono', 'ui-monospace', 'monospace'],
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      keyframes: {
+        'ping-pulse': {
+          '0%':   { boxShadow: '0 0 0 0 rgba(52,211,153,0.5)' },
+          '70%':  { boxShadow: '0 0 0 8px rgba(52,211,153,0)' },
+          '100%': { boxShadow: '0 0 0 0 rgba(52,211,153,0)' },
+        },
+        'shimmer': {
+          '0%':   { backgroundPosition: '-200% center' },
+          '100%': { backgroundPosition: '200% center' },
+        },
+      },
+      animation: {
+        'ping-pulse': 'ping-pulse 2s cubic-bezier(0,0,0.2,1) infinite',
+        'shimmer':    'shimmer 1.5s infinite',
       },
     },
   },

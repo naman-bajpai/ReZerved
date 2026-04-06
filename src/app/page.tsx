@@ -1,747 +1,663 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useState } from 'react';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useInView, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight,
-  Zap,
-  TrendingUp,
-  Users,
-  CalendarDays,
-  BarChart3,
-  Shield,
-  CheckCircle2,
-  Activity,
-  Menu,
-  X,
-  Bell,
+  ArrowRight, Zap, TrendingUp, Users, CalendarDays, Shield,
+  CheckCircle2, MessageSquare, Sparkles, BarChart3, Clock,
+  ChevronRight, Star, Instagram, Phone, Bell, Activity,
+  DollarSign, RefreshCw, Target, Lock, Layers,
 } from 'lucide-react';
 
-// ─── Design tokens ────────────────────────────────────────────
-const BG       = '#fafaf8';
-const ORANGE   = '#f97316';
-const PINK     = '#ec4899';
-const VIOLET   = '#7c3aed';
-const TEXT     = '#0f0a1e';
-const MID      = '#4b5563';
-const DIM      = '#9ca3af';
-const CARD     = '#ffffff';
-const BORDER   = 'rgba(15,10,30,0.08)';
+/* ─── Design tokens ─────────────────────────────────────── */
+const C = {
+  bg:     '#09090b',
+  surf:   '#111116',
+  card:   '#16161c',
+  border: 'rgba(255,255,255,0.07)',
+  amber:  '#f59e0b',
+  rose:   '#fb7185',
+  violet: '#a78bfa',
+  em:     '#34d399',
+  text:   '#f4f4f5',
+  dim:    '#71717a',
+  faint:  'rgba(255,255,255,0.04)',
+};
 
-const GRAD        = `linear-gradient(135deg, ${ORANGE} 0%, ${PINK} 100%)`;
-const GRAD_FULL   = `linear-gradient(135deg, ${ORANGE} 0%, ${PINK} 55%, ${VIOLET} 100%)`;
-
-// ─── Logo mark ───────────────────────────────────────────────
-function LogoMark({ size = 30 }: { size?: number }) {
+/* ─── Logo ─────────────────────────────────────────────── */
+function Logo({ size = 32 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 30 30" fill="none">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
       <defs>
-        <linearGradient id="logo-g" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#f97316" />
-          <stop offset="1" stopColor="#ec4899" />
+        <linearGradient id="lg1" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#f59e0b"/>
+          <stop offset="1" stopColor="#fb7185"/>
         </linearGradient>
       </defs>
-      <rect width="30" height="30" rx="9" fill="url(#logo-g)" />
-      <rect x="7" y="11" width="16" height="12" rx="2.5" fill="white" fillOpacity="0.95" />
-      <rect x="7" y="9" width="16" height="5" rx="2.5" fill="white" fillOpacity="0.7" />
-      <rect x="11" y="7.5" width="2.5" height="4" rx="1.25" fill="white" />
-      <rect x="16.5" y="7.5" width="2.5" height="4" rx="1.25" fill="white" />
-      <path d="M11 17.5l2.5 2.5 5-5.5" stroke="#f97316" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <rect width="32" height="32" rx="10" fill="url(#lg1)"/>
+      <rect x="8" y="12" width="16" height="12" rx="2.5" fill="white" fillOpacity="0.95"/>
+      <rect x="8" y="10" width="16" height="5" rx="2.5" fill="white" fillOpacity="0.65"/>
+      <rect x="12" y="8" width="3" height="5" rx="1.5" fill="white"/>
+      <rect x="17" y="8" width="3" height="5" rx="1.5" fill="white"/>
+      <path d="M12 18.5l2.5 2.5 5.5-6" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
 
-// ─── Sparkline ───────────────────────────────────────────────
-const SPARK = [38, 44, 36, 58, 50, 63, 60, 74, 70, 88, 82, 97, 92, 114];
-function Sparkline() {
-  const W = 130, H = 34;
-  const min = Math.min(...SPARK), max = Math.max(...SPARK);
-  const pts = SPARK.map((v, i) => {
-    const x = (i / (SPARK.length - 1)) * W;
-    const y = H - ((v - min) / (max - min)) * (H - 4) - 2;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
+/* ─── Animated counter ──────────────────────────────────── */
+function Counter({ to, prefix = '', suffix = '', duration = 2 }: {
+  to: number; prefix?: string; suffix?: string; duration?: number;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-40px' });
+  const mv = useMotionValue(0);
+  const spring = useSpring(mv, { duration: duration * 1000, bounce: 0 });
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (inView) {
+      mv.set(to);
+    }
+  }, [inView, to, mv]);
+
+  useEffect(() => {
+    return spring.on('change', v => setDisplay(Math.round(v)));
+  }, [spring]);
+
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
-      <defs>
-        <linearGradient id="sfill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f97316" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={`0,${H} ${pts} ${W},${H}`} fill="url(#sfill)" />
-      <polyline points={pts} fill="none" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <span ref={ref} className="font-mono-nums">
+      {prefix}{display.toLocaleString()}{suffix}
+    </span>
   );
 }
 
-// ─── Dashboard panel (dark, shown as product screenshot) ─────
-const FEED = [
-  { init: 'S', name: 'Sarah M.', svc: 'Haircut + Color', time: 'Today 2:00 pm', amt: '+$165' },
-  { init: 'J', name: 'James T.', svc: 'Deep Tissue · 1h', time: 'Today 4:30 pm', amt: '+$90' },
-  { init: 'M', name: 'Maya K.', svc: 'Brow Shaping', time: 'Tomorrow 10 am', amt: '+$75' },
+/* ─── Live demo conversation ────────────────────────────── */
+const DEMO_STEPS = [
+  { type: 'client',  text: 'Hey, can I get a full set Saturday at 2pm? 💅', delay: 0 },
+  { type: 'typing',  text: '',                                               delay: 1400 },
+  { type: 'ai',      text: 'Hi Sofia! I have Saturday 2pm open for you — full set with gel top coat is $85, takes about 75 min. Want me to lock it in? 🎀', delay: 2600 },
+  { type: 'client',  text: 'Yes!! Book it please 🙌',                        delay: 4200 },
+  { type: 'confirm', text: '✓ Booking confirmed for Saturday 2:00 PM · Full Set · $85',  delay: 5400 },
+  { type: 'upsell',  text: '💡 AI suggested gel removal add-on (+$20) — Sofia said yes!', delay: 6800 },
 ];
-function DashPanel() {
+
+function DemoConversation() {
+  const [step, setStep] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    DEMO_STEPS.forEach((s, i) => {
+      timers.push(setTimeout(() => setStep(i + 1), s.delay));
+    });
+    // Loop
+    const loopTimer = setTimeout(() => setStep(0), 9000);
+    timers.push(loopTimer);
+    return () => timers.forEach(clearTimeout);
+  }, [step === 0 ? step : undefined]); // eslint-disable-line
+
+  const visible = DEMO_STEPS.slice(0, step);
+
   return (
     <div
-      className="rounded-2xl overflow-hidden w-full"
+      ref={ref}
+      className="rounded-2xl overflow-hidden"
       style={{
-        background: '#13121e',
-        border: '1px solid rgba(255,255,255,0.07)',
-        boxShadow: '0 32px 72px rgba(15,10,30,0.14), 0 8px 24px rgba(249,115,22,0.07)',
+        background: C.card,
+        border: `1px solid ${C.border}`,
+        boxShadow: '0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,158,11,0.08)',
       }}
     >
-      {/* Browser chrome */}
-      <div className="flex items-center gap-2 px-4 h-9" style={{ background: '#0d0c18', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="flex gap-1.5">
-          {['#ef4444','#eab308','#22c55e'].map(c => (
-            <div key={c} className="w-2.5 h-2.5 rounded-full" style={{ background: c, opacity: 0.5 }} />
-          ))}
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3" style={{ background: C.surf, borderBottom: `1px solid ${C.border}` }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-400 to-violet-400 flex items-center justify-center">
+            <span className="text-[11px] font-bold text-white">S</span>
+          </div>
+          <div>
+            <p className="text-[13px] font-semibold" style={{ color: C.text }}>Sofia M.</p>
+            <div className="flex items-center gap-1.5">
+              <Instagram className="w-3 h-3" style={{ color: C.dim }} />
+              <span className="text-[10px]" style={{ color: C.dim }}>via Instagram DM</span>
+            </div>
+          </div>
         </div>
-        <div className="flex-1 mx-3 px-3 h-5 rounded flex items-center text-[10px]" style={{ background: 'rgba(255,255,255,0.04)', color: '#9a95ae' }}>
-          bookedup.app/dashboard
-        </div>
-        <div className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#fb923c' }}>
-          <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-          Live
-        </div>
-      </div>
-
-      {/* Revenue metric */}
-      <div className="px-5 pt-4 pb-3.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: '#9a95ae' }}>This week</p>
-        <div className="flex items-end justify-between mb-2">
-          <motion.p
-            className="text-[2rem] font-bold leading-none"
-            style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', color: '#f0ece2' }}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.5 }}
-          >
-            $4,280
-          </motion.p>
-          <motion.div
-            className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold"
-            style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399' }}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}
-          >
-            <TrendingUp className="w-3 h-3" />
-            +43%
-          </motion.div>
-        </div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.0 }}>
-          <Sparkline />
-        </motion.div>
-      </div>
-
-      {/* Booking feed */}
-      <div className="px-5 py-3.5">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#9a95ae' }}>Upcoming</p>
-          <Activity className="w-3 h-3" style={{ color: '#9a95ae' }} />
-        </div>
-        <div className="space-y-3">
-          {FEED.map((b, i) => (
-            <motion.div
-              key={b.name}
-              className="flex items-center gap-2.5"
-              initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1.15 + i * 0.18, duration: 0.35, ease: 'easeOut' }}
-            >
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: 'rgba(249,115,22,0.18)', color: '#fb923c' }}>
-                {b.init}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold leading-none" style={{ color: '#f0ece2' }}>{b.name}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: '#9a95ae' }}>{b.svc}</p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-xs font-bold" style={{ color: '#fb923c' }}>{b.amt}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: '#9a95ae' }}>{b.time}</p>
-              </div>
-            </motion.div>
-          ))}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
+          <div className="live-dot" style={{ width: 6, height: 6 }} />
+          <span className="text-[11px] font-medium" style={{ color: C.amber }}>AI Active</span>
         </div>
       </div>
 
-      {/* Status bar */}
-      <div className="px-5 py-2.5 flex items-center justify-between" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#0d0c18' }}>
-        <span className="text-[10px]" style={{ color: '#9a95ae' }}>3 slots auto-filled today</span>
-        <div className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#fb923c' }}>
-          <Zap className="w-2.5 h-2.5" />Autopilot on
+      {/* Messages */}
+      <div className="p-4 space-y-3 min-h-[260px]">
+        <AnimatePresence>
+          {visible.map((s, i) => {
+            if (s.type === 'typing') {
+              return (
+                <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex items-end gap-2">
+                  <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.15)' }}>
+                    <Sparkles className="w-3 h-3" style={{ color: C.amber }} />
+                  </div>
+                  <div className="px-3 py-2 rounded-2xl rounded-bl-sm" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.12)' }}>
+                    <div className="flex gap-1 items-center h-4">
+                      {[0,1,2].map(j => (
+                        <motion.div key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: C.amber }}
+                          animate={{ y: [0,-4,0] }} transition={{ duration: 0.6, repeat: Infinity, delay: j * 0.15 }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <span className="text-[10px]" style={{ color: C.dim }}>BookedUp AI is replying…</span>
+                </motion.div>
+              );
+            }
+            if (s.type === 'confirm') {
+              return (
+                <motion.div key={i} initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
+                  <div className="px-4 py-3 rounded-xl flex items-center gap-3" style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: C.em }} />
+                    <span className="text-[13px] font-medium" style={{ color: C.em }}>{s.text}</span>
+                  </div>
+                </motion.div>
+              );
+            }
+            if (s.type === 'upsell') {
+              return (
+                <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+                  <div className="px-4 py-3 rounded-xl flex items-center gap-3" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}>
+                    <TrendingUp className="w-4 h-4 flex-shrink-0" style={{ color: C.violet }} />
+                    <span className="text-[12px]" style={{ color: C.violet }}>{s.text}</span>
+                  </div>
+                </motion.div>
+              );
+            }
+            if (s.type === 'client') {
+              return (
+                <motion.div key={i} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} className="flex justify-end">
+                  <div className="max-w-[75%] px-3.5 py-2.5 rounded-2xl rounded-br-sm text-[13px] leading-relaxed" style={{ background: 'rgba(255,255,255,0.07)', color: C.text }}>
+                    {s.text}
+                  </div>
+                </motion.div>
+              );
+            }
+            if (s.type === 'ai') {
+              return (
+                <motion.div key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="flex items-end gap-2">
+                  <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.15)' }}>
+                    <Sparkles className="w-3 h-3" style={{ color: C.amber }} />
+                  </div>
+                  <div className="max-w-[75%] px-3.5 py-2.5 rounded-2xl rounded-bl-sm text-[13px] leading-relaxed" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.14)', color: C.text }}>
+                    {s.text}
+                  </div>
+                </motion.div>
+              );
+            }
+            return null;
+          })}
+        </AnimatePresence>
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 pb-4">
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}` }}>
+          <span className="text-[12px] flex-1" style={{ color: C.dim }}>Reply as @yourbusiness · Handled automatically ✓</span>
+          <div className="px-2.5 py-1 rounded-lg text-[11px] font-medium" style={{ background: 'rgba(245,158,11,0.12)', color: C.amber }}>Auto</div>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── FadeUp wrapper ───────────────────────────────────────────
-function FadeUp({ children, delay = 0, className = '' }: {
-  children: React.ReactNode; delay?: number; className?: string;
+/* ─── Feature card ──────────────────────────────────────── */
+function FeatureCard({ icon: Icon, title, desc, color, delay = 0 }: {
+  icon: React.ElementType; title: string; desc: string; color: string; delay?: number;
 }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
   return (
     <motion.div
-      ref={ref} className={className}
-      initial={{ opacity: 0, y: 28 }}
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+      className="group relative rounded-2xl p-6 premium-card-hover cursor-default"
+      style={{ background: C.card, border: `1px solid ${C.border}` }}
     >
-      {children}
+      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ background: `radial-gradient(circle at 30% 30%, ${color}08 0%, transparent 70%)` }}
+      />
+      <div className="relative">
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{ background: `${color}15`, border: `1px solid ${color}25` }}>
+          <Icon className="w-5 h-5" style={{ color }} strokeWidth={1.8} />
+        </div>
+        <h3 className="text-[15px] font-semibold mb-2" style={{ color: C.text }}>{title}</h3>
+        <p className="text-[13px] leading-relaxed" style={{ color: C.dim }}>{desc}</p>
+      </div>
     </motion.div>
   );
 }
 
-// ─── Bento feature card ───────────────────────────────────────
-function BentoCard({
-  icon: Icon, title, desc, color1, color2, delay, className = '',
-}: {
-  icon: React.ElementType; title: string; desc: string;
-  color1: string; color2: string; delay: number; className?: string;
+/* ─── Stat block ────────────────────────────────────────── */
+function StatBlock({ label, to, prefix = '', suffix = '' }: {
+  label: string; to: number; prefix?: string; suffix?: string;
 }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
   return (
-    <FadeUp delay={delay} className={className}>
-      <motion.div
-        className="group relative min-h-[200px] rounded-2xl p-6 overflow-hidden cursor-default h-full"
-        style={{ background: CARD, border: `1px solid ${BORDER}`, boxShadow: '0 1px 4px rgba(15,10,30,0.04)' }}
-        whileHover={{ scale: 0.98, rotate: '-0.4deg' }}
-        transition={{ type: 'spring', stiffness: 320, damping: 22 }}
-      >
-        {/* Sliding color swatch on hover */}
-        <div
-          className="absolute bottom-0 left-3 right-3 top-28 translate-y-10 rounded-xl transition-transform duration-300 ease-out group-hover:translate-y-2"
-          style={{ background: `linear-gradient(135deg, ${color1}, ${color2})`, opacity: 0.1 }}
-        />
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 relative z-10"
-          style={{ background: `linear-gradient(135deg, ${color1}20, ${color2}20)`, border: `1px solid ${color1}30` }}
-        >
-          <Icon className="w-5 h-5" style={{ color: color1 }} strokeWidth={1.8} />
-        </div>
-        <h3 className="text-sm font-semibold mb-2 relative z-10" style={{ color: TEXT }}>{title}</h3>
-        <p className="text-[13px] relative z-10 leading-relaxed" style={{ color: MID }}>{desc}</p>
-      </motion.div>
-    </FadeUp>
+    <div ref={ref} className="text-center">
+      <div className="text-4xl md:text-5xl font-bold mb-2 text-gradient-gold">
+        <Counter to={to} prefix={prefix} suffix={suffix} duration={2.5} />
+      </div>
+      <p className="text-sm" style={{ color: C.dim }}>{label}</p>
+    </div>
   );
 }
 
-// ─── Landing page ─────────────────────────────────────────────
-export default function LandingPage() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+/* ─── Nav ───────────────────────────────────────────────── */
+function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
 
   return (
-    <div className="min-h-screen" style={{ background: BG }}>
+    <motion.nav
+      initial={{ y: -16, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+      style={{
+        background: scrolled ? 'rgba(9,9,11,0.85)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? `1px solid ${C.border}` : '1px solid transparent',
+      }}
+    >
+      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <Logo size={30} />
+          <span className="text-[15px] font-bold tracking-tight" style={{ color: C.text }}>
+            BookedUp
+          </span>
+        </Link>
 
-      {/* ── Floating navbar ── */}
-      <div className="fixed top-0 inset-x-0 z-50 flex justify-center px-4 pt-4">
-        <motion.nav
-          className="w-full max-w-4xl flex items-center justify-between px-5 h-14 rounded-2xl"
-          style={{
-            background: 'rgba(255,255,255,0.88)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            border: `1px solid ${BORDER}`,
-            boxShadow: '0 4px 24px rgba(15,10,30,0.07), 0 1px 0 rgba(255,255,255,0.6) inset',
-          }}
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <motion.div whileHover={{ rotate: 8, scale: 1.05 }} transition={{ type: 'spring', stiffness: 400 }}>
-              <LogoMark size={30} />
-            </motion.div>
-            <span className="font-bold text-sm tracking-tight" style={{ color: TEXT }}>
-              Booked
-              <span style={{
-                background: GRAD,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>Up</span>
-            </span>
-          </Link>
-
-          {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-7">
-            {['Features', 'How it works', 'Pricing'].map(item => (
-              <a
-                key={item}
-                href="#"
-                className="text-[13px] font-medium transition-colors duration-150"
-                style={{ color: MID }}
-                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = TEXT)}
-                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = MID)}
-              >
-                {item}
-              </a>
-            ))}
-          </div>
-
-          {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-2 shrink-0">
-            <Link href="/login">
-              <button
-                className="text-[13px] font-medium px-4 py-1.5 rounded-xl transition-colors"
-                style={{ color: MID }}
-                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = TEXT)}
-                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = MID)}
-              >
-                Sign in
-              </button>
+        {/* Desktop links */}
+        <div className="hidden md:flex items-center gap-6">
+          {['Features', 'Pricing', 'About'].map(item => (
+            <Link key={item} href="#" className="text-[14px] transition-colors duration-200 hover:text-white" style={{ color: C.dim }}>
+              {item}
             </Link>
-            <Link href="/signup">
-              <motion.button
-                className="text-[13px] font-semibold px-4 py-2 rounded-xl text-white flex items-center gap-1.5"
-                style={{ background: GRAD, boxShadow: '0 2px 12px rgba(249,115,22,0.28)' }}
-                whileHover={{ scale: 1.04, boxShadow: '0 4px 20px rgba(249,115,22,0.4)' }}
-                whileTap={{ scale: 0.97 }}
-              >
-                Join beta
-              </motion.button>
-            </Link>
-          </div>
+          ))}
+        </div>
 
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden p-1.5 rounded-xl transition-colors"
-            style={{ color: MID }}
-            onClick={() => setMobileOpen(v => !v)}
+        <div className="hidden md:flex items-center gap-3">
+          <Link
+            href="/login"
+            className="px-4 py-2 rounded-lg text-[14px] font-medium transition-all duration-200 hover:text-white"
+            style={{ color: C.dim }}
           >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </motion.nav>
+            Sign in
+          </Link>
+          <Link
+            href="/signup"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[14px] font-semibold transition-all duration-200"
+            style={{
+              background: 'linear-gradient(135deg, #f59e0b, #fb7185)',
+              color: '#09090b',
+            }}
+          >
+            Get started
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {/* Mobile menu toggle */}
+        <button className="md:hidden p-2" style={{ color: C.dim }} onClick={() => setOpen(!open)}>
+          <div className="space-y-1.5">
+            <span className="block w-5 h-0.5 bg-current" />
+            <span className="block w-5 h-0.5 bg-current" />
+          </div>
+        </button>
       </div>
 
-      {/* Mobile menu overlay */}
+      {/* Mobile menu */}
       <AnimatePresence>
-        {mobileOpen && (
+        {open && (
           <motion.div
-            className="fixed inset-0 z-40 flex flex-col pt-24 px-6 pb-8"
-            style={{ background: 'rgba(250,250,248,0.97)', backdropFilter: 'blur(20px)' }}
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22 }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden overflow-hidden"
+            style={{ background: C.surf, borderTop: `1px solid ${C.border}` }}
           >
-            <nav className="flex flex-col gap-1">
-              {['Features', 'How it works', 'Pricing'].map((item, i) => (
-                <motion.a
-                  key={item}
-                  href="#"
-                  className="text-xl font-semibold py-4 border-b"
-                  style={{ color: TEXT, borderColor: BORDER }}
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.06 }}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item}
-                </motion.a>
+            <div className="px-6 py-4 flex flex-col gap-4">
+              {['Features', 'Pricing', 'About'].map(item => (
+                <Link key={item} href="#" className="text-[15px]" style={{ color: C.dim }}>{item}</Link>
               ))}
-            </nav>
-            <div className="mt-8 flex flex-col gap-3">
-              <Link href="/login" onClick={() => setMobileOpen(false)}>
-                <button className="w-full py-3.5 rounded-xl text-sm font-semibold border" style={{ color: TEXT, borderColor: BORDER, background: CARD }}>
-                  Sign in
-                </button>
-              </Link>
-              <Link href="/signup" onClick={() => setMobileOpen(false)}>
-                <button className="w-full py-3.5 rounded-xl text-sm font-semibold text-white" style={{ background: GRAD }}>
-                  Join the open beta — it&apos;s free
-                </button>
-              </Link>
+              <div className="flex gap-3 pt-2">
+                <Link href="/login" className="flex-1 text-center py-2.5 rounded-lg text-[14px] font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: C.text }}>Sign in</Link>
+                <Link href="/signup" className="flex-1 text-center py-2.5 rounded-lg text-[14px] font-semibold" style={{ background: 'linear-gradient(135deg,#f59e0b,#fb7185)', color: '#09090b' }}>Get started</Link>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+    </motion.nav>
+  );
+}
 
-      {/* ── Hero ── */}
-      <section className="relative z-10 pt-32 pb-16 px-6 md:px-10 overflow-hidden">
-        {/* Ambient gradient blobs */}
-        <div className="pointer-events-none absolute -top-12 right-[3%] w-[700px] h-[700px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(249,115,22,0.09) 0%, transparent 62%)', filter: 'blur(80px)' }} />
-        <div className="pointer-events-none absolute top-[35%] -left-[8%] w-[500px] h-[500px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.07) 0%, transparent 68%)', filter: 'blur(80px)' }} />
-        <div className="pointer-events-none absolute top-[15%] left-[38%] w-[400px] h-[400px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.05) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+/* ─── Testimonial ───────────────────────────────────────── */
+function Testimonial({ text, name, title, avatar, delay }: {
+  text: string; name: string; title: string; avatar: string; delay: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-40px' });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+      className="rounded-2xl p-6"
+      style={{ background: C.card, border: `1px solid ${C.border}` }}
+    >
+      <div className="flex gap-1 mb-4">
+        {[...Array(5)].map((_, i) => (
+          <Star key={i} className="w-3.5 h-3.5 fill-current" style={{ color: C.amber }} />
+        ))}
+      </div>
+      <p className="text-[14px] leading-relaxed mb-5" style={{ color: 'rgba(244,244,245,0.75)' }}>"{text}"</p>
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,113,133,0.2))', color: C.amber }}>
+          {avatar}
+        </div>
+        <div>
+          <p className="text-[13px] font-semibold" style={{ color: C.text }}>{name}</p>
+          <p className="text-[11px]" style={{ color: C.dim }}>{title}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
-        <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
+/* ─── Page ───────────────────────────────────────────────── */
+export default function LandingPage() {
+  return (
+    <div style={{ background: C.bg, color: C.text, minHeight: '100vh' }}>
+      <Nav />
 
-          {/* Open beta badge */}
+      {/* ── HERO ──────────────────────────────────────────── */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-6 pt-20">
+        {/* Mesh background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px]" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%)' }} />
+          <div className="absolute bottom-1/3 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(251,113,133,0.05) 0%, transparent 70%)' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-[800px] h-[2px] blur-sm" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.15), rgba(251,113,133,0.1), transparent)' }} />
+        </div>
+
+        {/* Grid lines */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.025]"
+          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '80px 80px' }}
+        />
+
+        <div className="relative max-w-5xl w-full mx-auto text-center">
+          {/* Label */}
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-semibold mb-8"
-            style={{
-              background: 'linear-gradient(135deg, rgba(249,115,22,0.1), rgba(236,72,153,0.1))',
-              border: '1px solid rgba(249,115,22,0.25)',
-              color: ORANGE,
-            }}
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 text-[13px] font-medium"
+            style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', color: C.amber }}
           >
-            <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-            Open Beta · Free to join — no credit card needed
+            <Sparkles className="w-3.5 h-3.5" />
+            Now available for nail & lash studios
+            <ChevronRight className="w-3.5 h-3.5 opacity-60" />
           </motion.div>
 
           {/* Headline */}
           <motion.h1
-            className="mb-6 max-w-4xl"
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(3.2rem, 7vw, 5.8rem)',
-              fontWeight: 700,
-              fontStyle: 'italic',
-              color: TEXT,
-              lineHeight: 1.03,
-              letterSpacing: '-0.025em',
-            }}
-            initial={{ opacity: 0, y: 22 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.08] mb-6"
+            style={{ fontFamily: 'var(--font-display)', color: C.text }}
           >
-            Your calendar
+            Your AI books clients
             <br />
-            is{' '}
-            <span style={{
-              background: GRAD_FULL,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>
-              leaking money.
-            </span>
+            <span className="text-gradient">while you work.</span>
           </motion.h1>
 
           <motion.p
-            className="text-base md:text-[1.1rem] mb-8 max-w-[500px]"
-            style={{ color: MID, lineHeight: 1.72 }}
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="text-lg md:text-xl leading-relaxed max-w-2xl mx-auto mb-10"
+            style={{ color: 'rgba(244,244,245,0.55)' }}
           >
-            We&apos;re building an AI tool that detects gaps, recovers no-shows, and fills
-            your schedule automatically — so you earn more without working more.{' '}
-            <strong style={{ color: TEXT }}>We&apos;re doing an open beta test. Feel free to sign up and try it free.</strong>
+            BookedUp turns every Instagram DM and SMS into a confirmed booking — automatically.
+            Fill empty slots, send upsells, and grow revenue without lifting a finger.
           </motion.p>
 
           {/* CTAs */}
           <motion.div
-            className="flex flex-wrap justify-center gap-3 mb-8"
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link href="/signup">
-              <motion.button
-                className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold text-white"
-                style={{ background: GRAD, boxShadow: '0 4px 24px rgba(249,115,22,0.32)' }}
-                whileHover={{ scale: 1.04, boxShadow: '0 6px 32px rgba(249,115,22,0.44)' }}
-                whileTap={{ scale: 0.97 }}
-              >
-                Join the open beta
-                <ArrowRight className="w-4 h-4" />
-              </motion.button>
-            </Link>
-            <motion.button
-              className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium"
-              style={{ background: CARD, border: `1px solid ${BORDER}`, color: TEXT, boxShadow: '0 1px 4px rgba(15,10,30,0.05)' }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <Link
+              href="/signup"
+              className="group flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-semibold transition-all duration-300"
+              style={{
+                background: 'linear-gradient(135deg, #f59e0b 0%, #fb7185 100%)',
+                color: '#09090b',
+                boxShadow: '0 8px 32px rgba(245,158,11,0.3)',
+              }}
             >
-              See how it works
-            </motion.button>
+              Start for free
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="#demo"
+              className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-medium transition-all duration-200"
+              style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, color: C.text }}
+            >
+              Watch demo
+            </Link>
           </motion.div>
 
-          {/* Trust strip */}
-          <motion.div
-            className="flex flex-wrap justify-center gap-5 mb-16"
+          {/* Trust line */}
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.44 }}
+            transition={{ duration: 0.6, delay: 0.65 }}
+            className="mt-6 text-[13px]"
+            style={{ color: 'rgba(244,244,245,0.3)' }}
           >
-            {[
-              { icon: CheckCircle2, text: 'Free during beta' },
-              { icon: CheckCircle2, text: 'No credit card required' },
-              { icon: Shield, text: 'Cancel anytime' },
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-1.5 text-xs" style={{ color: DIM }}>
-                <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: ORANGE }} />
-                {text}
-              </div>
-            ))}
-          </motion.div>
+            No credit card required · Setup in 5 minutes · Cancel anytime
+          </motion.p>
+        </div>
 
-          {/* Dashboard mockup + floating cards */}
+        {/* Demo panel */}
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="relative mt-16 w-full max-w-2xl mx-auto"
+          id="demo"
+        >
+          {/* Glow behind panel */}
+          <div className="absolute -inset-8 blur-3xl rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(245,158,11,0.08) 0%, rgba(251,113,133,0.05) 50%, transparent 80%)' }} />
+          <DemoConversation />
+        </motion.div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+          style={{ color: C.dim }}
+        >
           <motion.div
-            className="w-full max-w-xl relative"
-            initial={{ opacity: 0, y: 48, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.52, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            animate={{ y: [0, 5, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           >
-            {/* Floating notification — top left */}
-            <motion.div
-              className="absolute -left-4 md:-left-10 top-8 z-20 rounded-2xl px-4 py-3 text-left"
-              style={{
-                background: 'rgba(255,255,255,0.96)',
-                border: `1px solid ${BORDER}`,
-                boxShadow: '0 8px 32px rgba(15,10,30,0.09)',
-                backdropFilter: 'blur(12px)',
-                minWidth: 158,
-              }}
-              animate={{ y: [0, -7, 0] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <div className="flex items-center gap-1.5 mb-1">
-                <Bell className="w-3.5 h-3.5" style={{ color: ORANGE }} />
-                <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: ORANGE }}>New booking</span>
-              </div>
-              <p className="text-xs font-semibold" style={{ color: TEXT }}>Alex B. just booked</p>
-              <p className="text-[10px]" style={{ color: DIM }}>Cut + Beard · $85</p>
-            </motion.div>
+            <ChevronRight className="w-5 h-5 rotate-90" />
+          </motion.div>
+        </motion.div>
+      </section>
 
-            {/* Floating revenue pill — bottom right */}
-            <motion.div
-              className="absolute -right-2 md:-right-8 bottom-14 z-20 rounded-2xl px-4 py-3"
-              style={{
-                background: GRAD,
-                boxShadow: '0 8px 32px rgba(249,115,22,0.28)',
-                minWidth: 128,
-              }}
-              animate={{ y: [0, 7, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
-            >
-              <p className="text-[10px] font-semibold text-white/75 uppercase tracking-wide mb-0.5">Recovered</p>
-              <p className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic' }}>+$340</p>
-              <p className="text-[10px] text-white/75">this week</p>
-            </motion.div>
+      {/* ── STATS ─────────────────────────────────────────── */}
+      <section className="py-20 px-6" style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
+          <StatBlock to={94} suffix="%" label="Booking conversion rate" />
+          <StatBlock to={340} prefix="$" label="Avg. revenue lift / month" />
+          <StatBlock to={2800} suffix="+" label="Service pros on platform" />
+          <StatBlock to={98} suffix="%" label="No-show reduction" />
+        </div>
+      </section>
 
-            <DashPanel />
+      {/* ── FEATURES ──────────────────────────────────────── */}
+      <section className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <p className="text-[13px] uppercase tracking-widest mb-4 font-semibold" style={{ color: C.amber }}>Platform</p>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-5" style={{ fontFamily: 'var(--font-display)' }}>
+              Every tool you need,<br />
+              <span className="text-gradient">nothing you don't.</span>
+            </h2>
+            <p className="text-[16px] max-w-xl mx-auto" style={{ color: C.dim }}>
+              BookedUp is more than a booking tool — it's a complete revenue engine that works 24/7 in the background.
+            </p>
+          </motion.div>
 
-            {/* Glow beneath */}
-            <div
-              className="absolute -inset-x-8 -bottom-10 -z-10 h-28 pointer-events-none"
-              style={{
-                background: 'radial-gradient(ellipse at 50% 100%, rgba(249,115,22,0.18) 0%, transparent 70%)',
-                filter: 'blur(24px)',
-              }}
-            />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <FeatureCard delay={0} color={C.amber} icon={MessageSquare} title="AI Booking Conversion"
+              desc="Your AI replies to DMs and texts instantly, extracts intent, and converts inquiries into confirmed appointments — without you touching your phone." />
+            <FeatureCard delay={0.06} color={C.em} icon={CheckCircle2} title="Verified Confirmations"
+              desc="Every booking is confirmed with a two-tap flow. No more ghost clients, last-minute cancellations, or empty chairs." />
+            <FeatureCard delay={0.12} color={C.rose} icon={CalendarDays} title="Empty Slot Filler"
+              desc="When cancellations happen, BookedUp auto-reaches out to your waitlist and fills that slot — usually within minutes." />
+            <FeatureCard delay={0.18} color={C.violet} icon={TrendingUp} title="Smart Upsells"
+              desc="After a booking is confirmed, AI suggests relevant add-ons based on the client's history. Average ticket lift of 23%." />
+            <FeatureCard delay={0.24} color="#22d3ee" icon={RefreshCw} title="Retention Engine"
+              desc="Automatic follow-ups, rebooking reminders, and win-back campaigns keep your loyal clients coming back — on autopilot." />
+            <FeatureCard delay={0.3} color="#f472b6" icon={BarChart3} title="Revenue Intelligence"
+              desc="See which clients drive the most revenue, which days are slowest, and where money is being left on the table — in real time." />
+          </div>
+        </div>
+      </section>
+
+      {/* ── CHANNELS ──────────────────────────────────────── */}
+      <section className="py-20 px-6" style={{ background: C.surf, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <p className="text-[13px] uppercase tracking-widest mb-4 font-semibold" style={{ color: C.dim }}>Works everywhere your clients message you</p>
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
+              {[
+                { icon: Instagram, label: 'Instagram DMs', color: '#e1306c' },
+                { icon: Phone, label: 'SMS / Text', color: C.em },
+                { icon: MessageSquare, label: 'WhatsApp', color: '#25d366' },
+                { icon: Bell, label: 'Booking Link', color: C.amber },
+              ].map(({ icon: Icon, label, color }) => (
+                <div key={label} className="flex items-center gap-2.5 px-5 py-3 rounded-xl" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+                  <Icon className="w-4 h-4" style={{ color }} strokeWidth={1.8} />
+                  <span className="text-[14px] font-medium" style={{ color: C.text }}>{label}</span>
+                </div>
+              ))}
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ── Features bento grid ── */}
-      <section className="relative z-10 px-6 md:px-10 mb-24">
-        <div className="max-w-5xl mx-auto">
-          <FadeUp className="mb-12 text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: ORANGE }}>
-              Platform
-            </p>
-            <h2
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
-                fontStyle: 'italic',
-                fontWeight: 700,
-                color: TEXT,
-                lineHeight: 1.12,
-              }}
-            >
-              Every tool you need.{' '}
-              <span style={{ color: DIM, fontWeight: 400 }}>Nothing you don&apos;t.</span>
-            </h2>
-          </FadeUp>
-
-          <div className="grid grid-cols-12 gap-3.5">
-            <div className="col-span-12 md:col-span-8">
-              <BentoCard
-                icon={CalendarDays}
-                title="AI Schedule Filling"
-                desc="Detects gaps in real-time and messages clients to fill them before the slot goes cold. Your calendar stays full automatically."
-                color1="#f97316" color2="#ec4899" delay={0} className="h-full"
-              />
-            </div>
-            <div className="col-span-12 md:col-span-4">
-              <BentoCard
-                icon={TrendingUp}
-                title="No-Show Recovery"
-                desc="Automated re-booking sequences that turn missed appointments into rescheduled revenue."
-                color1="#ec4899" color2="#7c3aed" delay={0.07} className="h-full"
-              />
-            </div>
-            <div className="col-span-12 md:col-span-4">
-              <BentoCard
-                icon={Users}
-                title="Client Intelligence"
-                desc="Know your most valuable clients, predict churn, and know exactly when to reach out."
-                color1="#7c3aed" color2="#06b6d4" delay={0.14} className="h-full"
-              />
-            </div>
-            <div className="col-span-12 md:col-span-4">
-              <BentoCard
-                icon={BarChart3}
-                title="Revenue Analytics"
-                desc="Real-time income breakdowns by service, day, and channel. Know what&apos;s actually working."
-                color1="#10b981" color2="#06b6d4" delay={0.21} className="h-full"
-              />
-            </div>
-            <div className="col-span-12 md:col-span-4">
-              <BentoCard
-                icon={Zap}
-                title="Instant Booking Links"
-                desc="One link for Instagram, WhatsApp, anywhere. Clients book in seconds. You get paid faster."
-                color1="#f59e0b" color2="#f97316" delay={0.28} className="h-full"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── How it works ── */}
-      <section className="relative z-10 px-6 md:px-10 mb-24">
-        <div className="max-w-5xl mx-auto">
-          <FadeUp className="mb-12 text-center">
-            <h2
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
-                fontStyle: 'italic',
-                fontWeight: 700,
-                color: TEXT,
-              }}
-            >
-              Live in 5 minutes.
-            </h2>
-          </FadeUp>
-
-          <div className="grid md:grid-cols-3 gap-10 md:gap-8 relative">
-            <div
-              className="hidden md:block absolute top-[18px] left-[calc(16.7%+16px)] right-[calc(16.7%+16px)] h-px"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(249,115,22,0.3) 20%, rgba(249,115,22,0.3) 80%, transparent)' }}
-            />
-            {[
-              { n: '01', t: 'Connect', d: 'Sync your calendar, Instagram DMs, or WhatsApp business account in two clicks.' },
-              { n: '02', t: 'Analyze', d: 'AI maps your schedule, client history, and pricing gaps to build your revenue model.' },
-              { n: '03', t: 'Grow', d: 'Your calendar fills automatically. More clients, fewer gaps, zero extra effort.' },
-            ].map(({ n, t, d }, i) => (
-              <FadeUp key={n} delay={i * 0.1}>
-                <motion.div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold mb-4 relative z-10"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(249,115,22,0.1), rgba(236,72,153,0.1))',
-                    border: '1px solid rgba(249,115,22,0.22)',
-                    color: ORANGE,
-                  }}
-                  whileHover={{ scale: 1.1 }}
-                >
-                  {n}
-                </motion.div>
-                <h3 className="font-semibold text-sm mb-2" style={{ color: TEXT }}>{t}</h3>
-                <p className="text-[13px] leading-relaxed" style={{ color: MID }}>{d}</p>
-              </FadeUp>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Open Beta CTA ── */}
-      <FadeUp>
-        <section className="relative z-10 px-6 md:px-10 pb-24">
-          <div
-            className="max-w-5xl mx-auto rounded-3xl p-14 md:p-20 text-center relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #f97316 0%, #ec4899 55%, #7c3aed 100%)' }}
+      {/* ── TESTIMONIALS ──────────────────────────────────── */}
+      <section className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
           >
-            {/* Dot grid overlay */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.18) 1px, transparent 1px)',
-                backgroundSize: '22px 22px',
-              }}
-            />
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.22) 0%, transparent 55%)' }}
-            />
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-5" style={{ fontFamily: 'var(--font-display)' }}>
+              Real results from<br />
+              <span className="text-gradient">real businesses</span>
+            </h2>
+          </motion.div>
 
-            <div className="relative z-10">
-              <motion.div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-semibold mb-6"
-                style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.35)', color: 'white' }}
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                Now in open beta
-              </motion.div>
+          <div className="grid md:grid-cols-3 gap-4">
+            <Testimonial delay={0} avatar="M" name="Maya Rodriguez" title="Nail Tech · Miami, FL"
+              text="I was skeptical but BookedUp literally paid for itself in week one. I went from missing DMs to having a full calendar." />
+            <Testimonial delay={0.1} avatar="J" name="Jessica Kim" title="Lash Artist · LA"
+              text="My no-show rate dropped from 25% to under 3% after switching. The AI conversations feel so natural, clients don't even realize." />
+            <Testimonial delay={0.2} avatar="T" name="Tiana Davis" title="Nail Studio Owner · NYC"
+              text="The upsell feature alone adds $400-600 extra per month. It suggests gel removal or nail art and clients just say yes." />
+          </div>
+        </div>
+      </section>
 
-              <h2
-                className="mb-5 text-white"
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 'clamp(2.2rem, 5vw, 4rem)',
-                  fontStyle: 'italic',
-                  fontWeight: 700,
-                  lineHeight: 1.06,
-                }}
-              >
-                Be one of the first.
-                <br />
-                <span style={{ opacity: 0.82 }}>It&apos;s completely free.</span>
+      {/* ── FINAL CTA ─────────────────────────────────────── */}
+      <section className="py-24 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="rounded-3xl p-12 relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(251,113,133,0.06) 50%, rgba(167,139,250,0.06) 100%)', border: `1px solid rgba(245,158,11,0.15)` }}
+          >
+            <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(ellipse at center, rgba(245,158,11,0.1) 0%, transparent 70%)' }} />
+            <div className="relative">
+              <div className="flex justify-center mb-6">
+                <Logo size={48} />
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-5" style={{ fontFamily: 'var(--font-display)' }}>
+                Ready to fill your<br />
+                <span className="text-gradient-gold">calendar automatically?</span>
               </h2>
-
-              <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: 'rgba(255,255,255,0.82)', lineHeight: 1.72 }}>
-                We&apos;re doing an open beta test — feel free to sign up, explore every feature,
-                and help shape what BookedUp becomes. No risk, no credit card, just early access.
+              <p className="text-[16px] mb-8 max-w-lg mx-auto" style={{ color: C.dim }}>
+                Join thousands of service pros who let BookedUp handle their bookings while they focus on what they do best.
               </p>
-
-              <Link href="/signup">
-                <motion.button
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-sm font-bold"
-                  style={{ background: 'white', color: ORANGE, boxShadow: '0 4px 24px rgba(0,0,0,0.14)' }}
-                  whileHover={{ scale: 1.05, boxShadow: '0 8px 36px rgba(0,0,0,0.2)' }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  Sign up for free
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </Link>
-
-              <p className="mt-4 text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                Free during beta · No credit card · Cancel anytime
-              </p>
-            </div>
-          </div>
-        </section>
-      </FadeUp>
-
-      {/* ── Footer ── */}
-      <footer className="relative z-10 px-6 md:px-10 pb-8 pt-6" style={{ borderTop: `1px solid ${BORDER}` }}>
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <LogoMark size={22} />
-            <span className="text-sm font-bold" style={{ color: TEXT }}>
-              Booked
-              <span style={{ background: GRAD, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                Up
-              </span>
-            </span>
-          </div>
-          <p className="text-xs" style={{ color: DIM }}>© 2026 BookedUp. All rights reserved.</p>
-          <div className="flex gap-6">
-            {['Privacy', 'Terms', 'Contact'].map(item => (
-              <a
-                key={item}
-                href="#"
-                className="text-xs transition-colors"
-                style={{ color: DIM }}
-                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = TEXT)}
-                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = DIM)}
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-[16px] font-semibold transition-all duration-300"
+                style={{ background: 'linear-gradient(135deg, #f59e0b, #fb7185)', color: '#09090b', boxShadow: '0 12px 40px rgba(245,158,11,0.35)' }}
               >
-                {item}
-              </a>
+                Start free — no card needed
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ────────────────────────────────────────── */}
+      <footer className="py-12 px-6" style={{ borderTop: `1px solid ${C.border}` }}>
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2.5">
+            <Logo size={26} />
+            <span className="text-[14px] font-semibold" style={{ color: C.text }}>BookedUp</span>
+          </div>
+          <div className="flex gap-8">
+            {['Privacy', 'Terms', 'Support'].map(item => (
+              <Link key={item} href="#" className="text-[13px] transition-colors" style={{ color: C.dim }}>{item}</Link>
             ))}
           </div>
+          <p className="text-[12px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
+            © {new Date().getFullYear()} BookedUp · All rights reserved
+          </p>
         </div>
       </footer>
     </div>
