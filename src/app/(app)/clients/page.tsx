@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Search, TrendingUp, CalendarDays, Clock, Star,
   ChevronRight, DollarSign, AlertCircle, ArrowUpRight,
@@ -58,13 +57,9 @@ function ClientCard({ client, idx, onSelect }: {
     : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: idx * 0.04, ease: [0.22, 1, 0.36, 1] }}
+    <div
       className="group flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all"
       style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}
-      whileHover={{ borderColor: `${seg.color}20`, y: -1, background: 'rgba(255,255,255,0.035)', transition: { duration: 0.2 } }}
       onClick={() => onSelect(client)}
     >
       <Avatar name={client.name || 'U'} idx={idx} />
@@ -109,7 +104,7 @@ function ClientCard({ client, idx, onSelect }: {
       </div>
 
       <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: 'rgba(244,244,245,1)' }} />
-    </motion.div>
+    </div>
   );
 }
 
@@ -121,11 +116,7 @@ function ClientPanel({ client, onClose }: { client: Client; onClose: () => void 
     : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 24 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 24 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+    <div
       className="fixed right-0 top-0 h-full w-[320px] flex flex-col z-40 overflow-y-auto"
       style={{ background: '#0d0d12', borderLeft: '1px solid rgba(255,255,255,0.07)', boxShadow: '-16px 0 48px rgba(0,0,0,0.5)' }}
     >
@@ -193,7 +184,7 @@ function ClientPanel({ client, onClose }: { client: Client; onClose: () => void 
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(244,244,245,0.7)', caretColor: '#f59e0b' }}
         />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -246,12 +237,7 @@ export default function ClientsPage() {
   return (
     <div className="space-y-7 pb-12">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="flex items-center justify-between"
-      >
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[26px] font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
             Clients
@@ -260,15 +246,10 @@ export default function ClientsPage() {
             {clients.length} client{clients.length !== 1 ? 's' : ''} · manage relationships
           </p>
         </div>
-      </motion.div>
+      </div>
 
       {/* Segment + Search bar */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.08 }}
-        className="flex flex-wrap items-center gap-3"
-      >
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
           {[
             { val: 'all', label: 'All', count: segCounts.all },
@@ -301,7 +282,7 @@ export default function ClientsPage() {
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(244,244,245,0.8)', caretColor: '#f59e0b' }}
           />
         </div>
-      </motion.div>
+      </div>
 
       {/* Table header */}
       {!loading && filtered.length > 0 && (
@@ -319,11 +300,7 @@ export default function ClientsPage() {
         {loading ? (
           [...Array(6)].map((_, i) => <SkeletonRow key={i} />)
         ) : filtered.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-20 text-center"
-          >
+          <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <Users className="w-7 h-7" style={{ color: 'rgba(244,244,245,0.2)' }} strokeWidth={1.5} />
             </div>
@@ -333,24 +310,21 @@ export default function ClientsPage() {
             <p className="text-[13px]" style={{ color: 'rgba(244,244,245,0.25)' }}>
               {search ? 'Try a different search' : 'Clients will appear when they book'}
             </p>
-          </motion.div>
+          </div>
         ) : (
-          <AnimatePresence>
+          <>
             {filtered.map((client, i) => (
               <ClientCard key={client.id} client={client} idx={i} onSelect={setSelected} />
             ))}
-          </AnimatePresence>
+          </>
         )}
       </div>
 
       {/* Detail panel */}
-      <AnimatePresence>
+      <>
         {selected && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div
               className="fixed inset-0 z-30"
               style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
               onClick={() => setSelected(null)}
@@ -358,7 +332,7 @@ export default function ClientsPage() {
             <ClientPanel client={selected} onClose={() => setSelected(null)} />
           </>
         )}
-      </AnimatePresence>
+      </>
     </div>
   );
 }

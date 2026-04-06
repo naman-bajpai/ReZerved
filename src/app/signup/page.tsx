@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { ArrowRight, Eye, EyeOff, CheckCircle2, Loader2 } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
 
@@ -22,6 +21,17 @@ function Logo() {
       <rect x="12" y="8" width="3" height="5" rx="1.5" fill="white"/>
       <rect x="17" y="8" width="3" height="5" rx="1.5" fill="white"/>
       <path d="M12 18.5l2.5 2.5 5.5-6" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.0 24.0 0 0 0 0 21.56l7.98-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
     </svg>
   );
 }
@@ -62,6 +72,7 @@ export default function SignupPage() {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError]       = useState<string | null>(null);
 
   const valid = name.trim().length >= 2 && email.includes('@') && password.length >= 8;
@@ -82,18 +93,26 @@ export default function SignupPage() {
     }
   }
 
+  async function handleGoogle() {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      await authClient.signIn.social({
+        provider: 'google',
+        callbackURL: '/onboarding',
+      });
+    } catch {
+      setError('Google sign-in failed. Please try again.');
+      setGoogleLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-12" style={{ background: '#09090b' }}>
       <div className="fixed top-1/3 right-1/3 w-96 h-96 rounded-full blur-[120px] pointer-events-none" style={{ background: 'rgba(245,158,11,0.04)' }} />
       <div className="fixed bottom-1/3 left-1/3 w-96 h-96 rounded-full blur-[120px] pointer-events-none" style={{ background: 'rgba(251,113,133,0.03)' }} />
 
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-sm"
-      >
-        {/* Brand */}
+      <div className="relative w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <Logo />
           <h1 className="text-[22px] font-bold mt-4 tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
@@ -102,8 +121,24 @@ export default function SignupPage() {
           <p className="text-[14px] mt-1" style={{ color: 'rgba(244,244,245,0.4)' }}>No credit card required</p>
         </div>
 
-        {/* Card */}
         <div className="rounded-2xl p-7" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}>
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={googleLoading || loading}
+            className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[14px] font-medium transition-all hover:brightness-110 disabled:opacity-50"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#f4f4f5' }}
+          >
+            {googleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleIcon />}
+            Continue with Google
+          </button>
+
+          <div className="flex items-center gap-3 my-5">
+            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+            <span className="text-[12px]" style={{ color: 'rgba(244,244,245,0.25)' }}>or</span>
+            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <Field label="Full name" type="text" value={name} onChange={setName} placeholder="Maya Rodriguez" />
             <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" />
@@ -116,7 +151,7 @@ export default function SignupPage() {
             )}
 
             <button type="submit" disabled={!valid || loading}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-semibold transition-all mt-2"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-semibold transition-all"
               style={{
                 background: valid && !loading ? 'linear-gradient(135deg, #f59e0b, #fb7185)' : 'rgba(255,255,255,0.06)',
                 color: valid && !loading ? '#09090b' : 'rgba(244,244,245,0.3)',
@@ -127,7 +162,6 @@ export default function SignupPage() {
             </button>
           </form>
 
-          {/* Benefits */}
           <div className="mt-5 space-y-2">
             {['No credit card required', 'Free during beta', 'Setup in under 5 minutes'].map(b => (
               <div key={b} className="flex items-center gap-2">
@@ -137,20 +171,14 @@ export default function SignupPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-            <span className="text-[12px]" style={{ color: 'rgba(244,244,245,0.25)' }}>or</span>
-            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-          </div>
-
-          <p className="text-center text-[13px]" style={{ color: 'rgba(244,244,245,0.35)' }}>
+          <p className="text-center text-[13px] mt-5" style={{ color: 'rgba(244,244,245,0.35)' }}>
             Already have an account?{' '}
             <Link href="/login" className="font-semibold hover:text-amber-400 transition-colors" style={{ color: '#f59e0b' }}>
               Sign in
             </Link>
           </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

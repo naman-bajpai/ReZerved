@@ -7,7 +7,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen" style={{ background: '#09090b' }}>
         <SidebarNav />
         <main
-          className="flex-1 min-h-screen"
+          className="dark flex-1 min-h-screen text-foreground"
           style={{
             marginLeft: '256px',
             background: 'linear-gradient(180deg, #0d0d12 0%, #0a0a0f 100%)',

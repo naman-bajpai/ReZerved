@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarDays, Clock, Filter, ChevronDown, X, CheckCircle2,
   AlertCircle, Ban, UserX, ArrowUpRight, Sparkles, DollarSign,
@@ -41,8 +40,8 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 /* ─── Booking card ─────────────────────────────────────────── */
-function BookingCard({ booking, idx, onStatusChange }: {
-  booking: Booking; idx: number; onStatusChange: (id: string, status: 'confirmed' | 'cancelled' | 'no_show') => void;
+function BookingCard({ booking, onStatusChange }: {
+  booking: Booking; onStatusChange: (id: string, status: 'confirmed' | 'cancelled' | 'no_show') => void;
 }) {
   const [open, setOpen] = useState(false);
   const [acting, setActing] = useState(false);
@@ -60,14 +59,9 @@ function BookingCard({ booking, idx, onStatusChange }: {
   const cfg = STATUS_CFG[booking.status] || STATUS_CFG.pending;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8, scale: 0.98 }}
-      transition={{ duration: 0.4, delay: idx * 0.04, ease: [0.22, 1, 0.36, 1] }}
+    <div
       className="group rounded-2xl overflow-hidden"
       style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}
-      whileHover={{ borderColor: `${cfg.color}18`, transition: { duration: 0.2 } }}
     >
       <div
         className="flex items-center gap-4 px-5 py-4 cursor-pointer"
@@ -106,21 +100,18 @@ function BookingCard({ booking, idx, onStatusChange }: {
         )}
 
         {/* Expand */}
-        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex-shrink-0">
+        <div
+          className="flex-shrink-0"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}
+        >
           <ChevronDown className="w-4 h-4" style={{ color: 'rgba(244,244,245,0.3)' }} />
-        </motion.div>
+        </div>
       </div>
 
       {/* Expanded actions */}
-      <AnimatePresence>
+      <>
         {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
-          >
+          <div className="overflow-hidden">
             <div className="px-5 pb-4 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               <div className="flex items-center gap-3 mb-4 pl-[calc(4px+40px+16px)]">
                 <div className="text-[12px] rounded-xl px-3 py-1.5 sm:hidden" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(244,244,245,0.6)' }}>
@@ -170,10 +161,10 @@ function BookingCard({ booking, idx, onStatusChange }: {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
-    </motion.div>
+      </>
+    </div>
   );
 }
 
@@ -242,12 +233,7 @@ export default function BookingsPage() {
   return (
     <div className="space-y-7 pb-12">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="flex items-center justify-between"
-      >
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[26px] font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
             Bookings
@@ -262,15 +248,10 @@ export default function BookingsPage() {
             <span className="text-[13px] font-semibold" style={{ color: '#fbbf24' }}>{counts.pending} pending</span>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.08 }}
-        className="flex flex-wrap items-center gap-3"
-      >
+      <div className="flex flex-wrap items-center gap-3">
         {/* Status tabs */}
         <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
           {STATUS_FILTERS.map(({ val, label }) => (
@@ -310,49 +291,42 @@ export default function BookingsPage() {
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(244,244,245,0.8)', caretColor: '#f59e0b' }}
           />
         </div>
-      </motion.div>
+      </div>
 
       {/* List */}
       <div className="space-y-2">
         {loading ? (
           [...Array(5)].map((_, i) => <SkeletonCard key={i} />)
         ) : filtered.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-20 text-center"
-          >
+          <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <CalendarDays className="w-7 h-7" style={{ color: 'rgba(244,244,245,0.2)' }} strokeWidth={1.5} />
             </div>
             <p className="text-[15px] font-semibold mb-1" style={{ color: 'rgba(244,244,245,0.5)' }}>No bookings found</p>
             <p className="text-[13px]" style={{ color: 'rgba(244,244,245,0.25)' }}>Try adjusting your filters</p>
-          </motion.div>
+          </div>
         ) : (
-          <AnimatePresence>
-            {filtered.map((booking, i) => (
+          <>
+            {filtered.map(booking => (
               <BookingCard
                 key={booking.id}
                 booking={booking}
-                idx={i}
                 onStatusChange={handleStatusChange}
               />
             ))}
-          </AnimatePresence>
+          </>
         )}
       </div>
 
       {/* Count line */}
       {!loading && filtered.length > 0 && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+        <p
           className="text-[12px] text-center"
           style={{ color: 'rgba(244,244,245,0.2)' }}
         >
           {filtered.length} booking{filtered.length !== 1 ? 's' : ''}
           {statusFilter ? ` · ${STATUS_CFG[statusFilter]?.label}` : ''}
-        </motion.p>
+        </p>
       )}
     </div>
   );

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { Shield, Users } from 'lucide-react';
 import { getAdminUsers, getMe, type AdminUser } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
@@ -74,24 +73,16 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      >
+      <div>
         <h2 className="text-3xl font-bold tracking-tight font-[family-name:var(--font-display)]">Admin</h2>
         <p className="text-sm text-muted-foreground mt-1">
           All registered users across the platform.
         </p>
-      </motion.div>
+      </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-      >
+      <div>
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2.5">
@@ -115,12 +106,9 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((u, i) => (
-                  <motion.tr
+                {users.map((u) => (
+                  <tr
                     key={u.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.15 + i * 0.03 }}
                     className="border-b border-border/30 hover:bg-accent/30 transition-colors"
                   >
                     <td className="px-5 py-3.5">
@@ -149,13 +137,13 @@ export default function AdminPage() {
                     <td className="px-5 py-3.5 text-muted-foreground text-sm">
                       {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))}
               </tbody>
             </table>
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, Clock, CheckCircle2, ArrowRight, ArrowLeft,
   Sparkles, Zap, CalendarDays, Globe, Loader2,
@@ -51,9 +50,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
         return (
           <div key={step.id} className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <motion.div
-                animate={active ? { scale: [1, 1.08, 1] } : {}}
-                transition={{ duration: 0.4 }}
+              <div
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
                 style={done ? {
                   background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)',
@@ -67,7 +64,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
                   ? <CheckCircle2 className="w-4 h-4" style={{ color: '#34d399' }} />
                   : <Icon className="w-3.5 h-3.5" style={{ color: active ? '#09090b' : 'rgba(244,244,245,0.3)' }} strokeWidth={2} />
                 }
-              </motion.div>
+              </div>
               <span className="text-[12px] font-semibold hidden sm:block" style={{ color: active ? '#f4f4f5' : 'rgba(244,244,245,0.3)' }}>
                 {step.label}
               </span>
@@ -153,12 +150,7 @@ export default function OnboardingPage() {
 
       <div className="relative w-full max-w-md">
         {/* Brand */}
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col items-center mb-10"
-        >
+        <div className="flex flex-col items-center mb-10">
           <Logo />
           <h1 className="text-[22px] font-bold mt-4 tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
             Set up BookedUp
@@ -166,37 +158,26 @@ export default function OnboardingPage() {
           <p className="text-[14px] mt-1.5 text-center" style={{ color: 'rgba(244,244,245,0.4)' }}>
             Takes 2 minutes. No credit card.
           </p>
-        </motion.div>
+        </div>
 
         {/* Step indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="flex justify-center mb-8"
-        >
+        <div className="flex justify-center mb-8">
           <StepIndicator current={step} total={3} />
-        </motion.div>
+        </div>
 
         {/* Card */}
-        <AnimatePresence mode="wait">
+        <>
           {success ? (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+            <div
               className="rounded-2xl p-10 text-center"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(52,211,153,0.2)', boxShadow: '0 0 40px rgba(52,211,153,0.06)' }}
             >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
+              <div
                 className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
                 style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)' }}
               >
                 <CheckCircle2 className="w-8 h-8" style={{ color: '#34d399' }} />
-              </motion.div>
+              </div>
               <h2 className="text-[20px] font-bold mb-2" style={{ color: '#f4f4f5' }}>You're all set!</h2>
               <p className="text-[14px]" style={{ color: 'rgba(244,244,245,0.45)' }}>
                 Taking you to your dashboard…
@@ -204,14 +185,9 @@ export default function OnboardingPage() {
               <div className="mt-6 flex justify-center">
                 <div className="w-6 h-6 rounded-full border-2 border-amber-400/30 border-t-amber-400 animate-spin" />
               </div>
-            </motion.div>
+            </div>
           ) : step === 1 ? (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            <div
               className="rounded-2xl p-7"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 8px 40px rgba(0,0,0,0.3)' }}
             >
@@ -247,14 +223,9 @@ export default function OnboardingPage() {
                   Continue <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
-            </motion.div>
+            </div>
           ) : step === 2 ? (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            <div
               className="rounded-2xl p-7"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 8px 40px rgba(0,0,0,0.3)' }}
             >
@@ -302,14 +273,9 @@ export default function OnboardingPage() {
                   Continue <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
-            </motion.div>
+            </div>
           ) : (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            <div
               className="rounded-2xl p-7"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 8px 40px rgba(0,0,0,0.3)' }}
             >
@@ -376,9 +342,9 @@ export default function OnboardingPage() {
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Sparkles className="w-4 h-4" /> Launch BookedUp</>}
                 </button>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </>
       </div>
     </div>
   );

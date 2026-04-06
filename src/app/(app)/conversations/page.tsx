@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Instagram, Phone, Search, Sparkles, Send, CheckCircle2,
   Clock, AlertCircle, TrendingUp, MessageSquare, Filter,
@@ -86,17 +85,12 @@ function ChannelIcon({ channel }: { channel: string }) {
 }
 
 /* ─── Message bubble ───────────────────────────────────────── */
-function MessageBubble({ msg, isNew = false }: {
-  msg: { id: string; from: string; text: string; ts: string; isAI?: boolean }; isNew?: boolean;
+function MessageBubble({ msg }: {
+  msg: { id: string; from: string; text: string; ts: string; isAI?: boolean };
 }) {
   const isClient = msg.from === 'client';
   return (
-    <motion.div
-      initial={isNew ? { opacity: 0, y: 8, scale: 0.97 } : false}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-      className={`flex ${isClient ? 'justify-end' : 'justify-start'} gap-2 items-end`}
-    >
+    <div className={`flex ${isClient ? 'justify-end' : 'justify-start'} gap-2 items-end`}>
       {!isClient && (
         <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center mb-1" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)' }}>
           <Sparkles className="w-3.5 h-3.5" style={{ color: '#f59e0b' }} />
@@ -125,7 +119,7 @@ function MessageBubble({ msg, isNew = false }: {
           <span className="text-[10px]" style={{ color: 'rgba(244,244,245,0.25)' }}>{msg.ts}</span>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -139,9 +133,10 @@ function TypingIndicator() {
       <div className="px-4 py-3 rounded-2xl" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: '18px 18px 18px 4px' }}>
         <div className="flex gap-1 items-center">
           {[0, 1, 2].map(i => (
-            <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: '#f59e0b' }}
-              animate={{ y: [0, -4, 0] }}
-              transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+            <div
+              key={i}
+              className="w-1.5 h-1.5 rounded-full animate-bounce"
+              style={{ background: '#f59e0b', animationDelay: `${i * 0.15}s` }}
             />
           ))}
         </div>
@@ -242,8 +237,9 @@ export default function ConversationsPage() {
             const ic = INTENT_COLORS[convo.intent] || INTENT_COLORS.general;
             const isActive = selected.id === convo.id;
             return (
-              <motion.button
+              <button
                 key={convo.id}
+                type="button"
                 onClick={() => setSelected(convo)}
                 className="w-full text-left px-3 py-3 mx-1 rounded-xl transition-all relative"
                 style={{
@@ -251,7 +247,6 @@ export default function ConversationsPage() {
                   background: isActive ? 'rgba(245,158,11,0.08)' : 'transparent',
                   border: isActive ? '1px solid rgba(245,158,11,0.15)' : '1px solid transparent',
                 }}
-                whileHover={{ background: isActive ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.04)' }}
               >
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
@@ -279,7 +274,7 @@ export default function ConversationsPage() {
                     </div>
                   </div>
                 </div>
-              </motion.button>
+              </button>
             );
           })}
         </div>
@@ -319,12 +314,12 @@ export default function ConversationsPage() {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          <AnimatePresence>
+          <>
             {messages.map(msg => (
               <MessageBubble key={msg.id} msg={msg} />
             ))}
             {aiTyping && <TypingIndicator key="typing" />}
-          </AnimatePresence>
+          </>
           <div ref={bottomRef} />
         </div>
 

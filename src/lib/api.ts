@@ -140,6 +140,18 @@ export async function getServices() {
   return apiFetch<{ services: Service[] }>('/api/services');
 }
 
+export async function createService(body: {
+  name: string;
+  duration_mins: number;
+  price?: number;
+  add_ons?: AddOn[];
+}) {
+  return apiFetch<{ service: Service }>('/api/services', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
 // ─── Analytics ────────────────────────────────────────────────────────────────
 
 export async function getAnalytics(period: '7d' | '30d' | '90d' = '30d') {

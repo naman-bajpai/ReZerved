@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   Building2, Bell, Shield, Sparkles, Link2, Globe,
   ChevronRight, Check, ToggleLeft, ToggleRight,
@@ -89,12 +88,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-7 pb-12 max-w-2xl">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex items-center justify-between"
-      >
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[26px] font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
             Settings
@@ -114,10 +108,10 @@ export default function SettingsPage() {
         >
           {saved ? <><Check className="w-3.5 h-3.5" /> Saved</> : 'Save changes'}
         </button>
-      </motion.div>
+      </div>
 
       {/* Business */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+      <div>
         <SettingCard title="Business Profile" icon={Building2} color="#f59e0b">
           <SettingRow label="Business name" desc="Shown to clients in messages and confirmations">
             <div className="w-56">
@@ -131,10 +125,10 @@ export default function SettingsPage() {
             </div>
           </SettingRow>
         </SettingCard>
-      </motion.div>
+      </div>
 
       {/* AI Agent */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+      <div>
         <SettingCard title="AI Agent" subtitle="Customize how your AI talks to clients" icon={Sparkles} color="#a78bfa">
           <SettingRow label="Tone & personality" desc="How your AI comes across to clients">
             <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
@@ -158,10 +152,10 @@ export default function SettingsPage() {
             <Toggle value={true} onChange={() => {}} />
           </SettingRow>
         </SettingCard>
-      </motion.div>
+      </div>
 
       {/* Notifications */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
+      <div>
         <SettingCard title="Notifications" icon={Bell} color="#34d399">
           <SettingRow label="New booking" desc="Get notified when a booking is confirmed">
             <Toggle value={notifyNew} onChange={setNotifyNew} />
@@ -173,10 +167,10 @@ export default function SettingsPage() {
             <Toggle value={notifyUpsell} onChange={setNotifyUpsell} />
           </SettingRow>
         </SettingCard>
-      </motion.div>
+      </div>
 
       {/* Integrations */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      <div>
         <SettingCard title="Integrations" subtitle="Connect your messaging channels" icon={Link2} color="#fb7185">
           <SettingRow label="SMS via Twilio" desc="Respond to text messages automatically">
             <Toggle value={smsEnabled} onChange={setSmsEnabled} />
@@ -193,10 +187,10 @@ export default function SettingsPage() {
             </span>
           </SettingRow>
         </SettingCard>
-      </motion.div>
+      </div>
 
       {/* Danger zone */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
+      <div>
         <div className="rounded-2xl p-5" style={{ background: 'rgba(248,113,113,0.04)', border: '1px solid rgba(248,113,113,0.1)' }}>
           <p className="text-[13px] font-semibold mb-1" style={{ color: '#f87171' }}>Danger Zone</p>
           <p className="text-[12px] mb-3" style={{ color: 'rgba(244,244,245,0.35)' }}>Irreversible actions — proceed with caution.</p>
@@ -204,7 +198,7 @@ export default function SettingsPage() {
             Delete account
           </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

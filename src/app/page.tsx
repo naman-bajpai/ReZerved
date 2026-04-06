@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { motion, useInView, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, Zap, TrendingUp, Users, CalendarDays, Shield,
   CheckCircle2, MessageSquare, Sparkles, BarChart3, Clock,
@@ -49,21 +48,28 @@ function Logo({ size = 32 }: { size?: number }) {
 function Counter({ to, prefix = '', suffix = '', duration = 2 }: {
   to: number; prefix?: string; suffix?: string; duration?: number;
 }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-40px' });
-  const mv = useMotionValue(0);
-  const spring = useSpring(mv, { duration: duration * 1000, bounce: 0 });
   const [display, setDisplay] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const started = useRef(false);
 
   useEffect(() => {
-    if (inView) {
-      mv.set(to);
-    }
-  }, [inView, to, mv]);
-
-  useEffect(() => {
-    return spring.on('change', v => setDisplay(Math.round(v)));
-  }, [spring]);
+    if (started.current) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true;
+        const start = performance.now();
+        const ms = duration * 1000;
+        const tick = (now: number) => {
+          const t = Math.min((now - start) / ms, 1);
+          setDisplay(Math.round(t * to));
+          if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    }, { threshold: 0.1 });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [to, duration]);
 
   return (
     <span ref={ref} className="font-mono-nums">
@@ -131,71 +137,73 @@ function DemoConversation() {
 
       {/* Messages */}
       <div className="p-4 space-y-3 min-h-[260px]">
-        <AnimatePresence>
+        <>
           {visible.map((s, i) => {
             if (s.type === 'typing') {
               return (
-                <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex items-end gap-2">
+                <div key={i} className="flex items-end gap-2">
                   <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.15)' }}>
                     <Sparkles className="w-3 h-3" style={{ color: C.amber }} />
                   </div>
                   <div className="px-3 py-2 rounded-2xl rounded-bl-sm" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.12)' }}>
                     <div className="flex gap-1 items-center h-4">
                       {[0,1,2].map(j => (
-                        <motion.div key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: C.amber }}
-                          animate={{ y: [0,-4,0] }} transition={{ duration: 0.6, repeat: Infinity, delay: j * 0.15 }}
+                        <div
+                          key={j}
+                          className="w-1.5 h-1.5 rounded-full animate-bounce"
+                          style={{ background: C.amber, animationDelay: `${j * 150}ms` }}
                         />
                       ))}
                     </div>
                   </div>
                   <span className="text-[10px]" style={{ color: C.dim }}>BookedUp AI is replying…</span>
-                </motion.div>
+                </div>
               );
             }
             if (s.type === 'confirm') {
               return (
-                <motion.div key={i} initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
+                <div key={i}>
                   <div className="px-4 py-3 rounded-xl flex items-center gap-3" style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
                     <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: C.em }} />
                     <span className="text-[13px] font-medium" style={{ color: C.em }}>{s.text}</span>
                   </div>
-                </motion.div>
+                </div>
               );
             }
             if (s.type === 'upsell') {
               return (
-                <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+                <div key={i}>
                   <div className="px-4 py-3 rounded-xl flex items-center gap-3" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}>
                     <TrendingUp className="w-4 h-4 flex-shrink-0" style={{ color: C.violet }} />
                     <span className="text-[12px]" style={{ color: C.violet }}>{s.text}</span>
                   </div>
-                </motion.div>
+                </div>
               );
             }
             if (s.type === 'client') {
               return (
-                <motion.div key={i} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} className="flex justify-end">
+                <div key={i} className="flex justify-end">
                   <div className="max-w-[75%] px-3.5 py-2.5 rounded-2xl rounded-br-sm text-[13px] leading-relaxed" style={{ background: 'rgba(255,255,255,0.07)', color: C.text }}>
                     {s.text}
                   </div>
-                </motion.div>
+                </div>
               );
             }
             if (s.type === 'ai') {
               return (
-                <motion.div key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="flex items-end gap-2">
+                <div key={i} className="flex items-end gap-2">
                   <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.15)' }}>
                     <Sparkles className="w-3 h-3" style={{ color: C.amber }} />
                   </div>
                   <div className="max-w-[75%] px-3.5 py-2.5 rounded-2xl rounded-bl-sm text-[13px] leading-relaxed" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.14)', color: C.text }}>
                     {s.text}
                   </div>
-                </motion.div>
+                </div>
               );
             }
             return null;
           })}
-        </AnimatePresence>
+        </>
       </div>
 
       {/* Footer */}
@@ -210,17 +218,11 @@ function DemoConversation() {
 }
 
 /* ─── Feature card ──────────────────────────────────────── */
-function FeatureCard({ icon: Icon, title, desc, color, delay = 0 }: {
+function FeatureCard({ icon: Icon, title, desc, color, delay: _delay = 0 }: {
   icon: React.ElementType; title: string; desc: string; color: string; delay?: number;
 }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+    <div
       className="group relative rounded-2xl p-6 premium-card-hover cursor-default"
       style={{ background: C.card, border: `1px solid ${C.border}` }}
     >
@@ -234,7 +236,7 @@ function FeatureCard({ icon: Icon, title, desc, color, delay = 0 }: {
         <h3 className="text-[15px] font-semibold mb-2" style={{ color: C.text }}>{title}</h3>
         <p className="text-[13px] leading-relaxed" style={{ color: C.dim }}>{desc}</p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -242,10 +244,8 @@ function FeatureCard({ icon: Icon, title, desc, color, delay = 0 }: {
 function StatBlock({ label, to, prefix = '', suffix = '' }: {
   label: string; to: number; prefix?: string; suffix?: string;
 }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
   return (
-    <div ref={ref} className="text-center">
+    <div className="text-center">
       <div className="text-4xl md:text-5xl font-bold mb-2 text-gradient-gold">
         <Counter to={to} prefix={prefix} suffix={suffix} duration={2.5} />
       </div>
@@ -266,10 +266,7 @@ function Nav() {
   }, []);
 
   return (
-    <motion.nav
-      initial={{ y: -16, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    <nav
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
       style={{
         background: scrolled ? 'rgba(9,9,11,0.85)' : 'transparent',
@@ -325,43 +322,32 @@ function Nav() {
       </div>
 
       {/* Mobile menu */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden overflow-hidden"
-            style={{ background: C.surf, borderTop: `1px solid ${C.border}` }}
-          >
-            <div className="px-6 py-4 flex flex-col gap-4">
-              {['Features', 'Pricing', 'About'].map(item => (
-                <Link key={item} href="#" className="text-[15px]" style={{ color: C.dim }}>{item}</Link>
-              ))}
-              <div className="flex gap-3 pt-2">
-                <Link href="/login" className="flex-1 text-center py-2.5 rounded-lg text-[14px] font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: C.text }}>Sign in</Link>
-                <Link href="/signup" className="flex-1 text-center py-2.5 rounded-lg text-[14px] font-semibold" style={{ background: 'linear-gradient(135deg,#f59e0b,#fb7185)', color: '#09090b' }}>Get started</Link>
-              </div>
+      {open && (
+        <div
+          className="md:hidden overflow-hidden"
+          style={{ background: C.surf, borderTop: `1px solid ${C.border}` }}
+        >
+          <div className="px-6 py-4 flex flex-col gap-4">
+            {['Features', 'Pricing', 'About'].map(item => (
+              <Link key={item} href="#" className="text-[15px]" style={{ color: C.dim }}>{item}</Link>
+            ))}
+            <div className="flex gap-3 pt-2">
+              <Link href="/login" className="flex-1 text-center py-2.5 rounded-lg text-[14px] font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: C.text }}>Sign in</Link>
+              <Link href="/signup" className="flex-1 text-center py-2.5 rounded-lg text-[14px] font-semibold" style={{ background: 'linear-gradient(135deg,#f59e0b,#fb7185)', color: '#09090b' }}>Get started</Link>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
+          </div>
+        </div>
+      )}
+    </nav>
   );
 }
 
 /* ─── Testimonial ───────────────────────────────────────── */
-function Testimonial({ text, name, title, avatar, delay }: {
+function Testimonial({ text, name, title, avatar, delay: _delay }: {
   text: string; name: string; title: string; avatar: string; delay: number;
 }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-40px' });
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 24 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+    <div
       className="rounded-2xl p-6"
       style={{ background: C.card, border: `1px solid ${C.border}` }}
     >
@@ -380,7 +366,7 @@ function Testimonial({ text, name, title, avatar, delay }: {
           <p className="text-[11px]" style={{ color: C.dim }}>{title}</p>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -406,49 +392,35 @@ export default function LandingPage() {
 
         <div className="relative max-w-5xl w-full mx-auto text-center">
           {/* Label */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          <div
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 text-[13px] font-medium"
             style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', color: C.amber }}
           >
             <Sparkles className="w-3.5 h-3.5" />
             Now available for nail & lash studios
             <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-          </motion.div>
+          </div>
 
           {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          <h1
             className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.08] mb-6"
             style={{ fontFamily: 'var(--font-display)', color: C.text }}
           >
             Your AI books clients
             <br />
             <span className="text-gradient">while you work.</span>
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          <p
             className="text-lg md:text-xl leading-relaxed max-w-2xl mx-auto mb-10"
             style={{ color: 'rgba(244,244,245,0.55)' }}
           >
             BookedUp turns every Instagram DM and SMS into a confirmed booking — automatically.
             Fill empty slots, send upsells, and grow revenue without lifting a finger.
-          </motion.p>
+          </p>
 
           {/* CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/signup"
               className="group flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-semibold transition-all duration-300"
@@ -468,48 +440,36 @@ export default function LandingPage() {
             >
               Watch demo
             </Link>
-          </motion.div>
+          </div>
 
           {/* Trust line */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.65 }}
+          <p
             className="mt-6 text-[13px]"
             style={{ color: 'rgba(244,244,245,0.3)' }}
           >
             No credit card required · Setup in 5 minutes · Cancel anytime
-          </motion.p>
+          </p>
         </div>
 
         {/* Demo panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        <div
           className="relative mt-16 w-full max-w-2xl mx-auto"
           id="demo"
         >
           {/* Glow behind panel */}
           <div className="absolute -inset-8 blur-3xl rounded-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(245,158,11,0.08) 0%, rgba(251,113,133,0.05) 50%, transparent 80%)' }} />
           <DemoConversation />
-        </motion.div>
+        </div>
 
         {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
+        <div
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
           style={{ color: C.dim }}
         >
-          <motion.div
-            animate={{ y: [0, 5, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          >
+          <div className="animate-bounce">
             <ChevronRight className="w-5 h-5 rotate-90" />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </section>
 
       {/* ── STATS ─────────────────────────────────────────── */}
@@ -525,13 +485,7 @@ export default function LandingPage() {
       {/* ── FEATURES ──────────────────────────────────────── */}
       <section className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <p className="text-[13px] uppercase tracking-widest mb-4 font-semibold" style={{ color: C.amber }}>Platform</p>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-5" style={{ fontFamily: 'var(--font-display)' }}>
               Every tool you need,<br />
@@ -540,7 +494,7 @@ export default function LandingPage() {
             <p className="text-[16px] max-w-xl mx-auto" style={{ color: C.dim }}>
               BookedUp is more than a booking tool — it's a complete revenue engine that works 24/7 in the background.
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             <FeatureCard delay={0} color={C.amber} icon={MessageSquare} title="AI Booking Conversion"
@@ -562,7 +516,7 @@ export default function LandingPage() {
       {/* ── CHANNELS ──────────────────────────────────────── */}
       <section className="py-20 px-6" style={{ background: C.surf, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div className="max-w-4xl mx-auto text-center">
-          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <div>
             <p className="text-[13px] uppercase tracking-widest mb-4 font-semibold" style={{ color: C.dim }}>Works everywhere your clients message you</p>
             <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
               {[
@@ -577,24 +531,19 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* ── TESTIMONIALS ──────────────────────────────────── */}
       <section className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-14"
-          >
+          <div className="text-center mb-14">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-5" style={{ fontFamily: 'var(--font-display)' }}>
               Real results from<br />
               <span className="text-gradient">real businesses</span>
             </h2>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-3 gap-4">
             <Testimonial delay={0} avatar="M" name="Maya Rodriguez" title="Nail Tech · Miami, FL"
@@ -610,11 +559,7 @@ export default function LandingPage() {
       {/* ── FINAL CTA ─────────────────────────────────────── */}
       <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+          <div
             className="rounded-3xl p-12 relative overflow-hidden"
             style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(251,113,133,0.06) 50%, rgba(167,139,250,0.06) 100%)', border: `1px solid rgba(245,158,11,0.15)` }}
           >
@@ -639,7 +584,7 @@ export default function LandingPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
