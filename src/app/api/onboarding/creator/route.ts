@@ -15,7 +15,21 @@ export async function POST(req: NextRequest) {
     }
 
     if (profile.business_id) {
-      return NextResponse.json({ error: 'Profile already linked to a business' }, { status: 400 });
+      const { data: existingBiz } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('id', profile.business_id)
+        .maybeSingle();
+
+      if (existingBiz) {
+        return NextResponse.json({ error: 'Profile already linked to a business' }, { status: 400 });
+      }
+
+      console.log('Orphaned business_id detected, clearing:', profile.business_id);
+      await supabase
+        .from('profiles')
+        .update({ business_id: null, updated_at: new Date().toISOString() })
+        .eq('user_id', profile.user_id);
     }
 
     const body = await req.json().catch(() => ({}));

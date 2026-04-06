@@ -5,63 +5,54 @@ import { useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { getMe } from '@/lib/api';
 
-/**
- * Protects (app) routes: login required, then onboarding if no business linked.
- */
 export function AppShellGate({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = authClient.useSession();
   const pathname = usePathname();
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const [allowed, setAllowed] = useState<string | null>(null);
+
+  const userId = session?.user?.id;
 
   useEffect(() => {
-    if (isPending) return;
-
-    if (!session) {
-      router.replace(`/login?returnTo=${encodeURIComponent(pathname || '/dashboard')}`);
+    if (isPending || !userId) {
+      setAllowed(null);
       return;
     }
 
     let cancelled = false;
+    setAllowed(null);
 
     (async () => {
       try {
         const me = await getMe();
         if (cancelled) return;
-        if (!me.profile.business_id && pathname !== '/onboarding') {
+
+        const onboarded = !!me.business;
+        const isOnboarding = pathname === '/onboarding';
+
+        if (!onboarded && !isOnboarding) {
           router.replace('/onboarding');
-        } else if (me.profile.business_id && pathname === '/onboarding') {
-          // business already set — hard redirect so fresh data is loaded
-          window.location.href = '/dashboard';
-        } else {
-          if (!cancelled) setReady(true);
+          return;
         }
-      } catch (err: any) {
+
+        if (onboarded && isOnboarding) {
+          router.replace('/dashboard');
+          return;
+        }
+
+        setAllowed(pathname);
+      } catch {
         if (cancelled) return;
-        // 401 means session expired — send to login
-        if (err?.status === 401) {
-          router.replace(`/login?returnTo=${encodeURIComponent(pathname || '/dashboard')}`);
-        } else {
-          // Other errors (network etc.) — still render so user isn't stuck
-          setReady(true);
-        }
+        setAllowed(pathname);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [isPending, session, pathname, router]);
+  }, [isPending, userId, pathname, router]);
 
-  if (isPending || !session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-      </div>
-    );
-  }
-
-  if (!ready) {
+  if (isPending || !userId || allowed !== pathname) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />

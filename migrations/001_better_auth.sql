@@ -1,5 +1,7 @@
 -- Better Auth tables
 -- Run this in your Supabase SQL editor (or psql) before starting the app.
+-- Note: supabase/migrations/002_auth_profiles.sql already creates profiles
+-- with user_id referencing "user"(id), so no ALTER needed here.
 
 -- ─── Better Auth: user ────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS "user" (
@@ -50,15 +52,3 @@ CREATE TABLE IF NOT EXISTS verification (
   created_at  TIMESTAMPTZ,
   updated_at  TIMESTAMPTZ
 );
-
--- ─── Update profiles table ────────────────────────────────────────────────────
--- Add user_id column linking profiles to Better Auth users
-ALTER TABLE profiles
-  ADD COLUMN IF NOT EXISTS user_id TEXT UNIQUE REFERENCES "user"(id) ON DELETE SET NULL;
-
--- Make auth0_sub nullable (was already, but explicit)
-ALTER TABLE profiles
-  ALTER COLUMN auth0_sub DROP NOT NULL;
-
--- Index for fast lookup
-CREATE INDEX IF NOT EXISTS profiles_user_id_idx ON profiles(user_id);

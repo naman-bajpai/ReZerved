@@ -116,6 +116,7 @@ export async function loadBusiness(
 
   if (!profile) throw new AuthError('Unauthorized', 401);
   if (!profile.business_id) {
+    console.warn('[loadBusiness] profile has no business_id', { profileId: profile.id, userId: profile.user_id });
     throw new AuthError('Complete creator onboarding to access the dashboard', 403, 'NEEDS_ONBOARDING');
   }
 
@@ -125,7 +126,10 @@ export async function loadBusiness(
     .eq('id', profile.business_id)
     .single();
 
-  if (error || !business) throw new AuthError('Business not found', 403);
+  if (error || !business) {
+    console.error('[loadBusiness] business not found', { businessId: profile.business_id, error: error?.message });
+    throw new AuthError('Business not found', 403);
+  }
   return { ...business, business_id: business.id } as Business;
 }
 
