@@ -24,7 +24,7 @@ export const POST = withBusiness(async (req, _profile, business) => {
 
   const { data, error } = await supabase
     .from('services')
-    .insert({ business_id: business.business_id, name, duration_mins, price, add_ons: add_ons || [] })
+    .insert({ business_id: business.business_id, name, duration_mins, price, add_ons: add_ons || [], is_active: true })
     .select()
     .single();
 

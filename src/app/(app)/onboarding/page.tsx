@@ -30,10 +30,10 @@ function Logo() {
         </linearGradient>
       </defs>
       <rect width="32" height="32" rx="10" fill="url(#onbl)"/>
-      <rect x="8" y="12" width="16" height="12" rx="2.5" fill="white" fillOpacity="0.95"/>
-      <rect x="8" y="10" width="16" height="5" rx="2.5" fill="white" fillOpacity="0.65"/>
-      <rect x="12" y="8" width="3" height="5" rx="1.5" fill="white"/>
-      <rect x="17" y="8" width="3" height="5" rx="1.5" fill="white"/>
+              <rect x="8" y="12" width="16" height="12" rx="2.5" fill="#f4f4f5" fillOpacity="0.95"/>
+      <rect x="8" y="10" width="16" height="5" rx="2.5" fill="#f4f4f5" fillOpacity="0.65"/>
+      <rect x="12" y="8" width="3" height="5" rx="1.5" fill="#f4f4f5"/>
+      <rect x="17" y="8" width="3" height="5" rx="1.5" fill="#f4f4f5"/>
       <path d="M12 18.5l2.5 2.5 5.5-6" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
@@ -170,7 +170,7 @@ export default function OnboardingPage() {
           {success ? (
             <div
               className="rounded-2xl p-10 text-center"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(52,211,153,0.2)', boxShadow: '0 0 40px rgba(52,211,153,0.06)' }}
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 0 40px rgba(52,211,153,0.06)' }}
             >
               <div
                 className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"

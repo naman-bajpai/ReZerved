@@ -2,23 +2,22 @@
 
 import { useState } from 'react';
 import {
-  Building2, Bell, Shield, Sparkles, Link2, Globe,
-  ChevronRight, Check, ToggleLeft, ToggleRight,
+  Building2, Bell, Shield, Sparkles, Link2,
+  Check, ToggleLeft, ToggleRight,
 } from 'lucide-react';
+import { PageTransition } from '@/components/page-transition';
 
-const SECTIONS = [
-  { id: 'business', label: 'Business', icon: Building2, color: '#f59e0b' },
-  { id: 'ai',       label: 'AI Agent',  icon: Sparkles,  color: '#a78bfa' },
-  { id: 'notifications', label: 'Notifications', icon: Bell, color: '#34d399' },
-  { id: 'integrations',  label: 'Integrations',  icon: Link2, color: '#fb7185' },
-  { id: 'security', label: 'Security', icon: Shield, color: '#60a5fa' },
-];
+const inputStyle = {
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  color: '#f4f4f5',
+};
 
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
     <button onClick={() => onChange(!value)} className="flex-shrink-0 transition-all">
       {value
-        ? <ToggleRight className="w-7 h-7" style={{ color: '#f59e0b' }} />
+        ? <ToggleRight className="w-7 h-7" style={{ color: '#f97316' }} />
         : <ToggleLeft className="w-7 h-7" style={{ color: 'rgba(244,244,245,0.25)' }} />
       }
     </button>
@@ -27,28 +26,28 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
 
 function SettingRow({ label, desc, children }: { label: string; desc?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+    <div className="flex items-center justify-between py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       <div className="min-w-0 flex-1 pr-4">
         <p className="text-[13px] font-medium" style={{ color: '#f4f4f5' }}>{label}</p>
-        {desc && <p className="text-[11px] mt-0.5" style={{ color: 'rgba(244,244,245,0.35)' }}>{desc}</p>}
+        {desc && <p className="text-[11px] mt-0.5" style={{ color: 'rgba(244,244,245,0.4)' }}>{desc}</p>}
       </div>
       {children}
     </div>
   );
 }
 
-function SettingCard({ title, subtitle, icon: Icon, color, children }: {
-  title: string; subtitle?: string; icon: React.ElementType; color: string; children: React.ReactNode;
+function SettingCard({ title, subtitle, icon: Icon, color, iconBg, children }: {
+  title: string; subtitle?: string; icon: React.ElementType; color: string; iconBg: string; children: React.ReactNode;
 }) {
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}12`, border: `1px solid ${color}20` }}>
+      <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: iconBg }}>
           <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
         </div>
         <div>
           <p className="text-[14px] font-semibold" style={{ color: '#f4f4f5' }}>{title}</p>
-          {subtitle && <p className="text-[11px]" style={{ color: 'rgba(244,244,245,0.35)' }}>{subtitle}</p>}
+          {subtitle && <p className="text-[11px]" style={{ color: 'rgba(244,244,245,0.4)' }}>{subtitle}</p>}
         </div>
       </div>
       <div className="px-5 pb-1">{children}</div>
@@ -63,9 +62,9 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
       className="w-full px-3 py-2 rounded-xl text-[13px] outline-none transition-all"
-      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#f4f4f5', caretColor: '#f59e0b' }}
-      onFocus={e => { e.target.style.borderColor = 'rgba(245,158,11,0.35)'; }}
-      onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+      style={inputStyle}
+      onFocus={e => { e.target.style.borderColor = 'rgba(249,115,22,0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(249,115,22,0.08)'; }}
+      onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
     />
   );
 }
@@ -86,56 +85,58 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-7 pb-12 max-w-2xl">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-[26px] font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
-            Settings
-          </h1>
-          <p className="text-[14px] mt-1" style={{ color: 'rgba(244,244,245,0.4)' }}>
-            Manage your business configuration
-          </p>
+    <PageTransition>
+      <div className="space-y-7 pb-12 max-w-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-[26px] font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
+              Settings
+            </h1>
+            <p className="text-[14px] mt-1" style={{ color: 'rgba(244,244,245,0.4)' }}>
+              Manage your business configuration
+            </p>
+          </div>
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all"
+            style={saved ? {
+              background: 'rgba(22,163,74,0.08)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.2)',
+            } : {
+              background: 'linear-gradient(135deg, #f97316, #ec4899)', color: '#fff', border: '1px solid transparent',
+              boxShadow: '0 2px 8px rgba(249,115,22,0.18)',
+            }}
+          >
+            {saved ? <><Check className="w-3.5 h-3.5" /> Saved</> : 'Save changes'}
+          </button>
         </div>
-        <button
-          onClick={handleSave}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all"
-          style={saved ? {
-            background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.25)',
-          } : {
-            background: 'linear-gradient(135deg, #f59e0b, #fb7185)', color: '#09090b',
-          }}
-        >
-          {saved ? <><Check className="w-3.5 h-3.5" /> Saved</> : 'Save changes'}
-        </button>
-      </div>
 
-      {/* Business */}
-      <div>
-        <SettingCard title="Business Profile" icon={Building2} color="#f59e0b">
+        {/* Business */}
+        <SettingCard title="Business Profile" icon={Building2} color="#f97316" iconBg="rgba(249,115,22,0.08)">
           <SettingRow label="Business name" desc="Shown to clients in messages and confirmations">
             <div className="w-56">
               <TextInput value={businessName} onChange={setBusinessName} placeholder="Your business name" />
             </div>
           </SettingRow>
           <SettingRow label="Booking slug" desc="Your unique booking link">
-            <div className="flex items-center gap-2 text-[12px]" style={{ color: '#a78bfa' }}>
+            <div className="flex items-center gap-2 text-[12px]" style={{ color: '#7c3aed' }}>
               <span>bookedup.app/</span>
               <TextInput value="" onChange={() => {}} placeholder="yourname" />
             </div>
           </SettingRow>
         </SettingCard>
-      </div>
 
-      {/* AI Agent */}
-      <div>
-        <SettingCard title="AI Agent" subtitle="Customize how your AI talks to clients" icon={Sparkles} color="#a78bfa">
+        {/* AI Agent */}
+        <SettingCard title="AI Agent" subtitle="Customize how your AI talks to clients" icon={Sparkles} color="#7c3aed" iconBg="rgba(124,58,237,0.08)">
           <SettingRow label="Tone & personality" desc="How your AI comes across to clients">
-            <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
               {(['friendly', 'professional', 'casual'] as const).map(t => (
                 <button key={t} onClick={() => setAiTone(t)}
                   className="px-3 py-1.5 rounded-lg text-[12px] font-semibold capitalize transition-all"
-                  style={aiTone === t ? { background: 'rgba(167,139,250,0.15)', color: '#a78bfa' } : { color: 'rgba(244,244,245,0.4)' }}
+                  style={aiTone === t ? {
+                    background: 'rgba(255,255,255,0.1)', color: '#7c3aed',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)', border: '1px solid rgba(124,58,237,0.3)',
+                  } : { color: 'rgba(244,244,245,0.4)' }}
                 >
                   {t}
                 </button>
@@ -152,11 +153,9 @@ export default function SettingsPage() {
             <Toggle value={true} onChange={() => {}} />
           </SettingRow>
         </SettingCard>
-      </div>
 
-      {/* Notifications */}
-      <div>
-        <SettingCard title="Notifications" icon={Bell} color="#34d399">
+        {/* Notifications */}
+        <SettingCard title="Notifications" icon={Bell} color="#16a34a" iconBg="rgba(22,163,74,0.08)">
           <SettingRow label="New booking" desc="Get notified when a booking is confirmed">
             <Toggle value={notifyNew} onChange={setNotifyNew} />
           </SettingRow>
@@ -167,38 +166,34 @@ export default function SettingsPage() {
             <Toggle value={notifyUpsell} onChange={setNotifyUpsell} />
           </SettingRow>
         </SettingCard>
-      </div>
 
-      {/* Integrations */}
-      <div>
-        <SettingCard title="Integrations" subtitle="Connect your messaging channels" icon={Link2} color="#fb7185">
+        {/* Integrations */}
+        <SettingCard title="Integrations" subtitle="Connect your messaging channels" icon={Link2} color="#ec4899" iconBg="rgba(236,72,153,0.08)">
           <SettingRow label="SMS via Twilio" desc="Respond to text messages automatically">
             <Toggle value={smsEnabled} onChange={setSmsEnabled} />
           </SettingRow>
           <SettingRow label="Instagram DMs" desc="Handle DM bookings automatically">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24' }}>Beta</span>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(217,119,6,0.08)', color: '#d97706' }}>Beta</span>
               <Toggle value={igEnabled} onChange={setIgEnabled} />
             </div>
           </SettingRow>
           <SettingRow label="WhatsApp" desc="Coming soon">
-            <span className="text-[11px] font-medium px-2 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(244,244,245,0.3)' }}>
+            <span className="text-[11px] font-medium px-2 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: '#71717a' }}>
               Soon
             </span>
           </SettingRow>
         </SettingCard>
-      </div>
 
-      {/* Danger zone */}
-      <div>
+        {/* Danger zone */}
         <div className="rounded-2xl p-5" style={{ background: 'rgba(248,113,113,0.04)', border: '1px solid rgba(248,113,113,0.1)' }}>
           <p className="text-[13px] font-semibold mb-1" style={{ color: '#f87171' }}>Danger Zone</p>
-          <p className="text-[12px] mb-3" style={{ color: 'rgba(244,244,245,0.35)' }}>Irreversible actions — proceed with caution.</p>
-          <button className="text-[13px] font-semibold px-4 py-2 rounded-xl transition-all" style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)' }}>
+          <p className="text-[12px] mb-3" style={{ color: 'rgba(244,244,245,0.4)' }}>Irreversible actions — proceed with caution.</p>
+          <button className="text-[13px] font-semibold px-4 py-2 rounded-xl transition-all" style={{ background: 'rgba(248,113,113,0.08)', color: '#f87171', border: '1px solid rgba(248,113,113,0.15)' }}>
             Delete account
           </button>
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

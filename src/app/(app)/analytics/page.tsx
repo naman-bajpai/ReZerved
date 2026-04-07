@@ -180,10 +180,10 @@ export default function AnalyticsPage() {
   const statusData = useMemo(() => {
     const colors: Record<string, string> = {
       confirmed: '#34d399',
-      pending: '#fbbf24',
-      cancelled: '#f87171',
+      pending: '#f59e0b',
+      cancelled: '#fb7185',
       no_show: '#a78bfa',
-      expired: '#94a3b8',
+      expired: '#71717a',
     };
     return Object.entries(analytics?.bookings.breakdown || {})
       .map(([name, value]) => ({ name, value, color: colors[name] || '#f59e0b' }))
@@ -260,7 +260,7 @@ export default function AnalyticsPage() {
                 <XAxis dataKey="day" tick={{ fill: 'rgba(244,244,245,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'rgba(244,244,245,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="revenue" stroke="#f59e0b" strokeWidth={2} fill="url(#revGrad)" dot={false} activeDot={{ r: 4, fill: '#f59e0b', stroke: '#09090b', strokeWidth: 2 }} />
+                <Area type="monotone" dataKey="revenue" stroke="#f59e0b" strokeWidth={2} fill="url(#revGrad)" dot={false} activeDot={{ r: 4, fill: '#f59e0b', stroke: '#0d0d12', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           ) : (

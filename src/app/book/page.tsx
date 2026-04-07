@@ -48,71 +48,152 @@ export default function BookPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafaf8] flex flex-col max-w-lg mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-gray-200 bg-white">
-        <Link href="/" className="text-gray-400 hover:text-gray-700 transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f97316] to-[#ec4899] flex items-center justify-center">
-            <span className="text-white text-xs font-bold">B</span>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-[#0f0a1e]">Booking Assistant</p>
-            <p className="text-xs text-green-500">Online</p>
-          </div>
-        </div>
-      </div>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@500;600&family=Outfit:wght@300;400;500;600&display=swap');
+        .bp-root { font-family: 'Outfit', system-ui, sans-serif; }
+        .bp-serif { font-family: 'Cormorant', Georgia, serif; }
+        .bp-input {
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #fff;
+          outline: none;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .bp-input::placeholder { color: rgba(255,255,255,0.25); }
+        .bp-input:focus {
+          border-color: rgba(240,169,107,0.5);
+          box-shadow: 0 0 0 3px rgba(240,169,107,0.08);
+        }
+        @keyframes bp-fade-in {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .bp-msg { animation: bp-fade-in 0.25s ease forwards; }
+        @keyframes bp-bounce {
+          0%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-4px); }
+        }
+        .bp-dot-1 { animation: bp-bounce 1.2s ease-in-out infinite; }
+        .bp-dot-2 { animation: bp-bounce 1.2s ease-in-out 0.2s infinite; }
+        .bp-dot-3 { animation: bp-bounce 1.2s ease-in-out 0.4s infinite; }
+      `}</style>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                m.role === 'user'
-                  ? 'bg-[#f97316] text-white rounded-br-sm'
-                  : 'bg-white border border-gray-200 text-[#0f0a1e] rounded-bl-sm shadow-sm'
-              }`}
-            >
-              {m.text}
-            </div>
-          </div>
-        ))}
-        {sending && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
-              <span className="flex gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0ms]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:150ms]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:300ms]" />
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Input */}
-      <div className="p-4 border-t border-gray-200 bg-white">
-        <div className="flex gap-2 items-center">
-          <input
-            className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm outline-none focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/20 transition-all"
-            placeholder="Type a message…"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && send()}
-            disabled={sending}
-          />
-          <button
-            onClick={send}
-            disabled={!input.trim() || sending}
-            className="w-10 h-10 rounded-full bg-[#f97316] disabled:opacity-40 flex items-center justify-center text-white transition-opacity hover:bg-[#ea6c0a]"
+      <div
+        className="bp-root min-h-screen flex flex-col max-w-lg mx-auto"
+        style={{
+          background: 'radial-gradient(ellipse 80% 50% at 50% -5%, rgba(240,169,107,0.06) 0%, transparent 60%), #0a0a12',
+        }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <Link
+            href="/"
+            className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+            style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.05)' }}
           >
-            <Send className="w-4 h-4" />
-          </button>
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, #f0a96b, #e879a0)',
+                boxShadow: '0 4px 14px rgba(240,169,107,0.3)',
+              }}
+            >
+              <span className="text-sm font-bold" style={{ color: '#0a0a12', fontFamily: 'Outfit, sans-serif' }}>B</span>
+            </div>
+            <div>
+              <p className="bp-serif text-base font-semibold" style={{ color: '#fff' }}>Booking Assistant</p>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.6)' }} />
+                <span className="text-xs" style={{ color: 'rgba(52,211,153,0.8)' }}>Online</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-3">
+          {messages.map((m, i) => (
+            <div key={i} className={`bp-msg flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                className="max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
+                style={
+                  m.role === 'user'
+                    ? {
+                        background: 'linear-gradient(135deg, #f0a96b, #e879a0)',
+                        color: '#0a0a12',
+                        fontWeight: 500,
+                        borderBottomRightRadius: '6px',
+                        boxShadow: '0 4px 16px rgba(240,169,107,0.2)',
+                      }
+                    : {
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'rgba(255,255,255,0.8)',
+                        borderBottomLeftRadius: '6px',
+                      }
+                }
+              >
+                {m.text}
+              </div>
+            </div>
+          ))}
+
+          {sending && (
+            <div className="bp-msg flex justify-start">
+              <div
+                className="rounded-2xl px-5 py-3.5 flex items-center gap-1.5"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderBottomLeftRadius: '6px',
+                }}
+              >
+                <span className="bp-dot-1 w-1.5 h-1.5 rounded-full inline-block" style={{ background: 'rgba(240,169,107,0.6)' }} />
+                <span className="bp-dot-2 w-1.5 h-1.5 rounded-full inline-block" style={{ background: 'rgba(240,169,107,0.6)' }} />
+                <span className="bp-dot-3 w-1.5 h-1.5 rounded-full inline-block" style={{ background: 'rgba(240,169,107,0.6)' }} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input */}
+        <div
+          className="px-5 py-4 flex-shrink-0"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <div className="flex gap-2.5 items-center">
+            <input
+              className="bp-input flex-1 rounded-2xl px-4 py-3 text-sm"
+              placeholder="Type a message…"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && send()}
+              disabled={sending}
+            />
+            <button
+              onClick={send}
+              disabled={!input.trim() || sending}
+              className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
+              style={{
+                background: input.trim() && !sending
+                  ? 'linear-gradient(135deg, #f0a96b, #e879a0)'
+                  : 'rgba(255,255,255,0.06)',
+                color: input.trim() && !sending ? '#0a0a12' : 'rgba(255,255,255,0.2)',
+                boxShadow: input.trim() && !sending ? '0 4px 16px rgba(240,169,107,0.25)' : 'none',
+              }}
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -69,7 +69,10 @@ export default function BookingLinkPage() {
       </div>
 
       <div>
-        <Card className="border-white/[0.08] bg-white/[0.04] shadow-[0_18px_44px_-28px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+        <Card
+          className="shadow-[0_18px_44px_-28px_rgba(0,0,0,0.45)] backdrop-blur-sm"
+          style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)' }}
+        >
           <CardHeader>
             <div className="flex items-center gap-2.5">
               <div
@@ -86,7 +89,7 @@ export default function BookingLinkPage() {
                 <CardTitle className="text-base" style={{ color: '#f4f4f5' }}>
                   Your BookedUp link
                 </CardTitle>
-                <CardDescription className="text-xs" style={{ color: 'rgba(244,244,245,0.45)' }}>
+                <CardDescription className="text-xs" style={{ color: '#71717a' }}>
                   Drop this in your bio — it stays the same forever.
                 </CardDescription>
               </div>
@@ -103,8 +106,8 @@ export default function BookingLinkPage() {
                 <div
                   className="flex items-center gap-2 rounded-xl px-4 py-3"
                   style={{
-                    border: '1px solid rgba(245,158,11,0.22)',
-                    background: 'rgba(245,158,11,0.08)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'rgba(255,255,255,0.04)',
                   }}
                 >
                   <span className="flex-1 text-sm font-mono truncate" style={{ color: '#f4f4f5' }}>
@@ -113,7 +116,7 @@ export default function BookingLinkPage() {
                   <button
                     onClick={copyLink}
                     className="flex-shrink-0 transition-colors"
-                    style={{ color: 'rgba(244,244,245,0.45)' }}
+                    style={{ color: '#71717a' }}
                     title="Copy link"
                   >
                     {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -143,7 +146,7 @@ export default function BookingLinkPage() {
                   </a>
                 </div>
 
-                <p className="text-xs leading-relaxed" style={{ color: 'rgba(244,244,245,0.45)' }}>
+                <p className="text-xs leading-relaxed" style={{ color: '#71717a' }}>
                   Customers who book through this link will appear in your{' '}
                   <strong className="font-semibold" style={{ color: 'rgba(244,244,245,0.75)' }}>
                     Clients
@@ -157,7 +160,7 @@ export default function BookingLinkPage() {
               </>
             ) : (
               <>
-                <p className="text-sm" style={{ color: 'rgba(244,244,245,0.5)' }}>
+                <p className="text-sm" style={{ color: '#71717a' }}>
                   You don&apos;t have a booking link yet. Generate one to get started.
                 </p>
                 <Button onClick={generateSlug} disabled={generating}>
@@ -174,14 +177,17 @@ export default function BookingLinkPage() {
       </div>
 
       <div>
-        <Card className="border-white/[0.08] bg-white/[0.03] backdrop-blur-sm">
+        <Card
+          className="backdrop-blur-sm"
+          style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)' }}
+        >
           <CardHeader>
             <CardTitle className="text-sm" style={{ color: '#f4f4f5' }}>
               How it works
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ol className="space-y-3 text-sm" style={{ color: 'rgba(244,244,245,0.55)' }}>
+            <ol className="space-y-3 text-sm" style={{ color: '#71717a' }}>
               {[
                 'Customer clicks your link from Instagram bio or anywhere you share it.',
                 'They enter their name and email — a 6-digit code is sent to verify.',

@@ -21,8 +21,8 @@ function getSegment(client: Client): { label: string; color: string; bg: string 
     : 999;
 
   if (spend >= 100 && freq <= 28)    return { label: 'Champion',  color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' };
-  if (lastDays > 60)                  return { label: 'At Risk',   color: '#f87171', bg: 'rgba(248,113,113,0.1)' };
-  if (lastDays > 30)                  return { label: 'Lapsing',   color: '#fb7185', bg: 'rgba(251,113,133,0.1)' };
+  if (lastDays > 60)                  return { label: 'At Risk',   color: '#fb7185', bg: 'rgba(251,113,133,0.1)' };
+  if (lastDays > 30)                  return { label: 'Lapsing',   color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' };
   if (spend >= 60)                    return { label: 'Loyal',     color: '#34d399', bg: 'rgba(52,211,153,0.1)' };
   return                               { label: 'New',        color: '#a78bfa', bg: 'rgba(167,139,250,0.1)' };
 }
@@ -71,7 +71,7 @@ function ClientCard({ client, idx, onSelect }: {
             {seg.label}
           </span>
         </div>
-        <p className="text-[12px] truncate" style={{ color: 'rgba(244,244,245,0.4)' }}>
+        <p className="text-[12px] truncate" style={{ color: '#71717a' }}>
           {client.phone || 'No contact info'}
         </p>
       </div>
@@ -81,15 +81,15 @@ function ClientCard({ client, idx, onSelect }: {
         <p className="text-[14px] font-bold font-mono-nums" style={{ color: '#f59e0b' }}>
           {fmtCurrency(client.avg_spend || 0)}
         </p>
-        <p className="text-[11px] mt-0.5" style={{ color: 'rgba(244,244,245,0.3)' }}>avg spend</p>
+        <p className="text-[11px] mt-0.5" style={{ color: '#71717a' }}>avg spend</p>
       </div>
 
       {/* Last booked */}
       <div className="text-right flex-shrink-0 hidden md:block">
-        <p className="text-[13px] font-medium" style={{ color: 'rgba(244,244,245,0.55)' }}>
+        <p className="text-[13px] font-medium" style={{ color: '#71717a' }}>
           {lastBooked !== null ? (lastBooked === 0 ? 'Today' : `${lastBooked}d ago`) : 'Never'}
         </p>
-        <p className="text-[11px] mt-0.5" style={{ color: 'rgba(244,244,245,0.3)' }}>last visited</p>
+        <p className="text-[11px] mt-0.5" style={{ color: '#71717a' }}>last visited</p>
       </div>
 
       {/* Frequency */}
@@ -103,7 +103,7 @@ function ClientCard({ client, idx, onSelect }: {
         )}
       </div>
 
-      <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: 'rgba(244,244,245,1)' }} />
+      <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-40 transition-opacity" style={{ color: '#f4f4f5' }} />
     </div>
   );
 }
@@ -123,7 +123,7 @@ function ClientPanel({ client, onClose }: { client: Client; onClose: () => void 
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <p className="text-[14px] font-semibold" style={{ color: '#f4f4f5' }}>Client Profile</p>
-        <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(244,244,245,0.4)' }}>
+        <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: '#71717a' }}>
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -136,7 +136,7 @@ function ClientPanel({ client, onClose }: { client: Client; onClose: () => void 
           {seg.label}
         </span>
         {client.phone && (
-          <div className="flex items-center gap-1.5 text-[12px]" style={{ color: 'rgba(244,244,245,0.45)' }}>
+          <div className="flex items-center gap-1.5 text-[12px]" style={{ color: '#71717a' }}>
             <Phone className="w-3 h-3" />
             {client.phone}
           </div>
@@ -147,13 +147,13 @@ function ClientPanel({ client, onClose }: { client: Client; onClose: () => void 
       <div className="px-5 py-4 grid grid-cols-2 gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         {[
           { label: 'Avg Spend', value: fmtCurrency(client.avg_spend || 0), color: '#f59e0b' },
-          { label: 'Last Visit', value: lastBooked !== null ? `${lastBooked}d ago` : 'Never', color: 'rgba(244,244,245,0.7)' },
+          { label: 'Last Visit', value: lastBooked !== null ? `${lastBooked}d ago` : 'Never', color: '#f4f4f5' },
           { label: 'Frequency', value: client.typical_frequency_days ? `${client.typical_frequency_days}d` : '—', color: '#a78bfa' },
           { label: 'Total Visits', value: '12', color: '#34d399' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <p className="text-[15px] font-bold font-mono-nums mb-0.5" style={{ color }}>{value}</p>
-            <p className="text-[10px]" style={{ color: 'rgba(244,244,245,0.3)' }}>{label}</p>
+            <p className="text-[10px]" style={{ color: '#71717a' }}>{label}</p>
           </div>
         ))}
       </div>
@@ -165,7 +165,7 @@ function ClientPanel({ client, onClose }: { client: Client; onClose: () => void 
             <Sparkles className="w-3.5 h-3.5" style={{ color: '#f59e0b' }} />
             <span className="text-[12px] font-semibold" style={{ color: '#f59e0b' }}>Retention Opportunity</span>
           </div>
-          <p className="text-[12px] mb-3" style={{ color: 'rgba(244,244,245,0.55)' }}>
+          <p className="text-[12px] mb-3" style={{ color: '#71717a' }}>
             {client.name?.split(' ')[0]} hasn't visited in {lastBooked} days. Send a win-back message?
           </p>
           <button className="w-full py-2 rounded-lg text-[12px] font-semibold transition-all" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
@@ -176,12 +176,12 @@ function ClientPanel({ client, onClose }: { client: Client; onClose: () => void 
 
       {/* Notes placeholder */}
       <div className="mx-5 mt-4 mb-5">
-        <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgba(244,244,245,0.3)' }}>Notes</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: '#71717a' }}>Notes</p>
         <textarea
           placeholder="Add client notes…"
           rows={4}
           className="w-full resize-none rounded-xl px-3 py-2.5 text-[12px] outline-none transition-all"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(244,244,245,0.7)', caretColor: '#f59e0b' }}
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#f4f4f5', caretColor: '#f59e0b' }}
         />
       </div>
     </div>
@@ -242,7 +242,7 @@ export default function ClientsPage() {
           <h1 className="text-[26px] font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
             Clients
           </h1>
-          <p className="text-[14px] mt-1" style={{ color: 'rgba(244,244,245,0.4)' }}>
+          <p className="text-[14px] mt-1" style={{ color: '#71717a' }}>
             {clients.length} client{clients.length !== 1 ? 's' : ''} · manage relationships
           </p>
         </div>
@@ -261,11 +261,11 @@ export default function ClientsPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
               style={segment === val ? {
                 background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)'
-              } : { color: 'rgba(244,244,245,0.45)' }}
+              } : { color: '#71717a' }}
             >
               {label}
               {count > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(244,244,245,0.5)' }}>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)', color: '#71717a' }}>
                   {count}
                 </span>
               )}
@@ -274,12 +274,12 @@ export default function ClientsPage() {
         </div>
 
         <div className="relative ml-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'rgba(244,244,245,0.3)' }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: '#71717a' }} />
           <input
             value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search clients…"
             className="pl-9 pr-4 py-2 rounded-xl text-[12px] outline-none w-52 transition-all"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(244,244,245,0.8)', caretColor: '#f59e0b' }}
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: '#f4f4f5', caretColor: '#f59e0b' }}
           />
         </div>
       </div>
@@ -288,7 +288,7 @@ export default function ClientsPage() {
       {!loading && filtered.length > 0 && (
         <div className="grid px-5" style={{ gridTemplateColumns: '1fr auto auto auto auto' }}>
           {['Client', 'Avg Spend', 'Last Visit', 'Frequency', ''].map((h, i) => (
-            <p key={i} className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(244,244,245,0.25)', display: i >= 2 ? 'none' : undefined }}>
+            <p key={i} className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#52525b', display: i >= 2 ? 'none' : undefined }}>
               {h}
             </p>
           ))}
@@ -302,12 +302,12 @@ export default function ClientsPage() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <Users className="w-7 h-7" style={{ color: 'rgba(244,244,245,0.2)' }} strokeWidth={1.5} />
+              <Users className="w-7 h-7" style={{ color: '#71717a' }} strokeWidth={1.5} />
             </div>
-            <p className="text-[15px] font-semibold mb-1" style={{ color: 'rgba(244,244,245,0.5)' }}>
+            <p className="text-[15px] font-semibold mb-1" style={{ color: '#f4f4f5' }}>
               {search ? 'No clients found' : 'No clients yet'}
             </p>
-            <p className="text-[13px]" style={{ color: 'rgba(244,244,245,0.25)' }}>
+            <p className="text-[13px]" style={{ color: '#71717a' }}>
               {search ? 'Try a different search' : 'Clients will appear when they book'}
             </p>
           </div>

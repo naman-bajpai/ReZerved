@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, CalendarDays, Users, Sparkles, Clock,
   BarChart3, Link2, Shield, LogOut, MessageSquare, Settings,
-  TrendingUp, ChevronRight,
+  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getMe } from '@/lib/api';
@@ -56,16 +56,16 @@ function NavItem({ href, label, icon: Icon, active, badge }: NavItemProps) {
     <Link
       href={href}
       className={cn(
-        'group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200',
+        'group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150',
         active
-          ? 'text-white'
-          : 'text-[rgba(255,255,255,0.42)] hover:text-[rgba(255,255,255,0.8)] hover:bg-[rgba(255,255,255,0.04)]'
+          ? 'text-[#f59e0b]'
+          : 'text-[#71717a] hover:text-[#f4f4f5] hover:bg-[rgba(255,255,255,0.04)]'
       )}
     >
       {active && (
         <div
-          className="absolute inset-0 rounded-xl transition-all duration-200"
-          style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.18)' }}
+          className="absolute inset-0 rounded-xl"
+          style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.1)' }}
         />
       )}
 
@@ -76,19 +76,19 @@ function NavItem({ href, label, icon: Icon, active, badge }: NavItemProps) {
 
       <Icon
         className={cn(
-          'relative w-[17px] h-[17px] flex-shrink-0 transition-colors duration-200',
-          active ? 'text-amber-400' : 'text-[rgba(255,255,255,0.28)] group-hover:text-[rgba(255,255,255,0.55)]'
+          'relative w-[17px] h-[17px] flex-shrink-0 transition-colors duration-150',
+          active ? 'text-[#f59e0b]' : 'text-[#52525b] group-hover:text-[#f4f4f5]'
         )}
         strokeWidth={active ? 2.2 : 1.8}
       />
       <span className="relative flex-1 leading-none">{label}</span>
       {badge && (
-        <span className="relative flex-shrink-0 text-[11px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
+        <span className="relative flex-shrink-0 text-[11px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>
           {badge}
         </span>
       )}
       {active && (
-        <ChevronRight className="relative w-3 h-3 text-[rgba(255,255,255,0.2)] flex-shrink-0" />
+        <ChevronRight className="relative w-3 h-3 text-[#f59e0b]/40 flex-shrink-0" />
       )}
     </Link>
   );
@@ -98,7 +98,7 @@ function NavSection({ label, children }: { label?: string; children: React.React
   return (
     <div className="space-y-0.5">
       {label && (
-        <p className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold" style={{ color: 'rgba(255,255,255,0.2)' }}>
+        <p className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold" style={{ color: '#52525b' }}>
           {label}
         </p>
       )}
@@ -145,24 +145,19 @@ export function SidebarNav() {
       className="fixed left-0 top-0 h-full flex flex-col overflow-hidden"
       style={{
         width: 256,
-        background: '#0a0a0f',
+        background: '#09090b',
         borderRight: '1px solid rgba(255,255,255,0.06)',
-        boxShadow: '4px 0 24px rgba(0,0,0,0.4)',
       }}
     >
-      {/* Ambient glow */}
-      <div className="absolute top-0 left-0 w-48 h-48 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 20%, rgba(245,158,11,0.04) 0%, transparent 70%)' }} />
-      <div className="absolute bottom-0 right-0 w-48 h-48 pointer-events-none" style={{ background: 'radial-gradient(circle at 80% 80%, rgba(251,113,133,0.03) 0%, transparent 70%)' }} />
-
       {/* Brand */}
-      <div className="relative px-4 pt-5 pb-4">
+      <div className="px-4 pt-5 pb-4">
         <div className="flex items-center gap-3 px-2">
           <Logo />
           <div>
-            <h1 className="text-[14px] font-bold leading-none text-white tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            <h1 className="text-[14px] font-bold leading-none tracking-tight" style={{ color: '#f4f4f5', fontFamily: 'var(--font-display)' }}>
               BookedUp
             </h1>
-            <p className="text-[9px] uppercase tracking-[0.15em] mt-1 leading-none font-semibold" style={{ color: 'rgba(245,158,11,0.5)' }}>
+            <p className="text-[9px] uppercase tracking-[0.15em] mt-1 leading-none font-semibold" style={{ color: '#f59e0b' }}>
               Revenue Optimizer
             </p>
           </div>
@@ -174,9 +169,9 @@ export function SidebarNav() {
 
       {/* AI status pill */}
       <div className="px-4 pt-4">
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.12)' }}>
-          <div className="live-dot" />
-          <p className="text-[11px] font-medium" style={{ color: 'rgba(52,211,153,0.8)' }}>AI Booking Agent active</p>
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.1)' }}>
+          <div className="live-dot" style={{ background: '#34d399' }} />
+          <p className="text-[11px] font-medium" style={{ color: '#34d399' }}>AI Booking Agent active</p>
         </div>
       </div>
 
@@ -205,17 +200,17 @@ export function SidebarNav() {
       </nav>
 
       {/* Bottom — User card */}
-      <div className="relative px-3 pb-4">
+      <div className="px-3 pb-4">
         <div className="h-px mb-3" style={{ background: 'rgba(255,255,255,0.06)' }} />
         <div
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 group"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
         >
           {/* Avatar */}
           <div
             className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold"
             style={{
-              background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,113,133,0.2))',
+              background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,113,133,0.15))',
               color: '#f59e0b',
               border: '1px solid rgba(245,158,11,0.2)',
             }}
@@ -223,17 +218,17 @@ export function SidebarNav() {
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-medium truncate leading-none" style={{ color: 'rgba(255,255,255,0.75)' }}>
+            <p className="text-[12px] font-medium truncate leading-none" style={{ color: '#f4f4f5' }}>
               {session?.user?.name || 'My Account'}
             </p>
-            <p className="text-[10px] truncate mt-0.5 leading-none" style={{ color: 'rgba(255,255,255,0.28)' }}>
+            <p className="text-[10px] truncate mt-0.5 leading-none" style={{ color: '#71717a' }}>
               {session?.user?.email || ''}
             </p>
           </div>
           <button
             onClick={handleSignOut}
-            className="flex-shrink-0 p-1.5 rounded-lg transition-colors hover:bg-[rgba(255,255,255,0.07)]"
-            style={{ color: 'rgba(255,255,255,0.25)' }}
+            className="flex-shrink-0 p-1.5 rounded-lg transition-colors hover:bg-[rgba(255,255,255,0.06)]"
+            style={{ color: '#52525b' }}
             title="Sign out"
           >
             <LogOut className="w-3.5 h-3.5" strokeWidth={1.8} />
