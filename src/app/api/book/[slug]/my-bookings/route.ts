@@ -25,12 +25,29 @@ export async function GET(
 
   const { data: bookings, error } = await supabase
     .from('bookings')
-    .select('*, services (name, price, duration_mins)')
+    .select('id, status, payment_status, starts_at, ends_at, total_price, service_id')
     .eq('business_id', business.id)
     .eq('guest_email', session.email)
     .order('starts_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ bookings: bookings || [] });
+  if (!bookings || bookings.length === 0) {
+    return NextResponse.json({ bookings: [] });
+  }
+
+  // Fetch service details separately to avoid FK join dependency
+  const serviceIds = [...new Set(bookings.map((b) => b.service_id).filter(Boolean))];
+  const { data: services } = serviceIds.length
+    ? await supabase.from('services').select('id, name, duration_mins').in('id', serviceIds)
+    : { data: [] };
+
+  const serviceMap = Object.fromEntries((services || []).map((s) => [s.id, s]));
+
+  const enriched = bookings.map((b) => ({
+    ...b,
+    services: b.service_id ? serviceMap[b.service_id] ?? null : null,
+  }));
+
+  return NextResponse.json({ bookings: enriched });
 }

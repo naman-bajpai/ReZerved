@@ -240,7 +240,10 @@ export default function BookingPage() {
     });
     if (res.ok) {
       const { bookings } = await res.json();
-      setMyBookings(bookings);
+      setMyBookings(bookings ?? []);
+    } else {
+      const d = await res.json().catch(() => ({}));
+      console.error('[fetchMyBookings] failed', res.status, d);
     }
   }
 

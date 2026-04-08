@@ -96,7 +96,9 @@ export interface AdminUser {
 // ─── Bookings ─────────────────────────────────────────────────────────────────
 
 export async function getBookings(params: { status?: string; date?: string } = {}) {
-  const q = new URLSearchParams(params as Record<string, string>).toString();
+  const q = new URLSearchParams(
+    Object.fromEntries(Object.entries(params).filter(([, v]) => v != null)) as Record<string, string>
+  ).toString();
   return apiFetch<{ bookings: Booking[]; count: number }>(`/api/bookings?${q}`);
 }
 
@@ -114,7 +116,9 @@ export async function updateBookingStatus(
 // ─── Clients ──────────────────────────────────────────────────────────────────
 
 export async function getClients(params: { search?: string } = {}) {
-  const q = new URLSearchParams(params as Record<string, string>).toString();
+  const q = new URLSearchParams(
+    Object.fromEntries(Object.entries(params).filter(([, v]) => v != null)) as Record<string, string>
+  ).toString();
   return apiFetch<{ clients: Client[]; count: number }>(`/api/clients?${q}`);
 }
 

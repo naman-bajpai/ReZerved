@@ -20,11 +20,12 @@ export async function GET(
     .from('services')
     .select('id, name, duration_mins, price, add_ons')
     .eq('business_id', business.id)
-    .eq('is_active', true)
+    .neq('is_active', false)
     .order('name');
 
   if (svcError) {
     console.error('[book/slug] services query error:', svcError.message, { businessId: business.id });
+    return NextResponse.json({ error: svcError.message }, { status: 500 });
   }
 
   return NextResponse.json({ business, services: services ?? [] });

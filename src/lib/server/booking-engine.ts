@@ -36,13 +36,20 @@ export async function checkAvailability(
 
   if (schedErr) throw new Error('Failed to fetch availability schedule');
 
+  // Widen the window by one day on each side to avoid any UTC/local-time
+  // mismatch — the overlap check handles precision.
+  const windowStart = new Date(dateFrom + 'T00:00:00Z');
+  windowStart.setUTCDate(windowStart.getUTCDate() - 1);
+  const windowEnd = new Date(dateTo + 'T00:00:00Z');
+  windowEnd.setUTCDate(windowEnd.getUTCDate() + 2);
+
   const { data: existingBookings, error: bookErr } = await supabase
     .from('bookings')
     .select('starts_at, ends_at, status')
     .eq('business_id', businessId)
     .in('status', ['pending', 'confirmed'])
-    .gte('starts_at', new Date(dateFrom).toISOString())
-    .lte('starts_at', new Date(dateTo + 'T23:59:59').toISOString());
+    .gte('starts_at', windowStart.toISOString())
+    .lte('starts_at', windowEnd.toISOString());
 
   if (bookErr) throw new Error('Failed to fetch existing bookings');
 
@@ -78,7 +85,8 @@ export async function checkAvailability(
 
         const hasConflict = (existingBookings || []).some((b: any) => {
           const bStart = new Date(b.starts_at);
-          const bEnd = new Date(b.ends_at);
+          // Guard against null ends_at — fall back to 4-hour block
+          const bEnd = b.ends_at ? new Date(b.ends_at) : new Date(bStart.getTime() + 4 * 60 * 60 * 1000);
           return slotStart < bEnd && slotEnd > bStart;
         });
 
@@ -98,7 +106,7 @@ export async function checkAvailability(
     current.setHours(0, 0, 0, 0);
   }
 
-  return slots.slice(0, 10);
+  return slots.slice(0, 50);
 }
 
 export async function createBooking(

@@ -11,7 +11,7 @@ export const GET = withBusiness(async (req, _profile, business) => {
 
   let query = supabase
     .from('bookings')
-    .select('*, clients (id, name, phone, instagram_id, avg_spend), services (id, name, price, duration_mins)')
+    .select('*')
     .eq('business_id', business.business_id)
     .order('starts_at', { ascending: true })
     .range(offset, offset + limit - 1);
@@ -23,8 +23,34 @@ export const GET = withBusiness(async (req, _profile, business) => {
       .lte('starts_at', `${date}T23:59:59`);
   }
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });
+  const { data: bookings, error } = await query;
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ bookings: data, count: data.length });
+  if (!bookings || bookings.length === 0) {
+    return NextResponse.json({ bookings: [], count: 0 });
+  }
+
+  // Fetch related records separately to avoid FK join dependency
+  const serviceIds = Array.from(new Set(bookings.map((b) => b.service_id).filter(Boolean)));
+  const clientIds = Array.from(new Set(bookings.map((b) => b.client_id).filter(Boolean)));
+
+  const [{ data: services }, { data: clients }] = await Promise.all([
+    serviceIds.length
+      ? supabase.from('services').select('id, name, price, duration_mins').in('id', serviceIds)
+      : Promise.resolve({ data: [] }),
+    clientIds.length
+      ? supabase.from('clients').select('id, name, phone, instagram_id, avg_spend').in('id', clientIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const serviceMap = Object.fromEntries((services || []).map((s) => [s.id, s]));
+  const clientMap = Object.fromEntries((clients || []).map((c) => [c.id, c]));
+
+  const enriched = bookings.map((b) => ({
+    ...b,
+    services: b.service_id ? serviceMap[b.service_id] ?? null : null,
+    clients: b.client_id ? clientMap[b.client_id] ?? null : null,
+  }));
+
+  return NextResponse.json({ bookings: enriched, count: enriched.length });
 });
