@@ -37,7 +37,7 @@ export async function GET(
   }
 
   // Fetch service details separately to avoid FK join dependency
-  const serviceIds = [...new Set(bookings.map((b) => b.service_id).filter(Boolean))];
+  const serviceIds = Array.from(new Set(bookings.map((b) => b.service_id).filter(Boolean)));
   const { data: services } = serviceIds.length
     ? await supabase.from('services').select('id, name, duration_mins').in('id', serviceIds)
     : { data: [] };

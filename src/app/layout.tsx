@@ -27,7 +27,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'BookedUp — AI Revenue Optimizer',
+  title: 'Rezerve — AI Revenue Optimizer',
   description: 'Turn every message into a confirmed booking. The AI revenue engine for service businesses.',
   keywords: ['booking', 'AI', 'revenue', 'nail salon', 'lash artist', 'appointment'],
 };

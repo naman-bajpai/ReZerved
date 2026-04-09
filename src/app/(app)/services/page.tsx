@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Clock3, DollarSign, Loader2, Plus, Sparkles } from 'lucide-react';
-import { createService, getServices, type Service } from '@/lib/api';
+import { AlertCircle, Clock3, DollarSign, Loader2, Plus, Sparkles, Power } from 'lucide-react';
+import { createService, getServices, updateService, type Service } from '@/lib/api';
 import { PageTransition } from '@/components/page-transition';
 
 function fmtCurrency(v: number | string) {
@@ -23,6 +23,7 @@ export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [toggling, setToggling] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -47,7 +48,10 @@ export default function ServicesPage() {
   }, []);
 
   const sortedServices = useMemo(
-    () => [...services].sort((a, b) => a.name.localeCompare(b.name)),
+    () => [...services].sort((a, b) => {
+      if (a.is_active !== b.is_active) return a.is_active ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    }),
     [services]
   );
 
@@ -90,6 +94,18 @@ export default function ServicesPage() {
     }
   }
 
+  async function handleToggle(service: Service) {
+    setToggling(service.id);
+    try {
+      const res = await updateService(service.id, { is_active: !service.is_active });
+      setServices((prev) => prev.map((s) => (s.id === service.id ? res.service : s)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update service');
+    } finally {
+      setToggling(null);
+    }
+  }
+
   return (
     <PageTransition>
       <div className="space-y-7 pb-12">
@@ -109,10 +125,14 @@ export default function ServicesPage() {
           {/* Add service form */}
           <div
             className="rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
+            style={{
+              background: 'rgba(255,255,255,0.025)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderTop: '1.5px solid #f97316',
+            }}
           >
-            <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-[14px] font-semibold" style={{ color: '#f4f4f5' }}>Add service</p>
+            <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <p className="text-[14px] font-semibold" style={{ color: '#e4e4e7' }}>Add service</p>
             </div>
             <div className="px-5 py-4">
               <form className="space-y-3" onSubmit={handleSubmit}>
@@ -199,10 +219,13 @@ export default function ServicesPage() {
           {/* Services list */}
           <div
             className="rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
+            style={{
+              background: 'rgba(255,255,255,0.025)',
+              border: '1px solid rgba(255,255,255,0.07)',
+            }}
           >
-            <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-[14px] font-semibold" style={{ color: '#f4f4f5' }}>Active services</p>
+            <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <p className="text-[14px] font-semibold" style={{ color: '#e4e4e7' }}>All services</p>
             </div>
             <div className="px-5 py-4">
               {loading ? (
@@ -246,8 +269,8 @@ export default function ServicesPage() {
                   {sortedServices.map((service) => (
                     <div
                       key={service.id}
-                      className="rounded-xl px-4 py-3"
-                      style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+                      className="rounded-xl px-4 py-3 transition-all hover:bg-[rgba(255,255,255,0.03)]"
+                      style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.015)' }}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
@@ -265,15 +288,30 @@ export default function ServicesPage() {
                             </span>
                           </div>
                         </div>
-                        <span
-                          className="rounded-full px-2 py-0.5 text-[11px] font-semibold flex-shrink-0"
-                          style={{
-                            background: service.is_active ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                            color: service.is_active ? '#4ade80' : '#f87171',
-                          }}
-                        >
-                          {service.is_active ? 'Active' : 'Inactive'}
-                        </span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                            style={{
+                              background: service.is_active ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                              color: service.is_active ? '#4ade80' : '#f87171',
+                            }}
+                          >
+                            {service.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                          <button
+                            onClick={() => handleToggle(service)}
+                            disabled={toggling === service.id}
+                            title={service.is_active ? 'Deactivate' : 'Activate'}
+                            className="p-1.5 rounded-lg transition-all hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-40"
+                            style={{ color: service.is_active ? '#71717a' : '#4ade80' }}
+                          >
+                            {toggling === service.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Power className="w-3.5 h-3.5" strokeWidth={1.8} />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}

@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, CalendarDays, Users, Sparkles, Clock,
   BarChart3, Link2, Shield, LogOut, MessageSquare, Settings,
-  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getMe } from '@/lib/api';
@@ -14,7 +13,7 @@ import { authClient } from '@/lib/auth-client';
 
 const NAV = [
   { href: '/dashboard',      label: 'Overview',       icon: LayoutDashboard,  group: 'main' },
-  { href: '/conversations',  label: 'Conversations',  icon: MessageSquare,    group: 'main', badge: '3' },
+  { href: '/conversations',  label: 'Conversations',  icon: MessageSquare,    group: 'main' },
   { href: '/bookings',       label: 'Bookings',       icon: CalendarDays,     group: 'main' },
   { href: '/clients',        label: 'Clients',        icon: Users,            group: 'main' },
   { href: '/analytics',      label: 'Analytics',      icon: BarChart3,        group: 'main' },
@@ -26,7 +25,7 @@ const NAV = [
 
 function Logo() {
   return (
-    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+    <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
       <defs>
         <linearGradient id="snl" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
           <stop stopColor="#f59e0b"/>
@@ -56,39 +55,52 @@ function NavItem({ href, label, icon: Icon, active, badge }: NavItemProps) {
     <Link
       href={href}
       className={cn(
-        'group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150',
+        'group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200',
         active
-          ? 'text-[#f59e0b]'
-          : 'text-[#71717a] hover:text-[#f4f4f5] hover:bg-[rgba(255,255,255,0.04)]'
+          ? 'text-[#fbbf24]'
+          : 'text-[#71717a] hover:text-[#d4d4d8] hover:bg-[rgba(255,255,255,0.04)]'
       )}
     >
       {active && (
         <div
           className="absolute inset-0 rounded-xl"
-          style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.1)' }}
+          style={{
+            background: 'linear-gradient(105deg, rgba(245,158,11,0.11) 0%, rgba(245,158,11,0.04) 60%, transparent 100%)',
+            border: '1px solid rgba(245,158,11,0.16)',
+          }}
         />
       )}
 
-      {/* Active left accent */}
       {active && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full" style={{ background: 'linear-gradient(180deg, #f59e0b, #fb7185)' }} />
+        <div
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-[18px] w-[3px] rounded-r-full"
+          style={{
+            background: 'linear-gradient(180deg, #fbbf24, #f97316)',
+            boxShadow: '0 0 8px rgba(251,191,36,0.7), 2px 0 16px rgba(245,158,11,0.25)',
+          }}
+        />
       )}
 
       <Icon
         className={cn(
-          'relative w-[17px] h-[17px] flex-shrink-0 transition-colors duration-150',
-          active ? 'text-[#f59e0b]' : 'text-[#52525b] group-hover:text-[#f4f4f5]'
+          'relative w-[16px] h-[16px] flex-shrink-0 transition-all duration-200',
+          active ? 'text-[#fbbf24]' : 'text-[#52525b] group-hover:text-[#a1a1aa]'
         )}
         strokeWidth={active ? 2.2 : 1.8}
+        style={active ? { filter: 'drop-shadow(0 0 6px rgba(251,191,36,0.45))' } : {}}
       />
-      <span className="relative flex-1 leading-none">{label}</span>
+      <span className="relative flex-1 leading-none tracking-[-0.01em]">{label}</span>
       {badge && (
-        <span className="relative flex-shrink-0 text-[11px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>
+        <span
+          className="relative flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+          style={{
+            background: 'rgba(251,113,133,0.15)',
+            color: '#fb7185',
+            border: '1px solid rgba(251,113,133,0.22)',
+          }}
+        >
           {badge}
         </span>
-      )}
-      {active && (
-        <ChevronRight className="relative w-3 h-3 text-[#f59e0b]/40 flex-shrink-0" />
       )}
     </Link>
   );
@@ -98,7 +110,10 @@ function NavSection({ label, children }: { label?: string; children: React.React
   return (
     <div className="space-y-0.5">
       {label && (
-        <p className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold" style={{ color: '#52525b' }}>
+        <p
+          className="px-3 pb-2 pt-1 text-[10px] uppercase tracking-[0.14em] font-semibold"
+          style={{ color: '#3f3f46' }}
+        >
           {label}
         </p>
       )}
@@ -145,19 +160,36 @@ export function SidebarNav() {
       className="fixed left-0 top-0 h-full flex flex-col overflow-hidden"
       style={{
         width: 256,
-        background: '#09090b',
+        background: 'linear-gradient(168deg, #0f0d0b 0%, #09090b 55%, #09090b 100%)',
         borderRight: '1px solid rgba(255,255,255,0.06)',
       }}
     >
+      {/* Ambient glow behind brand */}
+      <div
+        className="absolute top-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: 180,
+          background: 'radial-gradient(ellipse at 50% -20%, rgba(245,158,11,0.08) 0%, transparent 70%)',
+        }}
+      />
+
       {/* Brand */}
-      <div className="px-4 pt-5 pb-4">
+      <div className="relative px-4 pt-5 pb-4">
         <div className="flex items-center gap-3 px-2">
-          <Logo />
+          <div style={{ filter: 'drop-shadow(0 2px 8px rgba(245,158,11,0.35))' }}>
+            <Logo />
+          </div>
           <div>
-            <h1 className="text-[14px] font-bold leading-none tracking-tight" style={{ color: '#f4f4f5', fontFamily: 'var(--font-display)' }}>
-              BookedUp
+            <h1
+              className="text-[14px] font-bold leading-none tracking-[-0.02em]"
+              style={{ color: '#f4f4f5', fontFamily: 'var(--font-display)' }}
+            >
+              Rezerve
             </h1>
-            <p className="text-[9px] uppercase tracking-[0.15em] mt-1 leading-none font-semibold" style={{ color: '#f59e0b' }}>
+            <p
+              className="text-[9px] uppercase tracking-[0.18em] mt-1 leading-none font-semibold"
+              style={{ color: '#f59e0b' }}
+            >
               Revenue Optimizer
             </p>
           </div>
@@ -165,21 +197,43 @@ export function SidebarNav() {
       </div>
 
       {/* Divider */}
-      <div className="mx-4 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+      <div className="mx-4 h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
 
       {/* AI status pill */}
-      <div className="px-4 pt-4">
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.1)' }}>
-          <div className="live-dot" style={{ background: '#34d399' }} />
+      <div className="relative px-4 pt-3 pb-1">
+        <div
+          className="flex items-center gap-2.5 px-3 py-2 rounded-xl"
+          style={{
+            background: 'linear-gradient(135deg, rgba(52,211,153,0.08) 0%, rgba(52,211,153,0.03) 100%)',
+            border: '1px solid rgba(52,211,153,0.14)',
+            boxShadow: '0 0 0 1px rgba(52,211,153,0.06) inset',
+          }}
+        >
+          <div className="relative flex-shrink-0">
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{
+                background: '#34d399',
+                boxShadow: '0 0 6px rgba(52,211,153,0.8)',
+                animation: 'pulse 2s ease-in-out infinite',
+              }}
+            />
+          </div>
           <p className="text-[11px] font-medium" style={{ color: '#34d399' }}>AI Booking Agent active</p>
+          <div className="ml-auto flex-shrink-0">
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: '#34d399', opacity: 0.4 }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
         <NavSection>
-          {mainNav.map(({ href, label, icon, badge }) => (
-            <NavItem key={href} href={href} label={label} icon={icon} active={pathname === href} badge={badge} />
+          {mainNav.map((item) => (
+            <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} active={pathname === item.href} />
           ))}
         </NavSection>
 
@@ -201,34 +255,37 @@ export function SidebarNav() {
 
       {/* Bottom — User card */}
       <div className="px-3 pb-4">
-        <div className="h-px mb-3" style={{ background: 'rgba(255,255,255,0.06)' }} />
+        <div className="h-px mb-3" style={{ background: 'rgba(255,255,255,0.05)' }} />
         <div
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5"
-          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all"
+          style={{
+            background: 'rgba(255,255,255,0.025)',
+            border: '1px solid rgba(255,255,255,0.07)',
+          }}
         >
-          {/* Avatar */}
           <div
             className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold"
             style={{
-              background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,113,133,0.15))',
+              background: 'linear-gradient(135deg, #f59e0b22, #fb718522)',
               color: '#f59e0b',
-              border: '1px solid rgba(245,158,11,0.2)',
+              border: '1px solid rgba(245,158,11,0.25)',
+              boxShadow: '0 0 8px rgba(245,158,11,0.1)',
             }}
           >
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-medium truncate leading-none" style={{ color: '#f4f4f5' }}>
+            <p className="text-[12px] font-medium truncate leading-none" style={{ color: '#e4e4e7' }}>
               {session?.user?.name || 'My Account'}
             </p>
-            <p className="text-[10px] truncate mt-0.5 leading-none" style={{ color: '#71717a' }}>
+            <p className="text-[10px] truncate mt-0.5 leading-none" style={{ color: '#52525b' }}>
               {session?.user?.email || ''}
             </p>
           </div>
           <button
             onClick={handleSignOut}
-            className="flex-shrink-0 p-1.5 rounded-lg transition-colors hover:bg-[rgba(255,255,255,0.06)]"
-            style={{ color: '#52525b' }}
+            className="flex-shrink-0 p-1.5 rounded-lg transition-all hover:bg-[rgba(255,255,255,0.07)]"
+            style={{ color: '#3f3f46' }}
             title="Sign out"
           >
             <LogOut className="w-3.5 h-3.5" strokeWidth={1.8} />

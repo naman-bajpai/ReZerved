@@ -25,7 +25,7 @@ export default function BookingLinkPage() {
       try {
         const me = await getMe();
         if (cancelled) return;
-        setSlug((me.business as any)?.slug ?? null);
+        setSlug(me.business?.slug ?? null);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -87,7 +87,7 @@ export default function BookingLinkPage() {
               </div>
               <div>
                 <CardTitle className="text-base" style={{ color: '#f4f4f5' }}>
-                  Your BookedUp link
+                  Your Rezerve link
                 </CardTitle>
                 <CardDescription className="text-xs" style={{ color: '#71717a' }}>
                   Drop this in your bio — it stays the same forever.

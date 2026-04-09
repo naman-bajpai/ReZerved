@@ -160,7 +160,7 @@ export default function LoginPage() {
           <h1 className="text-[22px] font-bold mt-4 tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
             Welcome back
           </h1>
-          <p className="text-[14px] mt-1" style={{ color: 'rgba(244,244,245,0.4)' }}>Sign in to your BookedUp account</p>
+          <p className="text-[14px] mt-1" style={{ color: 'rgba(244,244,245,0.4)' }}>Sign in to your Rezerve account</p>
         </div>
 
         <div className="rounded-2xl p-7" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}>

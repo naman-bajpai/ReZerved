@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-const FROM = process.env.EMAIL_FROM || 'BookedUp <noreply@bookedup.app>';
+const FROM = process.env.EMAIL_FROM || 'Rezerve <noreply@rezerve.app>';
 
 export async function sendOtpEmail({
   to,
@@ -50,7 +50,7 @@ export async function sendOtpEmail({
   await resend.emails.send({
     from: FROM,
     to,
-    subject: `${code} — your BookedUp verification code`,
+    subject: `${code} — your Rezerve verification code`,
     html,
   });
 }

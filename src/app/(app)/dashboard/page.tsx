@@ -11,6 +11,7 @@ import {
   DollarSign,
   TrendingUp,
   Users,
+  ArrowUpRight,
 } from 'lucide-react';
 import { getAnalytics, getBookings, type Analytics, type Booking } from '@/lib/api';
 import { PageTransition } from '@/components/page-transition';
@@ -59,8 +60,8 @@ const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }
 
 function Spinner() {
   return (
-    <div className="flex items-center justify-center py-12">
-      <div className="w-5 h-5 rounded-full border-2 border-orange-950 border-t-[#f59e0b] animate-spin" />
+    <div className="flex items-center justify-center py-16">
+      <div className="w-5 h-5 rounded-full border-2 border-[rgba(245,158,11,0.15)] border-t-[#f59e0b] animate-spin" />
     </div>
   );
 }
@@ -82,29 +83,109 @@ function KPICard({
 }) {
   return (
     <div
-      className="rounded-2xl p-5"
+      className="rounded-2xl p-5 relative overflow-hidden group transition-all duration-200 hover:translate-y-[-1px]"
       style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(255,255,255,0.025)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderTop: `1.5px solid ${color}`,
+        boxShadow: `0 0 0 0 ${color}00`,
       }}
     >
-      <div className="mb-3 flex items-start justify-between">
+      {/* Subtle gradient fill emanating from top */}
+      <div
+        className="absolute top-0 left-0 right-0 h-20 pointer-events-none"
+        style={{
+          background: `linear-gradient(180deg, ${color}08 0%, transparent 100%)`,
+        }}
+      />
+
+      <div className="relative mb-4 flex items-start justify-between">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: iconBg }}
+          style={{ background: iconBg, boxShadow: `0 0 12px ${color}15` }}
         >
           <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
         </div>
+        <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-30 transition-opacity" style={{ color }} />
       </div>
-      <div className="text-[26px] font-bold tracking-tight leading-none mb-1.5" style={{ color: '#f4f4f5' }}>
-        {value}
+
+      <div className="relative">
+        <div
+          className="text-[27px] font-bold tracking-[-0.03em] leading-none mb-1.5"
+          style={{ color: '#f4f4f5' }}
+        >
+          {value}
+        </div>
+        <p className="text-[12px] font-semibold mb-1" style={{ color: '#d4d4d8' }}>
+          {title}
+        </p>
+        <p className="text-[11px]" style={{ color: '#52525b' }}>
+          {sub}
+        </p>
       </div>
-      <p className="text-[12px] font-medium mb-1" style={{ color: '#f4f4f5' }}>
-        {title}
-      </p>
-      <p className="text-[11px]" style={{ color: '#71717a' }}>
-        {sub}
-      </p>
+    </div>
+  );
+}
+
+function SectionCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={`rounded-2xl overflow-hidden h-full ${className}`}
+      style={{
+        background: 'rgba(255,255,255,0.025)',
+        border: '1px solid rgba(255,255,255,0.07)',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SectionHeader({
+  icon: Icon,
+  iconColor,
+  iconBg,
+  title,
+  badge,
+  badgeDot,
+}: {
+  icon: React.ElementType;
+  iconColor: string;
+  iconBg: string;
+  title: string;
+  badge?: string;
+  badgeDot?: boolean;
+}) {
+  return (
+    <div
+      className="flex items-center justify-between px-5 py-4"
+      style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+    >
+      <div className="flex items-center gap-2.5">
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center"
+          style={{ background: iconBg }}
+        >
+          <Icon className="w-4 h-4" style={{ color: iconColor }} strokeWidth={2} />
+        </div>
+        <p className="text-[13px] font-semibold" style={{ color: '#e4e4e7' }}>
+          {title}
+        </p>
+      </div>
+      {badge && (
+        <span
+          className="text-[11px] px-2.5 py-1 rounded-full"
+          style={{ background: 'rgba(255,255,255,0.05)', color: '#71717a' }}
+        >
+          {badge}
+        </span>
+      )}
+      {badgeDot && (
+        <div
+          className="w-2 h-2 rounded-full"
+          style={{ background: '#34d399', boxShadow: '0 0 6px rgba(52,211,153,0.7)' }}
+        />
+      )}
     </div>
   );
 }
@@ -174,20 +255,24 @@ export default function DashboardPage() {
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <div
           className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-          style={{ background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.15)' }}
+          style={{ background: 'rgba(251,113,133,0.07)', border: '1px solid rgba(251,113,133,0.14)' }}
         >
           <AlertCircle className="w-5 h-5" style={{ color: '#fb7185' }} />
         </div>
         <p className="text-[15px] font-semibold mb-1" style={{ color: '#f4f4f5' }}>
           Failed to load dashboard
         </p>
-        <p className="text-[13px] mb-4" style={{ color: '#71717a' }}>
+        <p className="text-[13px] mb-5" style={{ color: '#71717a' }}>
           {error}
         </p>
         <button
           onClick={loadData}
-          className="text-[13px] font-medium px-4 py-2 rounded-lg"
-          style={{ background: 'rgba(245,158,11,0.08)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}
+          className="text-[13px] font-semibold px-5 py-2.5 rounded-xl transition-all hover:opacity-90"
+          style={{
+            background: 'rgba(245,158,11,0.08)',
+            color: '#f59e0b',
+            border: '1px solid rgba(245,158,11,0.18)',
+          }}
         >
           Retry
         </button>
@@ -206,27 +291,47 @@ export default function DashboardPage() {
 
   return (
     <PageTransition>
-      <div className="space-y-8 pb-12">
+      <div className="space-y-7 pb-12">
+
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[26px] font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
-              {greeting} 👋
-            </h1>
-            <p className="text-[14px] mt-1" style={{ color: '#71717a' }}>
-              Here&apos;s your performance overview for the last 30 days
+            <div className="flex items-center gap-2 mb-1">
+              <h1
+                className="text-[26px] font-bold tracking-[-0.03em]"
+                style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}
+              >
+                {greeting}
+              </h1>
+              <span className="text-[24px] select-none">👋</span>
+            </div>
+            <p className="text-[13px]" style={{ color: '#52525b' }}>
+              30-day performance overview
             </p>
           </div>
+
           <div
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl"
-            style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.1)' }}
+            style={{
+              background: 'rgba(52,211,153,0.05)',
+              border: '1px solid rgba(52,211,153,0.12)',
+            }}
           >
-            <div className="live-dot" style={{ background: '#34d399' }} />
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{
+                background: '#34d399',
+                boxShadow: '0 0 6px rgba(52,211,153,0.8)',
+                animation: 'pulse 2s ease-in-out infinite',
+              }}
+            />
             <span className="text-[12px] font-semibold" style={{ color: '#34d399' }}>
               Live
             </span>
           </div>
         </div>
 
+        {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KPICard
             title="Total Revenue"
@@ -262,31 +367,29 @@ export default function DashboardPage() {
           />
         </div>
 
+        {/* Middle row */}
         <div className="grid gap-4 lg:grid-cols-12">
-          <div className="lg:col-span-7">
-            <div
-              className="rounded-2xl overflow-hidden h-full"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(52,211,153,0.05)' }}>
-                    <CalendarDays className="w-4 h-4" style={{ color: '#34d399' }} strokeWidth={2} />
-                  </div>
-                  <p className="text-[14px] font-semibold" style={{ color: '#f4f4f5' }}>
-                    Upcoming Bookings
-                  </p>
-                </div>
-                <span className="text-[12px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.04)', color: '#71717a' }}>
-                  {upcoming.length} scheduled
-                </span>
-              </div>
 
+          {/* Upcoming Bookings */}
+          <div className="lg:col-span-7">
+            <SectionCard>
+              <SectionHeader
+                icon={CalendarDays}
+                iconColor="#34d399"
+                iconBg="rgba(52,211,153,0.07)"
+                title="Upcoming Bookings"
+                badge={`${upcoming.length} scheduled`}
+              />
               <div className="p-3">
                 {upcoming.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <CalendarDays className="w-10 h-10 mb-3" style={{ color: 'rgba(255,255,255,0.06)' }} strokeWidth={1.5} />
-                    <p className="text-[13px]" style={{ color: '#71717a' }}>
+                  <div className="flex flex-col items-center justify-center py-14 text-center">
+                    <div
+                      className="w-11 h-11 rounded-2xl flex items-center justify-center mb-3"
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    >
+                      <CalendarDays className="w-5 h-5" style={{ color: 'rgba(255,255,255,0.12)' }} strokeWidth={1.5} />
+                    </div>
+                    <p className="text-[13px]" style={{ color: '#52525b' }}>
                       No upcoming bookings
                     </p>
                   </div>
@@ -296,38 +399,48 @@ export default function DashboardPage() {
                       const status = STATUS_CONFIG[booking.status] ? booking.status : 'confirmed';
                       const sc = STATUS_CONFIG[status];
                       return (
-                        <div key={booking.id} className="group flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-150 hover:bg-[rgba(255,255,255,0.04)]">
+                        <div
+                          key={booking.id}
+                          className="group flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-150 hover:bg-[rgba(255,255,255,0.03)]"
+                        >
                           <div className="flex items-center gap-3">
                             <div
-                              className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-[12px] font-bold"
+                              className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ background: sc.color, boxShadow: `0 0 5px ${sc.color}80` }}
+                            />
+                            <div
+                              className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[12px] font-bold"
                               style={{
-                                background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(251,113,133,0.1))',
-                                color: '#f59e0b',
-                                border: '1px solid rgba(245,158,11,0.15)',
+                                background: `${sc.color}12`,
+                                color: sc.color,
+                                border: `1px solid ${sc.color}20`,
                               }}
                             >
                               {(booking.clients?.name || 'U').charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <p className="text-[13px] font-medium" style={{ color: '#f4f4f5' }}>
+                              <p className="text-[13px] font-medium" style={{ color: '#e4e4e7' }}>
                                 {booking.clients?.name || 'Client'}
                               </p>
-                              <p className="text-[11px] mt-0.5" style={{ color: '#71717a' }}>
+                              <p className="text-[11px] mt-0.5" style={{ color: '#52525b' }}>
                                 {booking.services?.name}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="text-right">
-                              <p className="text-[12px] font-medium" style={{ color: '#f4f4f5' }}>
+                              <p className="text-[12px] font-medium" style={{ color: '#d4d4d8' }}>
                                 {fmtDate(booking.starts_at)}
                               </p>
-                              <p className="text-[11px] mt-0.5 flex items-center justify-end gap-1" style={{ color: '#71717a' }}>
+                              <p className="text-[11px] mt-0.5 flex items-center justify-end gap-1" style={{ color: '#52525b' }}>
                                 <Clock className="w-3 h-3" />
                                 {fmtTime(booking.starts_at)}
                               </p>
                             </div>
-                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: sc.bg, color: sc.color }}>
+                            <span
+                              className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                              style={{ background: sc.bg, color: sc.color }}
+                            >
                               {sc.label}
                             </span>
                           </div>
@@ -337,158 +450,171 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </SectionCard>
           </div>
 
+          {/* Recent Activity */}
           <div className="lg:col-span-5">
-            <div
-              className="rounded-2xl overflow-hidden h-full"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.05)' }}>
-                    <Activity className="w-4 h-4" style={{ color: '#f59e0b' }} strokeWidth={2} />
-                  </div>
-                  <p className="text-[14px] font-semibold" style={{ color: '#f4f4f5' }}>
-                    Recent Activity
-                  </p>
-                </div>
-                <div className="live-dot" style={{ background: '#34d399' }} />
-              </div>
-
-              <div className="p-3 space-y-1">
+            <SectionCard>
+              <SectionHeader
+                icon={Activity}
+                iconColor="#f59e0b"
+                iconBg="rgba(245,158,11,0.07)"
+                title="Recent Activity"
+                badgeDot
+              />
+              <div className="p-3 space-y-0.5">
                 {activityItems.length ? (
                   activityItems.map((item) => {
                     const sc = STATUS_CONFIG[item.status];
                     return (
-                      <div key={item.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[rgba(255,255,255,0.04)] transition-all duration-150">
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[rgba(255,255,255,0.03)] transition-all duration-150"
+                      >
                         <div
-                          className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center"
+                          className="w-7 h-7 rounded-xl flex-shrink-0 flex items-center justify-center"
                           style={{ background: sc.bg }}
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5" style={{ color: sc.color }} strokeWidth={2} />
+                          <CheckCircle2 className="w-3 h-3" style={{ color: sc.color }} strokeWidth={2} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[12px] font-medium truncate" style={{ color: '#f4f4f5' }}>
+                          <p className="text-[12px] font-medium truncate" style={{ color: '#d4d4d8' }}>
                             {item.text}
                           </p>
-                          <p className="text-[11px] truncate mt-0.5" style={{ color: '#71717a' }}>
+                          <p className="text-[11px] truncate mt-0.5" style={{ color: '#52525b' }}>
                             {item.name}
                           </p>
                         </div>
-                        <span className="text-[10px] flex-shrink-0" style={{ color: '#71717a' }}>
+                        <span className="text-[10px] flex-shrink-0 tabular-nums" style={{ color: '#3f3f46' }}>
                           {item.time}
                         </span>
                       </div>
                     );
                   })
                 ) : (
-                  <p className="text-[12px] px-3 py-10 text-center" style={{ color: '#71717a' }}>
+                  <p className="text-[12px] px-3 py-10 text-center" style={{ color: '#52525b' }}>
                     No recent activity yet
                   </p>
                 )}
               </div>
-            </div>
+            </SectionCard>
           </div>
         </div>
 
+        {/* Bottom row */}
         <div className="grid gap-4 lg:grid-cols-12">
+
+          {/* Busiest Days */}
           <div className="lg:col-span-4">
-            <div
-              className="rounded-2xl overflow-hidden h-full"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(167,139,250,0.05)' }}>
-                    <BarChart3 className="w-4 h-4" style={{ color: '#a78bfa' }} strokeWidth={2} />
-                  </div>
-                  <p className="text-[14px] font-semibold" style={{ color: '#f4f4f5' }}>
-                    Busiest Days
-                  </p>
-                </div>
-              </div>
+            <SectionCard>
+              <SectionHeader
+                icon={BarChart3}
+                iconColor="#a78bfa"
+                iconBg="rgba(167,139,250,0.07)"
+                title="Busiest Days"
+              />
               <div className="px-5 py-4 space-y-3.5">
                 {(analytics?.busiestDays || []).slice(0, 7).map((day) => {
-                  const w = Math.max((day.count / maxDayCount) * 100, 6);
+                  const w = Math.max((day.count / maxDayCount) * 100, 4);
                   return (
                     <div key={day.day} className="flex items-center gap-3">
-                      <span className="text-[11px] font-semibold uppercase w-8" style={{ color: '#71717a' }}>
+                      <span
+                        className="text-[11px] font-semibold uppercase w-8 flex-shrink-0"
+                        style={{ color: '#52525b' }}
+                      >
                         {day.day}
                       </span>
-                      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${w}%`, background: 'linear-gradient(90deg, #a78bfa, #c4b5fd)' }} />
+                      <div
+                        className="flex-1 h-1.5 rounded-full overflow-hidden"
+                        style={{ background: 'rgba(255,255,255,0.05)' }}
+                      >
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${w}%`,
+                            background: 'linear-gradient(90deg, #a78bfa, #c4b5fd)',
+                            boxShadow: '0 0 6px rgba(167,139,250,0.3)',
+                          }}
+                        />
                       </div>
-                      <span className="text-[12px] font-semibold tabular-nums w-5 text-right" style={{ color: '#71717a' }}>
+                      <span
+                        className="text-[12px] font-semibold tabular-nums w-4 text-right flex-shrink-0"
+                        style={{ color: '#71717a' }}
+                      >
                         {day.count}
                       </span>
                     </div>
                   );
                 })}
                 {!analytics?.busiestDays?.length && (
-                  <p className="text-[13px] text-center py-8" style={{ color: '#71717a' }}>
+                  <p className="text-[13px] text-center py-8" style={{ color: '#52525b' }}>
                     No data yet
                   </p>
                 )}
               </div>
-            </div>
+            </SectionCard>
           </div>
 
+          {/* Top Clients */}
           <div className="lg:col-span-8">
-            <div
-              className="rounded-2xl overflow-hidden h-full"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(251,113,133,0.05)' }}>
-                    <Users className="w-4 h-4" style={{ color: '#fb7185' }} strokeWidth={2} />
-                  </div>
-                  <p className="text-[14px] font-semibold" style={{ color: '#f4f4f5' }}>
-                    Top Clients
-                  </p>
-                </div>
-                <span className="text-[12px] px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.04)', color: '#71717a' }}>
-                  By revenue
-                </span>
-              </div>
-
+            <SectionCard>
+              <SectionHeader
+                icon={Users}
+                iconColor="#fb7185"
+                iconBg="rgba(251,113,133,0.07)"
+                title="Top Clients"
+                badge="By revenue"
+              />
               {analytics?.topClients?.length ? (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                         {['Client', 'Avg Spend', 'Last Booked', 'Frequency'].map((h) => (
-                          <th key={h} className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#71717a' }}>
+                          <th
+                            key={h}
+                            className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.1em]"
+                            style={{ color: '#3f3f46' }}
+                          >
                             {h}
                           </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {analytics.topClients.slice(0, 6).map((client) => (
-                        <tr key={client.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                      {analytics.topClients.slice(0, 6).map((client, i) => (
+                        <tr
+                          key={client.id}
+                          className="transition-colors hover:bg-[rgba(255,255,255,0.02)]"
+                          style={{ borderBottom: '1px solid rgba(255,255,255,0.025)' }}
+                        >
                           <td className="px-5 py-3.5">
                             <div className="flex items-center gap-3">
                               <div
                                 className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-                                style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(251,113,133,0.1))', color: '#f59e0b' }}
+                                style={{
+                                  background: i === 0
+                                    ? 'rgba(245,158,11,0.15)'
+                                    : 'rgba(255,255,255,0.05)',
+                                  color: i === 0 ? '#f59e0b' : '#71717a',
+                                  border: i === 0 ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(255,255,255,0.06)',
+                                }}
                               >
                                 {(client.name || 'U').charAt(0).toUpperCase()}
                               </div>
-                              <span className="text-[13px] font-medium" style={{ color: '#f4f4f5' }}>
+                              <span className="text-[13px] font-medium" style={{ color: '#e4e4e7' }}>
                                 {client.name}
                               </span>
                             </div>
                           </td>
                           <td className="px-5 py-3.5">
-                            <span className="text-[13px] font-semibold" style={{ color: '#f59e0b' }}>
+                            <span className="text-[13px] font-bold tabular-nums" style={{ color: '#f59e0b' }}>
                               {fmtCurrency(client.avg_spend || 0)}
                             </span>
                           </td>
                           <td className="px-5 py-3.5 hidden sm:table-cell">
-                            <span className="text-[12px]" style={{ color: '#71717a' }}>
+                            <span className="text-[12px]" style={{ color: '#52525b' }}>
                               {client.last_booked_at
                                 ? new Date(client.last_booked_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                                 : '—'}
@@ -496,11 +622,14 @@ export default function DashboardPage() {
                           </td>
                           <td className="px-5 py-3.5 hidden md:table-cell">
                             {client.typical_frequency_days ? (
-                              <span className="text-[11px] font-medium px-2 py-1 rounded-full" style={{ background: 'rgba(167,139,250,0.08)', color: '#a78bfa' }}>
+                              <span
+                                className="text-[11px] font-semibold px-2 py-1 rounded-full"
+                                style={{ background: 'rgba(167,139,250,0.08)', color: '#a78bfa' }}
+                              >
                                 Every {client.typical_frequency_days}d
                               </span>
                             ) : (
-                              <span style={{ color: '#71717a' }}>—</span>
+                              <span style={{ color: '#3f3f46' }}>—</span>
                             )}
                           </td>
                         </tr>
@@ -509,14 +638,19 @@ export default function DashboardPage() {
                   </table>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <Users className="w-10 h-10 mb-3" style={{ color: 'rgba(255,255,255,0.06)' }} strokeWidth={1.5} />
-                  <p className="text-[13px]" style={{ color: '#71717a' }}>
+                <div className="flex flex-col items-center justify-center py-14 text-center">
+                  <div
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center mb-3"
+                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                  >
+                    <Users className="w-5 h-5" style={{ color: 'rgba(255,255,255,0.1)' }} strokeWidth={1.5} />
+                  </div>
+                  <p className="text-[13px]" style={{ color: '#52525b' }}>
                     No client data yet
                   </p>
                 </div>
               )}
-            </div>
+            </SectionCard>
           </div>
         </div>
       </div>

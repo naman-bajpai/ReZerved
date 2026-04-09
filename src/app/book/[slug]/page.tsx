@@ -443,7 +443,7 @@ export default function BookingPage() {
                   className="bk-serif text-base font-semibold truncate"
                   style={{ color: '#fff', letterSpacing: '0.01em' }}
                 >
-                  {business?.name || 'BookedUp'}
+                  {business?.name || 'Rezerve'}
                 </p>
                 {step !== 'welcome' && step !== 'loading' && step !== 'otp' && (
                   <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{guestEmail}</p>

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Building2, Bell, Shield, Sparkles, Link2,
-  Check, ToggleLeft, ToggleRight,
+  Building2, Bell, Sparkles, Link2, Check, Loader2,
 } from 'lucide-react';
 import { PageTransition } from '@/components/page-transition';
+import { getMe, updateSettings } from '@/lib/api';
 
 const inputStyle = {
   background: 'rgba(255,255,255,0.05)',
@@ -15,21 +15,35 @@ const inputStyle = {
 
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button onClick={() => onChange(!value)} className="flex-shrink-0 transition-all">
-      {value
-        ? <ToggleRight className="w-7 h-7" style={{ color: '#f97316' }} />
-        : <ToggleLeft className="w-7 h-7" style={{ color: 'rgba(244,244,245,0.25)' }} />
-      }
+    <button
+      onClick={() => onChange(!value)}
+      className="relative flex-shrink-0 w-10 h-[22px] rounded-full transition-all duration-200"
+      style={{
+        background: value
+          ? 'linear-gradient(135deg, #f97316, #f59e0b)'
+          : 'rgba(255,255,255,0.08)',
+        border: value ? '1px solid rgba(249,115,22,0.4)' : '1px solid rgba(255,255,255,0.1)',
+        boxShadow: value ? '0 0 12px rgba(249,115,22,0.25)' : 'none',
+      }}
+    >
+      <span
+        className="absolute top-0.5 w-[17px] h-[17px] rounded-full transition-all duration-200"
+        style={{
+          background: '#f4f4f5',
+          left: value ? 'calc(100% - 19px)' : '2px',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+        }}
+      />
     </button>
   );
 }
 
 function SettingRow({ label, desc, children }: { label: string; desc?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+    <div className="flex items-center justify-between py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
       <div className="min-w-0 flex-1 pr-4">
-        <p className="text-[13px] font-medium" style={{ color: '#f4f4f5' }}>{label}</p>
-        {desc && <p className="text-[11px] mt-0.5" style={{ color: 'rgba(244,244,245,0.4)' }}>{desc}</p>}
+        <p className="text-[13px] font-medium" style={{ color: '#d4d4d8' }}>{label}</p>
+        {desc && <p className="text-[11px] mt-0.5" style={{ color: '#52525b' }}>{desc}</p>}
       </div>
       {children}
     </div>
@@ -40,14 +54,27 @@ function SettingCard({ title, subtitle, icon: Icon, color, iconBg, children }: {
   title: string; subtitle?: string; icon: React.ElementType; color: string; iconBg: string; children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: iconBg }}>
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{
+        background: 'rgba(255,255,255,0.025)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderTop: `1.5px solid ${color}`,
+      }}
+    >
+      <div
+        className="flex items-center gap-3 px-5 py-4"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: iconBg, boxShadow: `0 0 10px ${color}10` }}
+        >
           <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
         </div>
         <div>
-          <p className="text-[14px] font-semibold" style={{ color: '#f4f4f5' }}>{title}</p>
-          {subtitle && <p className="text-[11px]" style={{ color: 'rgba(244,244,245,0.4)' }}>{subtitle}</p>}
+          <p className="text-[14px] font-semibold" style={{ color: '#e4e4e7' }}>{title}</p>
+          {subtitle && <p className="text-[11px]" style={{ color: '#52525b' }}>{subtitle}</p>}
         </div>
       </div>
       <div className="px-5 pb-1">{children}</div>
@@ -78,10 +105,27 @@ export default function SettingsPage() {
   const [notifyCancel, setNotifyCancel] = useState(true);
   const [notifyUpsell, setNotifyUpsell] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  function handleSave() {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    getMe().then((me) => {
+      if (me.business?.name) setBusinessName(me.business.name);
+    }).catch(() => {});
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await updateSettings({ business_name: businessName });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -97,18 +141,28 @@ export default function SettingsPage() {
               Manage your business configuration
             </p>
           </div>
-          <button
-            onClick={handleSave}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all"
-            style={saved ? {
-              background: 'rgba(22,163,74,0.08)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.2)',
-            } : {
-              background: 'linear-gradient(135deg, #f97316, #ec4899)', color: '#fff', border: '1px solid transparent',
-              boxShadow: '0 2px 8px rgba(249,115,22,0.18)',
-            }}
-          >
-            {saved ? <><Check className="w-3.5 h-3.5" /> Saved</> : 'Save changes'}
-          </button>
+          <div className="flex flex-col items-end gap-1">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all disabled:opacity-60"
+              style={saved ? {
+                background: 'rgba(22,163,74,0.08)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.2)',
+              } : {
+                background: 'linear-gradient(135deg, #f97316, #ec4899)', color: '#fff', border: '1px solid transparent',
+                boxShadow: '0 2px 8px rgba(249,115,22,0.18)',
+              }}
+            >
+              {saving ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
+              ) : saved ? (
+                <><Check className="w-3.5 h-3.5" /> Saved</>
+              ) : 'Save changes'}
+            </button>
+            {saveError && (
+              <p className="text-[11px]" style={{ color: '#f87171' }}>{saveError}</p>
+            )}
+          </div>
         </div>
 
         {/* Business */}
@@ -120,7 +174,7 @@ export default function SettingsPage() {
           </SettingRow>
           <SettingRow label="Booking slug" desc="Your unique booking link">
             <div className="flex items-center gap-2 text-[12px]" style={{ color: '#7c3aed' }}>
-              <span>bookedup.app/</span>
+              <span>rezerve.app/</span>
               <TextInput value="" onChange={() => {}} placeholder="yourname" />
             </div>
           </SettingRow>

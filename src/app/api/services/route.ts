@@ -7,7 +7,6 @@ export const GET = withBusiness(async (_req, _profile, business) => {
     .from('services')
     .select('*')
     .eq('business_id', business.business_id)
-    .eq('is_active', true)
     .order('name');
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

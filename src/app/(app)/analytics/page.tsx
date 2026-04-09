@@ -75,19 +75,30 @@ function KPICard({
 }) {
   return (
     <div
-      className="rounded-2xl p-5 group"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }}
+      className="rounded-2xl p-5 relative overflow-hidden group transition-all duration-200 hover:translate-y-[-1px]"
+      style={{
+        background: 'rgba(255,255,255,0.025)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderTop: `1.5px solid ${color}`,
+      }}
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${color}14`, border: `1px solid ${color}20` }}>
+      <div
+        className="absolute top-0 left-0 right-0 h-16 pointer-events-none"
+        style={{ background: `linear-gradient(180deg, ${color}08 0%, transparent 100%)` }}
+      />
+      <div className="relative flex items-start justify-between mb-4">
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: `${color}10`, border: `1px solid ${color}18` }}
+        >
           <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
         </div>
       </div>
-      <div className="text-[28px] font-bold tracking-tight leading-none mb-1.5" style={{ color: '#f4f4f5' }}>
+      <div className="relative text-[28px] font-bold tracking-[-0.03em] leading-none mb-1.5" style={{ color: '#f4f4f5' }}>
         {value}
       </div>
-      <p className="text-[12px] font-medium mb-0.5" style={{ color: 'rgba(244,244,245,0.45)' }}>{title}</p>
-      <p className="text-[11px]" style={{ color: 'rgba(244,244,245,0.25)' }}>{sub}</p>
+      <p className="text-[12px] font-semibold mb-0.5" style={{ color: '#d4d4d8' }}>{title}</p>
+      <p className="text-[11px]" style={{ color: '#52525b' }}>{sub}</p>
     </div>
   );
 }
@@ -100,18 +111,24 @@ function Section({ title, subtitle, icon: Icon, color, children }: {
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }}
+      style={{
+        background: 'rgba(255,255,255,0.025)',
+        border: '1px solid rgba(255,255,255,0.07)',
+      }}
     >
-      <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="flex items-center gap-2.5">
           {Icon && (
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${color || '#f59e0b'}12` }}>
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center"
+              style={{ background: `${color || '#f59e0b'}10` }}
+            >
               <Icon className="w-3.5 h-3.5" style={{ color: color || '#f59e0b' }} strokeWidth={2} />
             </div>
           )}
           <div>
-            <p className="text-[13px] font-semibold" style={{ color: '#f4f4f5' }}>{title}</p>
-            {subtitle && <p className="text-[11px]" style={{ color: 'rgba(244,244,245,0.35)' }}>{subtitle}</p>}
+            <p className="text-[13px] font-semibold" style={{ color: '#e4e4e7' }}>{title}</p>
+            {subtitle && <p className="text-[11px]" style={{ color: '#52525b' }}>{subtitle}</p>}
           </div>
         </div>
       </div>
@@ -123,13 +140,16 @@ function Section({ title, subtitle, icon: Icon, color, children }: {
 /* ─── Period selector ───────────────────────────────────────── */
 function PeriodSelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+    <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
       {[['7d', '7D'], ['30d', '30D'], ['90d', '90D']].map(([val, label]) => (
         <button key={val} onClick={() => onChange(val)}
           className="px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
           style={value === val ? {
-            background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)'
-          } : { color: 'rgba(244,244,245,0.4)' }}
+            background: 'rgba(245,158,11,0.12)',
+            color: '#fbbf24',
+            border: '1px solid rgba(245,158,11,0.22)',
+            boxShadow: '0 0 10px rgba(245,158,11,0.08)',
+          } : { color: '#52525b' }}
         >
           {label}
         </button>

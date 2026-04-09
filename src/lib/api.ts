@@ -1,5 +1,5 @@
 /**
- * BookedUp API client — session cookie (Better Auth) or legacy X-Business-ID for local dev.
+ * Rezerve API client — session cookie (Better Auth) or legacy X-Business-ID for local dev.
  */
 
 // Empty string = same origin (Next.js API routes at /api/*)
@@ -52,7 +52,10 @@ export async function getMe() {
       id: string;
       name: string;
       timezone: string;
+      slug: string | null;
       external_booking_url: string | null;
+      instagram_page_id: string | null;
+      owner_name: string | null;
     } | null;
   }>('/api/me');
 }
@@ -156,6 +159,23 @@ export async function createService(body: {
   });
 }
 
+export async function updateService(
+  id: string,
+  body: { name?: string; duration_mins?: number; price?: number; is_active?: boolean }
+) {
+  return apiFetch<{ service: Service }>(`/api/services/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateSettings(body: { business_name?: string; timezone?: string }) {
+  return apiFetch<{ business: { id: string; name: string; timezone: string } }>('/api/settings', {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+}
+
 // ─── Analytics ────────────────────────────────────────────────────────────────
 
 export async function getAnalytics(period: '7d' | '30d' | '90d' = '30d') {
@@ -181,21 +201,25 @@ export interface Booking {
   status: 'pending' | 'confirmed' | 'cancelled' | 'expired' | 'no_show';
   add_ons: AddOn[];
   total_price: number;
-  source_channel: 'sms' | 'instagram';
+  source_channel: 'sms' | 'instagram' | 'web' | 'web_chat';
+  payment_status: 'unpaid' | 'paid' | 'refunded';
+  guest_email: string | null;
+  guest_name: string | null;
   created_at: string;
-  clients?: { name: string; phone: string };
+  clients?: { name: string; phone: string; email?: string };
   services?: { name: string; price: number; duration_mins: number };
 }
 
 export interface Client {
   id: string;
   name: string;
+  email: string | null;
   phone: string;
-  instagram_id: string;
-  notes: string;
+  instagram_id: string | null;
+  notes: string | null;
   avg_spend: number;
-  last_booked_at: string;
-  typical_frequency_days: number;
+  last_booked_at: string | null;
+  typical_frequency_days: number | null;
   created_at: string;
 }
 

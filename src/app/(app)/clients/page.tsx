@@ -58,8 +58,12 @@ function ClientCard({ client, idx, onSelect }: {
 
   return (
     <div
-      className="group flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all"
-      style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}
+      className="group flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all duration-150 hover:bg-[rgba(255,255,255,0.035)] hover:translate-y-[-1px]"
+      style={{
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderLeft: `2px solid ${seg.color}40`,
+      }}
       onClick={() => onSelect(client)}
     >
       <Avatar name={client.name || 'U'} idx={idx} />
@@ -250,7 +254,7 @@ export default function ClientsPage() {
 
       {/* Segment + Search bar */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
           {[
             { val: 'all', label: 'All', count: segCounts.all },
             { val: 'champion', label: 'Champions', count: segCounts.champion },
@@ -260,8 +264,11 @@ export default function ClientsPage() {
             <button key={val} onClick={() => setSegment(val)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
               style={segment === val ? {
-                background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)'
-              } : { color: '#71717a' }}
+                background: 'rgba(245,158,11,0.12)',
+                color: '#fbbf24',
+                border: '1px solid rgba(245,158,11,0.22)',
+                boxShadow: '0 0 10px rgba(245,158,11,0.08)',
+              } : { color: '#52525b' }}
             >
               {label}
               {count > 0 && (

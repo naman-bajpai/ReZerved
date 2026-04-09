@@ -187,28 +187,30 @@ export default function AvailabilityPage() {
                   style={{
                     background: row.is_active ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)',
                     border: row.is_active
-                      ? '1px solid rgba(255,255,255,0.07)'
-                      : '1px solid rgba(255,255,255,0.04)',
-                    boxShadow: row.is_active ? '0 1px 4px rgba(0,0,0,0.05)' : 'none',
+                      ? '1px solid rgba(249,115,22,0.18)'
+                      : '1px solid rgba(255,255,255,0.05)',
+                    borderLeft: row.is_active ? '2px solid #f97316' : '2px solid transparent',
+                    boxShadow: row.is_active ? '0 0 0 1px rgba(249,115,22,0.06) inset' : 'none',
                   }}
                 >
                   {/* Toggle */}
                   <button
                     onClick={() => toggle(d.dow)}
-                    className="relative flex-shrink-0 w-10 h-6 rounded-full transition-all"
+                    className="relative flex-shrink-0 w-10 h-[22px] rounded-full transition-all duration-200"
                     style={{
                       background: row.is_active
-                        ? 'linear-gradient(135deg, #f97316, #ec4899)'
-                        : 'rgba(255,255,255,0.1)',
-                      boxShadow: row.is_active ? '0 0 8px rgba(249,115,22,0.2)' : 'none',
+                        ? 'linear-gradient(135deg, #f97316, #f59e0b)'
+                        : 'rgba(255,255,255,0.08)',
+                      border: row.is_active ? '1px solid rgba(249,115,22,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                      boxShadow: row.is_active ? '0 0 12px rgba(249,115,22,0.3)' : 'none',
                     }}
                   >
                     <span
-                      className="absolute top-0.5 w-5 h-5 rounded-full transition-all"
+                      className="absolute top-0.5 w-[17px] h-[17px] rounded-full transition-all duration-200"
                       style={{
                         background: '#f4f4f5',
-                        left: row.is_active ? 'calc(100% - 22px)' : '2px',
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                        left: row.is_active ? 'calc(100% - 19px)' : '2px',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
                       }}
                     />
                   </button>

@@ -153,7 +153,7 @@ export default function OnboardingPage() {
         <div className="flex flex-col items-center mb-10">
           <Logo />
           <h1 className="text-[22px] font-bold mt-4 tracking-tight" style={{ fontFamily: 'var(--font-display)', color: '#f4f4f5' }}>
-            Set up BookedUp
+            Set up Rezerve
           </h1>
           <p className="text-[14px] mt-1.5 text-center" style={{ color: 'rgba(244,244,245,0.4)' }}>
             Takes 2 minutes. No credit card.
@@ -339,7 +339,7 @@ export default function OnboardingPage() {
                   className="flex items-center gap-2 px-7 py-3 rounded-xl text-[14px] font-semibold transition-all"
                   style={{ background: 'linear-gradient(135deg, #f59e0b, #fb7185)', color: '#09090b', boxShadow: '0 4px 20px rgba(245,158,11,0.3)' }}
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Sparkles className="w-4 h-4" /> Launch BookedUp</>}
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Sparkles className="w-4 h-4" /> Launch Rezerve</>}
                 </button>
               </div>
             </div>

@@ -150,7 +150,7 @@ export default function ConversationsPage() {
     >
       {/* ── Conversation List ──────────────────────────── */}
       <div className="w-[280px] flex-shrink-0 flex flex-col"
-        style={{ background: '#0d0d12', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        style={{ background: '#0c0b0a', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
         {/* Header */}
         <div className="px-4 pt-5 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div className="flex items-center justify-between mb-4">
@@ -213,8 +213,11 @@ export default function ConversationsPage() {
                   className="w-full text-left px-3 py-3 mx-1 rounded-xl transition-all"
                   style={{
                     width: 'calc(100% - 8px)',
-                    background: isActive ? 'rgba(245,158,11,0.08)' : 'transparent',
-                    border: isActive ? '1px solid rgba(245,158,11,0.15)' : '1px solid transparent',
+                    background: isActive
+                      ? 'linear-gradient(105deg, rgba(245,158,11,0.1) 0%, rgba(245,158,11,0.04) 100%)'
+                      : 'transparent',
+                    border: isActive ? '1px solid rgba(245,158,11,0.18)' : '1px solid transparent',
+                    borderLeft: isActive ? '2px solid #f59e0b' : '2px solid transparent',
                   }}>
                   <div className="flex items-start gap-3">
                     <div className="relative flex-shrink-0">
@@ -358,7 +361,7 @@ export default function ConversationsPage() {
 
       {/* ── Right Panel ──────────────────────────────────── */}
       <div className="w-[240px] flex-shrink-0 flex flex-col"
-        style={{ background: '#0d0d12', borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
+        style={{ background: '#0c0b0a', borderLeft: '1px solid rgba(255,255,255,0.07)' }}>
         <div className="px-4 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <p className="text-[13px] font-semibold" style={{ color: '#f4f4f5' }}>Details</p>
         </div>

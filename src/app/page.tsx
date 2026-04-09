@@ -1,12 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState, type ElementType } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   CalendarDays,
   CheckCircle2,
-  ChevronRight,
   Clock3,
   Instagram,
   MessageSquare,
@@ -16,15 +15,25 @@ import {
   TrendingUp,
   Users,
   Zap,
+  Star,
 } from 'lucide-react';
 
-const C = {
+/* ─── Design tokens ──────────────────────────────────────────── */
+const D = {
+  /* hero dark */
+  dark: '#0c0a08',
+  darkCard: 'rgba(255,255,255,0.04)',
+  darkBorder: 'rgba(255,255,255,0.09)',
+  darkText: '#f5f0ea',
+  darkDim: 'rgba(245,240,234,0.5)',
+  /* body cream */
   bg: '#f6f1eb',
   panel: '#fffdfa',
-  panelSoft: '#f2ebe3',
+  panelSoft: '#f0e9e0',
   border: '#dfd3c5',
   text: '#171411',
   dim: '#6f655d',
+  /* accent */
   accent: '#df6f38',
   accentSoft: '#f6d8c6',
   accentStrong: '#b84f1d',
@@ -32,141 +41,157 @@ const C = {
   gold: '#b7822f',
 };
 
-const BOARD_STEPS = [
-  {
-    label: 'New DM captured',
-    customer: 'Ariana',
-    service: 'Soft gel full set',
-    time: 'Today, 2:14 PM',
-    reply: 'Saturday 2:00 PM is open. Full set with removal is 95 and takes 75 min. Want me to reserve it?',
-    outcome: 'Awaiting confirmation',
-    revenue: '+$95',
-  },
-  {
-    label: 'AI follow-up sent',
-    customer: 'Ariana',
-    service: 'Soft gel full set',
-    time: 'Today, 2:15 PM',
-    reply: 'Locked. I also suggested cuticle treatment for 18 based on her last visit.',
-    outcome: 'Upsell offered',
-    revenue: '+$113',
-  },
-  {
-    label: 'Booking confirmed',
-    customer: 'Ariana',
-    service: 'Soft gel + treatment',
-    time: 'Saturday, 2:00 PM',
-    reply: 'Appointment confirmed. Reminder and deposit request were sent automatically.',
-    outcome: 'Calendar updated',
-    revenue: '+$113',
-  },
+/* ─── Conversation thread data ───────────────────────────────── */
+const THREAD = [
+  { from: 'client', text: "Hey! Do you have anything open this Saturday? Looking for a soft gel full set 💅", time: '2:11 PM' },
+  { from: 'ai',     text: "Hey Ariana! Saturday 2:00 PM is available. Soft gel full set is $95 and takes about 75 min. Want me to hold that slot for you?", time: '2:11 PM' },
+  { from: 'client', text: "Yes please! That works perfect 🙏", time: '2:12 PM' },
+  { from: 'ai',     text: "Done — Saturday 2 PM is locked in! Based on your last visit I also added cuticle care for $18. I'll send the deposit link now.", time: '2:12 PM' },
+  { from: 'client', text: "Omg yes add that, thank you!!", time: '2:13 PM' },
+  { from: 'ai',     text: "All set! Deposit link sent. You'll get a reminder Friday evening. See you Saturday 🎀", time: '2:13 PM' },
 ];
 
-const FEATURE_CARDS = [
+const FEATURES = [
   {
     icon: MessageSquare,
-    title: 'Reply instantly',
-    desc: 'BookedUp answers DMs and texts in your tone, quotes services correctly, and moves straight to a confirmed slot.',
+    title: 'Reply instantly, in your voice',
+    desc: 'Rezerve answers every DM and text as if you typed it yourself — quotes your exact pricing, checks your real availability, and pushes to confirm.',
+    color: D.accent,
+    bg: 'rgba(223,111,56,0.08)',
   },
   {
     icon: CalendarDays,
-    title: 'Protect the calendar',
-    desc: 'Deposits, reminders, confirmations, and waitlist fills run automatically so open time gets sold instead of wasted.',
+    title: 'Deposits and reminders, automatic',
+    desc: 'Every booking triggers a deposit request, confirmation, and two reminders without you lifting a finger. Open slots stay sold.',
+    color: D.teal,
+    bg: 'rgba(31,122,114,0.08)',
   },
   {
     icon: TrendingUp,
-    title: 'Lift ticket size',
-    desc: 'Suggested add-ons appear at the right moment, after intent is clear and before the client drops out.',
+    title: 'Upsells at exactly the right moment',
+    desc: 'After intent is clear, Rezerve surfaces one relevant add-on based on the client\'s history — before they drop out of the thread.',
+    color: D.gold,
+    bg: 'rgba(183,130,47,0.08)',
   },
   {
     icon: ShieldCheck,
-    title: 'Stay in control',
-    desc: 'You can review conversations, approve edge cases, and keep every workflow inside simple operating rules.',
+    title: 'You stay in control',
+    desc: 'Review any conversation, set approval rules per service or price threshold, and override the AI any time. You define the guardrails.',
+    color: '#7c6fcd',
+    bg: 'rgba(124,111,205,0.08)',
   },
 ];
 
-const PROCESS_STEPS = [
+const TESTIMONIALS = [
   {
-    title: 'Capture intent',
-    desc: 'Pull service, timing, and platform context from the first message.',
+    quote: "Before Rezerve, I was losing bookings every week to DMs I saw too late. Now my calendar fills itself while I'm at the table.",
+    name: 'Maya K.',
+    role: 'Nail Artist · Austin, TX',
+    stars: 5,
   },
   {
-    title: 'Offer the best slot',
-    desc: 'Match real availability, service length, and pricing without back-and-forth.',
+    quote: "The AI replies sound exactly like me. Clients have no idea, and they're booking faster than before. My no-show rate dropped in half.",
+    name: 'Priya S.',
+    role: 'Lash Studio Owner · New York, NY',
+    stars: 5,
   },
   {
-    title: 'Confirm and retain',
-    desc: 'Send reminders, deposits, and next-booking nudges after checkout.',
+    quote: 'Setup took 20 minutes. I connected Instagram, added my services, and walked away. Now I check the calendar instead of my DMs.',
+    name: 'Jordan R.',
+    role: 'Independent Stylist · Los Angeles, CA',
+    stars: 5,
   },
 ];
 
-function Logo({ size = 34 }: { size?: number }) {
+/* ─── Logo ───────────────────────────────────────────────────── */
+function Logo({ size = 32, dark = false }: { size?: number; dark?: boolean }) {
+  const id = `logo-${size}-${dark ? 'd' : 'l'}`;
   return (
-    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
       <defs>
-        <linearGradient id="bookedup-logo" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+        <linearGradient id={id} x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
           <stop stopColor="#df6f38" />
           <stop offset="1" stopColor="#b84f1d" />
         </linearGradient>
       </defs>
-      <rect x="2" y="2" width="32" height="32" rx="11" fill="url(#bookedup-logo)" />
-      <rect x="9" y="12" width="18" height="13" rx="3" fill="#fffdfa" />
-      <rect x="9" y="10" width="18" height="5" rx="2.5" fill="#f4d4c0" />
-      <path d="M13.5 18.5 16.5 21.5 22.5 15.5" stroke="#b84f1d" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+      <rect width="32" height="32" rx="10" fill={`url(#${id})`} />
+      <rect x="8" y="12" width="16" height="12" rx="2.5" fill="white" fillOpacity="0.95" />
+      <rect x="8" y="10" width="16" height="5" rx="2.5" fill="white" fillOpacity="0.6" />
+      <rect x="12" y="8" width="3" height="5" rx="1.5" fill="white" />
+      <rect x="17" y="8" width="3" height="5" rx="1.5" fill="white" />
+      <path d="M12 18.5l2.5 2.5 5.5-6" stroke="#b84f1d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
+/* ─── Nav ────────────────────────────────────────────────────── */
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => setScrolled(window.scrollY > 56);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  const isDark = !scrolled;
 
   return (
     <nav
       className="fixed inset-x-0 top-0 z-50 transition-all duration-300"
       style={{
-        background: scrolled ? 'rgba(246,241,235,0.84)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(18px)' : 'none',
-        borderBottom: scrolled ? `1px solid ${C.border}` : '1px solid transparent',
+        background: scrolled ? 'rgba(246,241,235,0.9)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? `1px solid ${D.border}` : '1px solid transparent',
       }}
     >
-      <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-6">
+      <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-3">
-          <Logo />
-          <span className="text-[15px] font-semibold tracking-[0.12em] uppercase" style={{ color: C.text }}>
-            BookedUp
+          <Logo size={28} dark={isDark} />
+          <span
+            className="text-[14px] font-bold tracking-[0.14em] uppercase"
+            style={{ color: isDark ? D.darkText : D.text }}
+          >
+            Rezerve
           </span>
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-7 md:flex">
           {[
             { label: 'Platform', href: '#platform' },
             { label: 'Workflow', href: '#workflow' },
             { label: 'FAQ', href: '#faq' },
           ].map(item => (
-            <Link key={item.label} href={item.href} className="text-[14px]" style={{ color: C.dim }}>
+            <Link
+              key={item.label}
+              href={item.href}
+              className="text-[13px] font-medium transition-opacity hover:opacity-70"
+              style={{ color: isDark ? D.darkDim : D.dim }}
+            >
               {item.label}
             </Link>
           ))}
         </div>
 
-        <div className="hidden items-center gap-3 md:flex">
-          <Link href="/login" className="px-4 py-2 text-[14px]" style={{ color: C.dim }}>
+        <div className="hidden items-center gap-2 md:flex">
+          <Link
+            href="/login"
+            className="px-4 py-2 text-[13px] font-medium rounded-full transition-all hover:opacity-70"
+            style={{ color: isDark ? D.darkDim : D.dim }}
+          >
             Sign in
           </Link>
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[14px] font-medium text-white"
-            style={{ background: C.accent }}
+            className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[13px] font-semibold text-white"
+            style={{
+              background: 'linear-gradient(135deg, #df6f38, #b84f1d)',
+              boxShadow: '0 4px 16px rgba(184,79,29,0.3)',
+            }}
           >
             Start free
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
@@ -174,34 +199,53 @@ function Nav() {
           type="button"
           aria-label="Toggle menu"
           className="md:hidden"
-          style={{ color: C.text }}
-          onClick={() => setOpen(value => !value)}
+          style={{ color: isDark ? D.darkText : D.text }}
+          onClick={() => setOpen(v => !v)}
         >
-          <div className="space-y-1.5">
-            <span className="block h-0.5 w-5 bg-current" />
-            <span className="block h-0.5 w-5 bg-current" />
+          <div className="space-y-[5px]">
+            <span
+              className="block h-px w-[22px]"
+              style={{ background: 'currentColor', transition: 'transform 0.2s', transform: open ? 'rotate(45deg) translate(4px, 4px)' : 'none' }}
+            />
+            <span
+              className="block h-px w-[22px]"
+              style={{ background: 'currentColor', transition: 'opacity 0.2s', opacity: open ? 0 : 1 }}
+            />
+            <span
+              className="block h-px w-[22px]"
+              style={{ background: 'currentColor', transition: 'transform 0.2s', transform: open ? 'rotate(-45deg) translate(4px, -4px)' : 'none' }}
+            />
           </div>
         </button>
       </div>
 
       {open && (
-        <div className="border-t px-6 py-5 md:hidden" style={{ background: C.panel, borderColor: C.border }}>
+        <div
+          className="border-t px-6 py-5 md:hidden"
+          style={{ background: D.panel, borderColor: D.border }}
+        >
           <div className="flex flex-col gap-4">
-            <Link href="#platform" style={{ color: C.dim }}>Platform</Link>
-            <Link href="#workflow" style={{ color: C.dim }}>Workflow</Link>
-            <Link href="#faq" style={{ color: C.dim }}>FAQ</Link>
+            {[
+              { label: 'Platform', href: '#platform' },
+              { label: 'Workflow', href: '#workflow' },
+              { label: 'FAQ', href: '#faq' },
+            ].map(item => (
+              <Link key={item.label} href={item.href} className="text-[14px]" style={{ color: D.dim }}>
+                {item.label}
+              </Link>
+            ))}
             <div className="mt-2 flex gap-3">
               <Link
                 href="/login"
-                className="flex-1 rounded-full border px-4 py-2.5 text-center text-[14px]"
-                style={{ borderColor: C.border, color: C.text }}
+                className="flex-1 rounded-full border px-4 py-2.5 text-center text-[13px] font-medium"
+                style={{ borderColor: D.border, color: D.text }}
               >
                 Sign in
               </Link>
               <Link
                 href="/signup"
-                className="flex-1 rounded-full px-4 py-2.5 text-center text-[14px] font-medium text-white"
-                style={{ background: C.accent }}
+                className="flex-1 rounded-full px-4 py-2.5 text-center text-[13px] font-semibold text-white"
+                style={{ background: 'linear-gradient(135deg, #df6f38, #b84f1d)' }}
               >
                 Start free
               </Link>
@@ -213,339 +257,495 @@ function Nav() {
   );
 }
 
-function RevealNumber({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
-  const [display, setDisplay] = useState(0);
+/* ─── Conversation widget ────────────────────────────────────── */
+function ConversationWidget() {
+  return (
+    <div className="relative w-full max-w-[520px] mx-auto">
+      {/* Ambient glow */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          inset: '-60px -40px',
+          background:
+            'radial-gradient(ellipse at 35% 55%, rgba(223,111,56,0.2), transparent 52%), radial-gradient(ellipse at 72% 25%, rgba(31,122,114,0.13), transparent 44%)',
+          filter: 'blur(2px)',
+        }}
+      />
+
+      {/* Card */}
+      <div
+        className="relative overflow-hidden rounded-[26px]"
+        style={{
+          background: 'rgba(255,253,250,0.98)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 40px 96px rgba(0,0,0,0.5), 0 0 0 1px rgba(223,111,56,0.08)',
+        }}
+      >
+        {/* Chrome bar */}
+        <div
+          className="flex items-center justify-between px-5 py-3.5"
+          style={{ background: D.panel, borderBottom: `1px solid ${D.border}` }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="flex gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#fc685d' }} />
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#fdbc41' }} />
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#33c748' }} />
+            </div>
+            <div className="flex items-center gap-1.5 ml-1">
+              <Instagram className="w-3.5 h-3.5" style={{ color: '#c13584' }} />
+              <span className="text-[12px] font-semibold" style={{ color: D.text }}>Ariana M.</span>
+              <span className="text-[11px]" style={{ color: D.dim }}>· Instagram DM</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: '#34d399', boxShadow: '0 0 5px rgba(52,211,153,0.9)', animation: 'pulse 2s infinite' }}
+            />
+            <span className="text-[11px] font-semibold" style={{ color: D.teal }}>AI handling</span>
+          </div>
+        </div>
+
+        {/* Message thread */}
+        <div className="px-4 py-5 space-y-4">
+          {THREAD.map((msg, i) => {
+            const isClient = msg.from === 'client';
+            return (
+              <div
+                key={i}
+                className={`flex items-end gap-2.5 ${isClient ? 'justify-end' : 'justify-start'}`}
+                style={{
+                  animation: 'fadeUp 0.5s ease both',
+                  animationDelay: `${i * 0.08}s`,
+                }}
+              >
+                {/* AI avatar */}
+                {!isClient && (
+                  <div
+                    className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #df6f38, #b84f1d)',
+                      boxShadow: '0 2px 8px rgba(184,79,29,0.3)',
+                      marginBottom: 18,
+                    }}
+                  >
+                    <Sparkles className="w-3 h-3 text-white" />
+                  </div>
+                )}
+
+                <div className={`flex flex-col ${isClient ? 'items-end' : 'items-start'}`} style={{ maxWidth: '78%' }}>
+                  <div
+                    className="px-4 py-2.5 text-[13px] leading-[1.55]"
+                    style={isClient ? {
+                      background: D.panelSoft,
+                      border: `1px solid ${D.border}`,
+                      borderRadius: '18px 18px 4px 18px',
+                      color: D.text,
+                    } : {
+                      background: '#171411',
+                      borderRadius: '18px 18px 18px 4px',
+                      color: '#f5f0ea',
+                    }}
+                  >
+                    {msg.text}
+                  </div>
+                  <div
+                    className={`flex items-center gap-1 mt-1 text-[10px] ${isClient ? 'flex-row-reverse' : ''}`}
+                    style={{ color: D.dim }}
+                  >
+                    {!isClient && <Sparkles className="w-2.5 h-2.5" style={{ color: D.accent }} />}
+                    <span>{isClient ? 'Ariana' : 'Rezerve AI'} · {msg.time}</span>
+                  </div>
+                </div>
+
+                {/* Client avatar */}
+                {isClient && (
+                  <div
+                    className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold"
+                    style={{
+                      background: D.accentSoft,
+                      color: D.accentStrong,
+                      marginBottom: 18,
+                    }}
+                  >
+                    A
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Booking confirmation card */}
+        <div
+          className="mx-4 mb-4 rounded-[18px] p-4"
+          style={{
+            background: 'linear-gradient(135deg, rgba(31,122,114,0.06), rgba(31,122,114,0.03))',
+            border: '1px solid rgba(31,122,114,0.18)',
+            animation: 'fadeUp 0.5s ease both',
+            animationDelay: '0.56s',
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: D.teal }} />
+              <span className="text-[13px] font-bold" style={{ color: D.text }}>Booking confirmed</span>
+            </div>
+            <span
+              className="text-[12px] font-bold px-2.5 py-1 rounded-full"
+              style={{ background: 'rgba(31,122,114,0.1)', color: D.teal }}
+            >
+              +$113
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: 'Service', value: 'Soft gel + cuticle care' },
+              { label: 'Date', value: 'Saturday, 2:00 PM' },
+              { label: 'Deposit', value: 'Collected · $30' },
+              { label: 'Reminder', value: 'Fri 6 PM · auto-sent' },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-[10px] uppercase tracking-[0.1em] mb-0.5" style={{ color: D.dim }}>{label}</p>
+                <p className="text-[12px] font-semibold" style={{ color: D.text }}>{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div
+          className="flex items-center justify-between px-5 py-3"
+          style={{ borderTop: `1px solid ${D.border}`, background: D.panelSoft }}
+        >
+          <span className="text-[11px]" style={{ color: D.dim }}>Handled by AI in 0.4s</span>
+          <div className="flex items-center gap-1.5">
+            <CalendarDays className="w-3 h-3" style={{ color: D.teal }} />
+            <span className="text-[11px] font-semibold" style={{ color: D.teal }}>Calendar updated</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Stat counter ───────────────────────────────────────────── */
+function Counter({ value, suffix = '' }: { value: number; suffix?: string }) {
+  const [n, setN] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
 
   useEffect(() => {
     const node = ref.current;
     if (!node || started.current) return;
-
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting || started.current) return;
+    const observer = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting || started.current) return;
       started.current = true;
       const begin = performance.now();
-      const duration = 1200;
-
-      const tick = (time: number) => {
-        const progress = Math.min((time - begin) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        setDisplay(Math.round(value * eased));
-        if (progress < 1) requestAnimationFrame(tick);
+      const duration = 1400;
+      const tick = (now: number) => {
+        const p = Math.min((now - begin) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        setN(Math.round(value * eased));
+        if (p < 1) requestAnimationFrame(tick);
       };
-
       requestAnimationFrame(tick);
-    }, { threshold: 0.35 });
-
+    }, { threshold: 0.4 });
     observer.observe(node);
     return () => observer.disconnect();
   }, [value]);
 
   return (
     <span ref={ref}>
-      {prefix}
-      {display.toLocaleString()}
+      {n.toLocaleString()}
       {suffix}
     </span>
   );
 }
 
-function CommandCenter() {
-  const [activeStep, setActiveStep] = useState(0);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setActiveStep(current => (current + 1) % BOARD_STEPS.length);
-    }, 2200);
-
-    return () => window.clearInterval(interval);
-  }, []);
-
-  const current = BOARD_STEPS[activeStep];
-
-  return (
-    <div className="relative mx-auto w-full max-w-[580px]">
-      <div
-        className="absolute -inset-10 rounded-[40px] blur-3xl"
-        style={{
-          background:
-            'radial-gradient(circle at 30% 30%, rgba(223,111,56,0.18), transparent 45%), radial-gradient(circle at 70% 70%, rgba(31,122,114,0.12), transparent 40%)',
-        }}
-      />
-
-      <div
-        className="relative overflow-hidden rounded-[30px] border p-4 shadow-[0_30px_90px_rgba(99,72,43,0.14)] md:p-5"
-        style={{ background: 'rgba(255,253,250,0.92)', borderColor: C.border }}
-      >
-        <div className="mb-4 flex items-center justify-between rounded-[22px] border px-4 py-3" style={{ borderColor: C.border, background: C.panel }}>
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.22em]" style={{ color: C.dim }}>Live booking desk</p>
-            <p className="mt-1 text-[17px] font-semibold" style={{ color: C.text }}>AI command center</p>
-          </div>
-          <div className="rounded-full px-3 py-1 text-[12px] font-medium" style={{ background: C.accentSoft, color: C.accentStrong }}>
-            {current.revenue}
-          </div>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-3 rounded-[24px] border p-3" style={{ borderColor: C.border, background: C.panel }}>
-            {BOARD_STEPS.map((step, index) => {
-              const active = index === activeStep;
-              return (
-                <div
-                  key={step.label}
-                  className="rounded-[18px] border p-3 transition-all duration-500"
-                  style={{
-                    borderColor: active ? '#e7b18f' : C.border,
-                    background: active ? '#fff4ed' : C.panel,
-                    transform: active ? 'translateX(0)' : 'translateX(0)',
-                    boxShadow: active ? '0 14px 32px rgba(223,111,56,0.12)' : 'none',
-                    opacity: active ? 1 : 0.58,
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[13px] font-semibold" style={{ color: C.text }}>{step.customer}</p>
-                      <p className="text-[12px]" style={{ color: C.dim }}>{step.service}</p>
-                    </div>
-                    <span className="text-[11px]" style={{ color: C.dim }}>{step.time}</span>
-                  </div>
-                  <div className="mt-3 flex items-center gap-2 text-[12px]" style={{ color: active ? C.accentStrong : C.dim }}>
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {step.label}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="space-y-4">
-            <div className="rounded-[24px] border p-4" style={{ borderColor: C.border, background: '#171411' }}>
-              <div className="flex items-center gap-2 text-[12px]" style={{ color: '#d8c7b6' }}>
-                <div className="h-2.5 w-2.5 rounded-full bg-[#df6f38]" />
-                Auto-response in progress
-              </div>
-              <p className="mt-4 text-[20px] font-semibold leading-tight text-white">
-                {current.reply}
-              </p>
-              <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div
-                  key={activeStep}
-                  className="h-full rounded-full"
-                  style={{
-                    width: '100%',
-                    background: 'linear-gradient(90deg, #df6f38, #f0c29b)',
-                    animation: 'progressFill 2.1s linear',
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <div className="rounded-[22px] border p-4" style={{ borderColor: C.border, background: C.panelSoft }}>
-                <p className="text-[11px] uppercase tracking-[0.18em]" style={{ color: C.dim }}>Outcome</p>
-                <p className="mt-2 text-[17px] font-semibold" style={{ color: C.text }}>{current.outcome}</p>
-                <div className="mt-4 flex items-center gap-2 text-[12px]" style={{ color: C.teal }}>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Deposit and reminder armed
-                </div>
-              </div>
-
-              <div className="rounded-[22px] border p-4" style={{ borderColor: C.border, background: C.panel }}>
-                <p className="text-[11px] uppercase tracking-[0.18em]" style={{ color: C.dim }}>Next opening</p>
-                <p className="mt-2 text-[17px] font-semibold" style={{ color: C.text }}>Saturday 3:30 PM</p>
-                <div className="mt-4 flex items-center gap-2 text-[12px]" style={{ color: C.gold }}>
-                  <Clock3 className="h-4 w-4" />
-                  Waitlist ready to fill gaps
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FeatureCard({ icon: Icon, title, desc }: { icon: ElementType; title: string; desc: string }) {
-  return (
-    <div
-      className="rounded-[26px] border p-6"
-      style={{ background: C.panel, borderColor: C.border, boxShadow: '0 14px 40px rgba(86,63,36,0.05)' }}
-    >
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: C.accentSoft, color: C.accentStrong }}>
-        <Icon className="h-5 w-5" />
-      </div>
-      <h3 className="mt-5 text-[20px] font-semibold" style={{ color: C.text }}>{title}</h3>
-      <p className="mt-3 text-[15px] leading-7" style={{ color: C.dim }}>{desc}</p>
-    </div>
-  );
-}
-
+/* ─── Page ───────────────────────────────────────────────────── */
 export default function LandingPage() {
   return (
-    <main style={{ background: C.bg, color: C.text }}>
+    <main>
       <style>{`
         @keyframes progressFill {
           from { transform: translateX(-100%); }
           to { transform: translateX(0%); }
         }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-6px); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fadeUp 0.7s ease both; }
+        .fade-up-1 { animation-delay: 0.1s; }
+        .fade-up-2 { animation-delay: 0.22s; }
+        .fade-up-3 { animation-delay: 0.34s; }
+        .fade-up-4 { animation-delay: 0.46s; }
       `}</style>
 
       <Nav />
 
-      <section className="relative overflow-hidden px-6 pb-20 pt-28 md:pb-28 md:pt-36">
+      {/* ── HERO ──────────────────────────────────────────────── */}
+      <section
+        className="relative min-h-screen flex flex-col justify-center overflow-hidden px-6 pt-24 pb-20"
+        style={{ background: D.dark }}
+      >
+        {/* Background mesh */}
         <div
-          className="pointer-events-none absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              'radial-gradient(circle at 15% 20%, rgba(223,111,56,0.12), transparent 28%), radial-gradient(circle at 85% 35%, rgba(31,122,114,0.09), transparent 24%), linear-gradient(180deg, rgba(255,253,250,0.65) 0%, rgba(246,241,235,0) 100%)',
+            background: [
+              'radial-gradient(ellipse at 12% 40%, rgba(223,111,56,0.18), transparent 38%)',
+              'radial-gradient(ellipse at 88% 25%, rgba(31,122,114,0.12), transparent 35%)',
+              'radial-gradient(ellipse at 55% 90%, rgba(183,130,47,0.08), transparent 40%)',
+            ].join(', '),
+          }}
+        />
+        {/* Noise overlay for texture */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.025]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '128px',
           }}
         />
 
-        <div className="relative mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[0.92fr_1.08fr]">
-          <div>
-            <div
-              className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] uppercase tracking-[0.18em]"
-              style={{ borderColor: C.border, background: 'rgba(255,253,250,0.72)', color: C.dim }}
-            >
-              <Zap className="h-3.5 w-3.5" />
-              Booking automation for service pros
-            </div>
+        <div className="relative mx-auto w-full max-w-6xl">
+          <div className="grid items-center gap-16 lg:grid-cols-[1fr_1fr]">
 
-            <h1
-              className="mt-7 max-w-xl text-5xl font-semibold leading-[1.02] md:text-7xl"
-              style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.04em' }}
-            >
-              Clean up your inbox.
-              <span className="block" style={{ color: C.accentStrong }}>Fill your calendar automatically.</span>
-            </h1>
-
-            <p className="mt-6 max-w-xl text-[18px] leading-8 md:text-[19px]" style={{ color: C.dim }}>
-              BookedUp turns Instagram DMs and texts into paid appointments with faster replies, better slot matching, and automatic follow-up after the booking is closed.
-            </p>
-
-            <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-medium text-white"
-                style={{ background: C.accent, boxShadow: '0 18px 40px rgba(223,111,56,0.22)' }}
+            {/* Left copy */}
+            <div>
+              <div
+                className="fade-up inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] mb-8"
+                style={{
+                  borderColor: 'rgba(223,111,56,0.3)',
+                  background: 'rgba(223,111,56,0.08)',
+                  color: '#df6f38',
+                }}
               >
-                Start free
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="#platform"
-                className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3.5 text-[15px] font-medium"
-                style={{ borderColor: C.border, background: 'rgba(255,253,250,0.72)' }}
-              >
-                See the workflow
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
+                <Zap className="h-3 w-3" />
+                AI booking for service pros
+              </div>
 
-            <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              {[
-                { value: 24, suffix: '/7', label: 'fast response coverage' },
-                { value: 5, suffix: ' min', label: 'average setup time' },
-                { value: 3, suffix: 'x', label: 'less manual follow-up' },
-              ].map(item => (
-                <div key={item.label} className="rounded-[22px] border px-4 py-4" style={{ borderColor: C.border, background: 'rgba(255,253,250,0.82)' }}>
-                  <div className="text-[28px] font-semibold tracking-[-0.04em]" style={{ color: C.text }}>
-                    <RevealNumber value={item.value} suffix={item.suffix} />
+              <h1
+                className="fade-up fade-up-1 text-[52px] font-bold leading-[1.0] tracking-[-0.04em] md:text-[68px] lg:text-[60px] xl:text-[72px]"
+                style={{ color: D.darkText, fontFamily: 'var(--font-display)' }}
+              >
+                Stop leaving
+                <br />
+                bookings in
+                <br />
+                <span
+                  style={{
+                    background: 'linear-gradient(135deg, #df6f38, #f0a06a)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  your DMs.
+                </span>
+              </h1>
+
+              <p
+                className="fade-up fade-up-2 mt-7 text-[17px] leading-[1.7] max-w-lg"
+                style={{ color: D.darkDim }}
+              >
+                Rezerve reads the message, quotes your service, books the slot, collects the deposit, and sends the reminder — while you're with a client.
+              </p>
+
+              <div className="fade-up fade-up-3 mt-9 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all hover:opacity-90 hover:translate-y-[-1px]"
+                  style={{
+                    background: 'linear-gradient(135deg, #df6f38, #b84f1d)',
+                    boxShadow: '0 8px 24px rgba(184,79,29,0.4)',
+                  }}
+                >
+                  Start free — no card needed
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="#platform"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border px-7 py-3.5 text-[14px] font-medium transition-all hover:opacity-80"
+                  style={{
+                    borderColor: 'rgba(255,255,255,0.12)',
+                    color: D.darkDim,
+                    background: 'rgba(255,255,255,0.04)',
+                  }}
+                >
+                  See how it works
+                </Link>
+              </div>
+
+              {/* Stat pills */}
+              <div className="fade-up fade-up-4 mt-10 flex flex-wrap gap-3">
+                {[
+                  { n: 24, suffix: '/7', label: 'response coverage' },
+                  { n: 5, suffix: ' min', label: 'setup' },
+                  { n: 3, suffix: 'x', label: 'less follow-up' },
+                ].map(stat => (
+                  <div
+                    key={stat.label}
+                    className="rounded-2xl px-4 py-3"
+                    style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <div
+                      className="text-[22px] font-bold tracking-[-0.03em] leading-none"
+                      style={{ color: D.darkText }}
+                    >
+                      <Counter value={stat.n} suffix={stat.suffix} />
+                    </div>
+                    <p className="text-[11px] mt-1 uppercase tracking-[0.1em]" style={{ color: D.darkDim }}>
+                      {stat.label}
+                    </p>
                   </div>
-                  <p className="mt-1 text-[12px] uppercase tracking-[0.12em]" style={{ color: C.dim }}>{item.label}</p>
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+
+            {/* Right widget */}
+            <div
+              className="fade-up fade-up-2"
+              style={{ animation: 'float 6s ease-in-out infinite', animationDelay: '1s' }}
+            >
+              <LiveWidget />
             </div>
           </div>
-
-          <CommandCenter />
         </div>
+
+        {/* Bottom fade to cream */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
+          style={{
+            background: `linear-gradient(to bottom, transparent, ${D.bg})`,
+          }}
+        />
       </section>
 
-      <section id="platform" className="px-6 py-20 md:py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-2xl">
-              <p className="text-[12px] uppercase tracking-[0.2em]" style={{ color: C.dim }}>Platform</p>
-              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.04em] md:text-5xl" style={{ fontFamily: 'var(--font-display)' }}>
-                A quieter interface, built for real booking work.
-              </h2>
-            </div>
-            <p className="max-w-xl text-[16px] leading-7" style={{ color: C.dim }}>
-              The product story is simpler now: capture demand, close the appointment, and keep the calendar full without making the page feel busy.
-            </p>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {FEATURE_CARDS.map(card => (
-              <FeatureCard key={card.title} icon={card.icon} title={card.title} desc={card.desc} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-y px-6 py-20 md:py-24" style={{ borderColor: C.border, background: '#efe5d9' }}>
-        <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1fr_1.3fr]">
-          <div className="rounded-[30px] border p-8" style={{ borderColor: '#d6c5b4', background: 'rgba(255,253,250,0.74)' }}>
-            <p className="text-[12px] uppercase tracking-[0.2em]" style={{ color: C.dim }}>Channels</p>
-            <h3 className="mt-3 text-3xl font-semibold tracking-[-0.04em]" style={{ fontFamily: 'var(--font-display)' }}>
-              One operating layer across every message source.
-            </h3>
-            <p className="mt-4 text-[16px] leading-7" style={{ color: C.dim }}>
-              Clients can start on Instagram, continue over text, and still land in the same scheduling flow with consistent pricing and confirmations.
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
+      {/* ── SOCIAL PROOF BAR ──────────────────────────────────── */}
+      <section style={{ background: D.bg }}>
+        <div
+          className="mx-auto max-w-6xl px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ borderBottom: `1px solid ${D.border}` }}
+        >
+          <p className="text-[13px]" style={{ color: D.dim }}>
+            Trusted by independent artists and studios across 40+ cities
+          </p>
+          <div className="flex items-center gap-6">
             {[
-              { icon: Instagram, label: 'Instagram DMs', note: 'Capture leads where discovery happens.' },
-              { icon: Phone, label: 'SMS follow-up', note: 'Keep confirmations and reminders direct.' },
-              { icon: MessageSquare, label: 'Website inquiries', note: 'Convert traffic without adding admin work.' },
-              { icon: Users, label: 'Waitlist outreach', note: 'Refill cancelled slots before they go cold.' },
-            ].map(item => (
-              <div key={item.label} className="rounded-[26px] border p-6" style={{ borderColor: '#d6c5b4', background: 'rgba(255,253,250,0.9)' }}>
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ background: '#f7d7c6', color: C.accentStrong }}>
-                  <item.icon className="h-5 w-5" />
-                </div>
-                <p className="mt-4 text-[18px] font-semibold">{item.label}</p>
-                <p className="mt-2 text-[15px] leading-7" style={{ color: C.dim }}>{item.note}</p>
+              { icon: Instagram, label: 'Instagram DMs' },
+              { icon: Phone, label: 'SMS / Text' },
+              { icon: MessageSquare, label: 'Website chat' },
+            ].map(c => (
+              <div key={c.label} className="flex items-center gap-1.5 text-[12px]" style={{ color: D.dim }}>
+                <c.icon className="h-3.5 w-3.5" />
+                {c.label}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="workflow" className="px-6 py-20 md:py-24">
+      {/* ── FEATURES ──────────────────────────────────────────── */}
+      <section id="platform" style={{ background: D.bg }}>
+        <div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+          <div className="mb-14 max-w-xl">
+            <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-4" style={{ color: D.accent }}>
+              Platform
+            </p>
+            <h2
+              className="text-[38px] font-bold tracking-[-0.04em] leading-[1.08] md:text-[52px]"
+              style={{ fontFamily: 'var(--font-display)', color: D.text }}
+            >
+              Everything a booking needs. Nothing it doesn't.
+            </h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {FEATURES.map(f => (
+              <div
+                key={f.title}
+                className="rounded-[24px] p-6 group transition-all hover:translate-y-[-2px]"
+                style={{
+                  background: D.panel,
+                  border: `1px solid ${D.border}`,
+                  boxShadow: '0 1px 0 rgba(255,253,250,0.9) inset',
+                }}
+              >
+                <div
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl mb-5"
+                  style={{ background: f.bg }}
+                >
+                  <f.icon className="h-5 w-5" style={{ color: f.color }} />
+                </div>
+                <h3 className="text-[17px] font-semibold mb-2.5 leading-snug" style={{ color: D.text }}>
+                  {f.title}
+                </h3>
+                <p className="text-[14px] leading-[1.7]" style={{ color: D.dim }}>
+                  {f.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CHANNELS ──────────────────────────────────────────── */}
+      <section
+        className="px-6 py-20 md:py-24"
+        style={{ background: D.panelSoft, borderTop: `1px solid ${D.border}`, borderBottom: `1px solid ${D.border}` }}
+      >
         <div className="mx-auto max-w-6xl">
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-            <div className="max-w-xl">
-              <p className="text-[12px] uppercase tracking-[0.2em]" style={{ color: C.dim }}>Workflow</p>
-              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.04em] md:text-5xl" style={{ fontFamily: 'var(--font-display)' }}>
-                The booking loop is short on purpose.
+          <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr] items-center">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-4" style={{ color: D.accent }}>
+                Channels
+              </p>
+              <h2
+                className="text-[34px] font-bold tracking-[-0.04em] leading-[1.1] mb-5 md:text-[42px]"
+                style={{ fontFamily: 'var(--font-display)', color: D.text }}
+              >
+                One layer across every message source.
               </h2>
-              <p className="mt-5 text-[16px] leading-7" style={{ color: C.dim }}>
-                Most pages over-explain the software. This one now shows the exact sequence that matters to a studio owner: respond, schedule, retain.
+              <p className="text-[15px] leading-[1.7]" style={{ color: D.dim }}>
+                Clients can start on Instagram, switch to text, and still land in the same scheduling flow with consistent pricing and instant confirmations.
               </p>
             </div>
 
-            <div className="space-y-4">
-              {PROCESS_STEPS.map((step, index) => (
-                <div key={step.title} className="rounded-[28px] border p-6 md:p-8" style={{ borderColor: C.border, background: C.panel }}>
-                  <div className="flex items-start gap-5">
-                    <div
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[14px] font-semibold"
-                      style={{ background: C.accentSoft, color: C.accentStrong }}
-                    >
-                      0{index + 1}
-                    </div>
-                    <div>
-                      <h3 className="text-[22px] font-semibold">{step.title}</h3>
-                      <p className="mt-2 text-[15px] leading-7" style={{ color: C.dim }}>{step.desc}</p>
-                    </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { icon: Instagram, label: 'Instagram DMs', note: 'Capture leads where discovery happens.', color: '#e1306c', bg: 'rgba(225,48,108,0.07)' },
+                { icon: Phone, label: 'SMS / Text', note: 'Keep confirmations and reminders direct.', color: D.teal, bg: 'rgba(31,122,114,0.07)' },
+                { icon: MessageSquare, label: 'Website widget', note: 'Convert traffic without manual work.', color: D.accent, bg: D.accentSoft },
+                { icon: Users, label: 'Waitlist fill', note: 'Refill cancelled slots before they go cold.', color: D.gold, bg: 'rgba(183,130,47,0.07)' },
+              ].map(item => (
+                <div
+                  key={item.label}
+                  className="rounded-[22px] p-5 transition-all hover:translate-y-[-1px]"
+                  style={{
+                    background: D.panel,
+                    border: `1px solid ${D.border}`,
+                    boxShadow: '0 2px 12px rgba(99,72,43,0.05)',
+                  }}
+                >
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-xl mb-4"
+                    style={{ background: item.bg }}
+                  >
+                    <item.icon className="h-4.5 w-4.5 h-[18px] w-[18px]" style={{ color: item.color }} />
                   </div>
+                  <p className="text-[15px] font-semibold mb-1" style={{ color: D.text }}>{item.label}</p>
+                  <p className="text-[13px] leading-[1.6]" style={{ color: D.dim }}>{item.note}</p>
                 </div>
               ))}
             </div>
@@ -553,65 +753,272 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="faq" className="px-6 pb-24">
-        <div className="mx-auto max-w-5xl rounded-[34px] border p-8 md:p-12" style={{ borderColor: C.border, background: C.panel }}>
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+      {/* ── WORKFLOW ──────────────────────────────────────────── */}
+      <section id="workflow" className="px-6 py-20 md:py-28" style={{ background: D.bg }}>
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-14 max-w-xl">
+            <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-4" style={{ color: D.accent }}>
+              Workflow
+            </p>
+            <h2
+              className="text-[38px] font-bold tracking-[-0.04em] leading-[1.08] md:text-[48px]"
+              style={{ fontFamily: 'var(--font-display)', color: D.text }}
+            >
+              Three steps. Then it runs itself.
+            </h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                n: '01',
+                title: 'Capture intent',
+                desc: 'Rezerve reads the first message and extracts service, timing preference, and channel — instantly.',
+                color: D.accent,
+                bg: D.accentSoft,
+              },
+              {
+                n: '02',
+                title: 'Offer the best slot',
+                desc: 'It checks your real calendar, matches service duration, and proposes a specific time with pricing. No back-and-forth.',
+                color: D.teal,
+                bg: 'rgba(31,122,114,0.1)',
+              },
+              {
+                n: '03',
+                title: 'Confirm and retain',
+                desc: 'Deposit collected, reminder scheduled, next-visit nudge queued for post-checkout. The loop closes by itself.',
+                color: D.gold,
+                bg: 'rgba(183,130,47,0.1)',
+              },
+            ].map((step, i) => (
+              <div
+                key={step.n}
+                className="rounded-[28px] p-8 relative overflow-hidden"
+                style={{
+                  background: D.panel,
+                  border: `1px solid ${D.border}`,
+                  boxShadow: '0 4px 20px rgba(99,72,43,0.06)',
+                }}
+              >
+                <div
+                  className="absolute top-0 right-0 text-[80px] font-bold leading-none select-none pointer-events-none"
+                  style={{
+                    color: 'rgba(0,0,0,0.04)',
+                    fontFamily: 'var(--font-display)',
+                    lineHeight: 1,
+                    transform: 'translate(8px, -8px)',
+                  }}
+                >
+                  {step.n}
+                </div>
+                <div
+                  className="flex h-11 w-11 items-center justify-center rounded-full text-[13px] font-bold mb-6"
+                  style={{ background: step.bg, color: step.color }}
+                >
+                  {step.n}
+                </div>
+                <h3 className="text-[20px] font-bold mb-3 tracking-[-0.02em]" style={{ color: D.text }}>
+                  {step.title}
+                </h3>
+                <p className="text-[14px] leading-[1.7]" style={{ color: D.dim }}>
+                  {step.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ──────────────────────────────────────── */}
+      <section
+        className="px-6 py-20 md:py-24"
+        style={{ background: D.dark, borderTop: `1px solid rgba(255,255,255,0.04)` }}
+      >
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-3" style={{ color: D.accent }}>
+              Stories
+            </p>
+            <h2
+              className="text-[34px] font-bold tracking-[-0.04em] md:text-[44px]"
+              style={{ fontFamily: 'var(--font-display)', color: D.darkText }}
+            >
+              Real results, real studios.
+            </h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {TESTIMONIALS.map(t => (
+              <div
+                key={t.name}
+                className="rounded-[24px] p-7 flex flex-col"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                <div className="flex gap-0.5 mb-5">
+                  {Array.from({ length: t.stars }).map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-current" style={{ color: D.gold }} />
+                  ))}
+                </div>
+                <p className="text-[15px] leading-[1.7] flex-1 mb-6" style={{ color: D.darkDim }}>
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div>
+                  <p className="text-[13px] font-semibold" style={{ color: D.darkText }}>{t.name}</p>
+                  <p className="text-[12px] mt-0.5" style={{ color: 'rgba(245,240,234,0.35)' }}>{t.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ───────────────────────────────────────────────── */}
+      <section id="faq" className="px-6 py-20 md:py-24" style={{ background: D.bg }}>
+        <div className="mx-auto max-w-5xl">
+          <div className="grid gap-12 lg:grid-cols-[1fr_1.3fr]">
             <div>
-              <p className="text-[12px] uppercase tracking-[0.2em]" style={{ color: C.dim }}>FAQ</p>
-              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.04em]" style={{ fontFamily: 'var(--font-display)' }}>
-                Built to feel automatic, not risky.
+              <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-4" style={{ color: D.accent }}>
+                FAQ
+              </p>
+              <h2
+                className="text-[34px] font-bold tracking-[-0.04em] leading-[1.1] md:text-[42px]"
+                style={{ fontFamily: 'var(--font-display)', color: D.text }}
+              >
+                Questions before you commit.
               </h2>
+              <p className="mt-4 text-[14px] leading-[1.7]" style={{ color: D.dim }}>
+                Rezerve is built to stay out of your way — and out of your clients' way.
+              </p>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-0">
               {[
-                ['Can I approve messages?', 'Yes. You can fully automate common flows or require approval for specific services, clients, or price thresholds.'],
-                ['Does it work for deposits and reminders?', 'The booking flow supports confirmation prompts, reminder messages, and deposit-driven handoff so fewer appointments go dark.'],
-                ['Will this replace my booking software?', 'It is better framed as the layer that converts inbound demand into scheduled appointments, then keeps the client engaged after booking.'],
-              ].map(([q, a]) => (
-                <div key={q} className="border-b pb-6 last:border-b-0 last:pb-0" style={{ borderColor: C.border }}>
-                  <p className="text-[18px] font-semibold">{q}</p>
-                  <p className="mt-2 text-[15px] leading-7" style={{ color: C.dim }}>{a}</p>
-                </div>
+                ['Can I review messages before they send?', 'Yes. Fully automate common flows, or require your approval for specific services, price thresholds, or new clients. You set the rules.'],
+                ['How does deposit collection work?', 'Rezerve sends a payment link after the client confirms. If the deposit isn\'t collected within your grace window, the slot stays open automatically.'],
+                ['Does it replace my booking software?', 'Think of it as the front of the funnel — it converts inbound messages into confirmed slots, then hands off to your existing calendar or booking tool.'],
+                ['What happens when I\'m mid-appointment?', 'The AI handles the inbox. You review the log when you come up for air. Edge cases queue for your attention without bothering the client.'],
+              ].map(([q, a], i) => (
+                <FaqItem key={i} q={q} a={a} />
               ))}
             </div>
           </div>
+        </div>
+      </section>
 
-          <div
-            className="mt-10 flex flex-col items-start justify-between gap-5 rounded-[28px] border px-6 py-6 md:flex-row md:items-center"
-            style={{ borderColor: '#e7b18f', background: '#fff4ed' }}
+      {/* ── FINAL CTA ─────────────────────────────────────────── */}
+      <section
+        className="relative px-6 py-20 md:py-28 overflow-hidden"
+        style={{ background: D.dark }}
+      >
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: [
+              'radial-gradient(ellipse at 30% 50%, rgba(223,111,56,0.2), transparent 50%)',
+              'radial-gradient(ellipse at 75% 40%, rgba(31,122,114,0.12), transparent 45%)',
+            ].join(', '),
+          }}
+        />
+        <div className="relative mx-auto max-w-3xl text-center">
+          <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-5" style={{ color: D.accent }}>
+            Get started
+          </p>
+          <h2
+            className="text-[40px] font-bold tracking-[-0.04em] leading-[1.06] mb-5 md:text-[56px]"
+            style={{ fontFamily: 'var(--font-display)', color: D.darkText }}
           >
-            <div>
-              <p className="text-[24px] font-semibold tracking-[-0.03em]">Start with your busiest inbox.</p>
-              <p className="mt-1 text-[15px]" style={{ color: C.dim }}>
-                Connect one channel first, prove conversion lift, then expand.
-              </p>
-            </div>
+            Start with your busiest inbox.
+          </h2>
+          <p className="text-[16px] leading-[1.7] mb-10 max-w-xl mx-auto" style={{ color: D.darkDim }}>
+            Connect one channel, watch it book appointments, then expand. Setup takes five minutes.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-[15px] font-medium text-white"
-              style={{ background: C.accent }}
+              className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-[15px] font-semibold text-white transition-all hover:opacity-90 hover:translate-y-[-1px]"
+              style={{
+                background: 'linear-gradient(135deg, #df6f38, #b84f1d)',
+                boxShadow: '0 8px 32px rgba(184,79,29,0.4)',
+              }}
             >
-              Start free
+              Start free — no card needed
               <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center gap-2 rounded-full border px-8 py-4 text-[15px] font-medium transition-all hover:opacity-80"
+              style={{
+                borderColor: 'rgba(255,255,255,0.12)',
+                color: D.darkDim,
+                background: 'rgba(255,255,255,0.04)',
+              }}
+            >
+              Sign in
             </Link>
           </div>
         </div>
       </section>
 
-      <footer className="border-t px-6 py-10" style={{ borderColor: C.border }}>
-        <div className="mx-auto flex max-w-6xl flex-col gap-5 md:flex-row md:items-center md:justify-between">
+      {/* ── FOOTER ────────────────────────────────────────────── */}
+      <footer
+        className="px-6 py-10"
+        style={{
+          background: '#080705',
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+        }}
+      >
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <Logo size={28} />
-            <span className="text-[14px] font-semibold tracking-[0.12em] uppercase">BookedUp</span>
+            <Logo size={24} dark />
+            <span className="text-[13px] font-bold tracking-[0.14em] uppercase" style={{ color: D.darkDim }}>
+              Rezerve
+            </span>
+            <span className="text-[12px] ml-2" style={{ color: 'rgba(245,240,234,0.2)' }}>
+              © 2025
+            </span>
           </div>
-          <div className="flex gap-6 text-[14px]" style={{ color: C.dim }}>
-            <Link href="#">Privacy</Link>
-            <Link href="#">Terms</Link>
-            <Link href="#">Support</Link>
+          <div className="flex gap-6 text-[13px]" style={{ color: 'rgba(245,240,234,0.3)' }}>
+            <Link href="#" className="hover:opacity-70 transition-opacity">Privacy</Link>
+            <Link href="#" className="hover:opacity-70 transition-opacity">Terms</Link>
+            <Link href="#" className="hover:opacity-70 transition-opacity">Support</Link>
           </div>
         </div>
       </footer>
     </main>
+  );
+}
+
+/* ─── FAQ accordion item ─────────────────────────────────────── */
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: `1px solid ${D.border}` }}>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between py-5 text-left gap-4"
+      >
+        <span className="text-[16px] font-semibold" style={{ color: D.text }}>{q}</span>
+        <div
+          className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-transform"
+          style={{
+            background: D.accentSoft,
+            color: D.accentStrong,
+            transform: open ? 'rotate(45deg)' : 'none',
+          }}
+        >
+          <span className="text-[14px] font-bold leading-none">+</span>
+        </div>
+      </button>
+      {open && (
+        <p className="pb-5 text-[14px] leading-[1.75]" style={{ color: D.dim }}>
+          {a}
+        </p>
+      )}
+    </div>
   );
 }
