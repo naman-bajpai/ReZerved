@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
   CalendarDays,
   CheckCircle2,
-  Clock3,
   Instagram,
   MessageSquare,
   Phone,
@@ -20,20 +20,17 @@ import {
 
 /* ─── Design tokens ──────────────────────────────────────────── */
 const D = {
-  /* hero dark */
   dark: '#0c0a08',
   darkCard: 'rgba(255,255,255,0.04)',
   darkBorder: 'rgba(255,255,255,0.09)',
   darkText: '#f5f0ea',
   darkDim: 'rgba(245,240,234,0.5)',
-  /* body cream */
   bg: '#f6f1eb',
   panel: '#fffdfa',
   panelSoft: '#f0e9e0',
   border: '#dfd3c5',
   text: '#171411',
   dim: '#6f655d',
-  /* accent */
   accent: '#df6f38',
   accentSoft: '#f6d8c6',
   accentStrong: '#b84f1d',
@@ -69,7 +66,7 @@ const FEATURES = [
   {
     icon: TrendingUp,
     title: 'Upsells at exactly the right moment',
-    desc: 'After intent is clear, Rezerve surfaces one relevant add-on based on the client\'s history — before they drop out of the thread.',
+    desc: "After intent is clear, Rezerve surfaces one relevant add-on based on the client's history — before they drop out of the thread.",
     color: D.gold,
     bg: 'rgba(183,130,47,0.08)',
   },
@@ -102,6 +99,128 @@ const TESTIMONIALS = [
     stars: 5,
   },
 ];
+
+/* ─── Aurora ─────────────────────────────────────────────────── */
+function Aurora() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Primary orange blob */}
+      <motion.div
+        className="absolute rounded-full ambient-loop"
+        style={{
+          width: '75vw',
+          height: '75vw',
+          maxWidth: 1000,
+          maxHeight: 1000,
+          background: 'radial-gradient(circle at 40% 40%, rgba(223,111,56,0.26) 0%, rgba(184,79,29,0.1) 45%, transparent 70%)',
+          filter: 'blur(72px)',
+          top: '-30%',
+          left: '-20%',
+        }}
+        animate={{
+          x: [0, 70, -30, 40, 0],
+          y: [0, -50, 70, -20, 0],
+          scale: [1, 1.12, 0.93, 1.06, 1],
+          opacity: [0.8, 1, 0.7, 0.95, 0.8],
+        }}
+        transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+      />
+
+      {/* Teal blob */}
+      <motion.div
+        className="absolute rounded-full ambient-loop"
+        style={{
+          width: '65vw',
+          height: '65vw',
+          maxWidth: 860,
+          maxHeight: 860,
+          background: 'radial-gradient(circle at 50% 50%, rgba(31,122,114,0.2) 0%, rgba(31,122,114,0.06) 50%, transparent 70%)',
+          filter: 'blur(90px)',
+          top: '0%',
+          right: '-25%',
+        }}
+        animate={{
+          x: [0, -60, 40, -20, 0],
+          y: [0, 60, -40, 30, 0],
+          scale: [1, 0.88, 1.18, 0.96, 1],
+          opacity: [0.7, 1, 0.6, 0.9, 0.7],
+        }}
+        transition={{ duration: 28, repeat: Infinity, ease: 'linear', delay: 4 }}
+      />
+
+      {/* Gold accent blob */}
+      <motion.div
+        className="absolute rounded-full ambient-loop"
+        style={{
+          width: '55vw',
+          height: '55vw',
+          maxWidth: 720,
+          maxHeight: 720,
+          background: 'radial-gradient(circle at 50% 50%, rgba(183,130,47,0.14) 0%, rgba(183,130,47,0.04) 50%, transparent 70%)',
+          filter: 'blur(110px)',
+          bottom: '-20%',
+          left: '25%',
+        }}
+        animate={{
+          x: [0, 50, -40, 20, 0],
+          y: [0, -70, 30, -40, 0],
+          scale: [1, 1.22, 0.88, 1.1, 1],
+          opacity: [0.6, 0.9, 0.5, 0.8, 0.6],
+        }}
+        transition={{ duration: 34, repeat: Infinity, ease: 'linear', delay: 9 }}
+      />
+
+      {/* Small purple spark */}
+      <motion.div
+        className="absolute rounded-full ambient-loop"
+        style={{
+          width: '35vw',
+          height: '35vw',
+          maxWidth: 450,
+          maxHeight: 450,
+          background: 'radial-gradient(circle, rgba(124,111,205,0.12) 0%, transparent 70%)',
+          filter: 'blur(80px)',
+          top: '50%',
+          left: '55%',
+        }}
+        animate={{
+          x: [0, -40, 60, 0],
+          y: [0, 40, -50, 0],
+          opacity: [0.4, 0.7, 0.3, 0.4],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'linear', delay: 2 }}
+      />
+    </div>
+  );
+}
+
+/* ─── FadeIn scroll utility ──────────────────────────────────── */
+function FadeIn({
+  children,
+  delay = 0,
+  y = 28,
+  className = '',
+  style = {},
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay }}
+      className={className}
+      style={style}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 /* ─── Logo ───────────────────────────────────────────────────── */
 function Logo({ size = 32, dark = false }: { size?: number; dark?: boolean }) {
@@ -139,7 +258,7 @@ function Nav() {
 
   return (
     <nav
-      className="fixed inset-x-0 top-0 z-50 transition-all duration-300"
+      className="fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-200"
       style={{
         background: scrolled ? 'rgba(246,241,235,0.9)' : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
@@ -166,7 +285,7 @@ function Nav() {
             <Link
               key={item.label}
               href={item.href}
-              className="text-[13px] font-medium transition-opacity hover:opacity-70"
+              className="text-[13px] font-medium ui-subtle"
               style={{ color: isDark ? D.darkDim : D.dim }}
             >
               {item.label}
@@ -177,14 +296,14 @@ function Nav() {
         <div className="hidden items-center gap-2 md:flex">
           <Link
             href="/login"
-            className="px-4 py-2 text-[13px] font-medium rounded-full transition-all hover:opacity-70"
+            className="px-4 py-2 text-[13px] font-medium rounded-full ui-subtle ui-press"
             style={{ color: isDark ? D.darkDim : D.dim }}
           >
             Sign in
           </Link>
           <Link
             href="/signup"
-            className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[13px] font-semibold text-white"
+            className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[13px] font-semibold text-white ui-press"
             style={{
               background: 'linear-gradient(135deg, #df6f38, #b84f1d)',
               boxShadow: '0 4px 16px rgba(184,79,29,0.3)',
@@ -198,7 +317,7 @@ function Nav() {
         <button
           type="button"
           aria-label="Toggle menu"
-          className="md:hidden"
+          className="md:hidden ui-press"
           style={{ color: isDark ? D.darkText : D.text }}
           onClick={() => setOpen(v => !v)}
         >
@@ -219,40 +338,46 @@ function Nav() {
         </button>
       </div>
 
-      {open && (
-        <div
-          className="border-t px-6 py-5 md:hidden"
-          style={{ background: D.panel, borderColor: D.border }}
-        >
-          <div className="flex flex-col gap-4">
-            {[
-              { label: 'Platform', href: '#platform' },
-              { label: 'Workflow', href: '#workflow' },
-              { label: 'FAQ', href: '#faq' },
-            ].map(item => (
-              <Link key={item.label} href={item.href} className="text-[14px]" style={{ color: D.dim }}>
-                {item.label}
-              </Link>
-            ))}
-            <div className="mt-2 flex gap-3">
-              <Link
-                href="/login"
-                className="flex-1 rounded-full border px-4 py-2.5 text-center text-[13px] font-medium"
-                style={{ borderColor: D.border, color: D.text }}
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/signup"
-                className="flex-1 rounded-full px-4 py-2.5 text-center text-[13px] font-semibold text-white"
-                style={{ background: 'linear-gradient(135deg, #df6f38, #b84f1d)' }}
-              >
-                Start free
-              </Link>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden border-t md:hidden"
+            style={{ background: D.panel, borderColor: D.border }}
+          >
+            <div className="flex flex-col gap-4 px-6 py-5">
+              {[
+                { label: 'Platform', href: '#platform' },
+                { label: 'Workflow', href: '#workflow' },
+                { label: 'FAQ', href: '#faq' },
+              ].map(item => (
+                <Link key={item.label} href={item.href} className="text-[14px]" style={{ color: D.dim }}>
+                  {item.label}
+                </Link>
+              ))}
+              <div className="mt-2 flex gap-3">
+                <Link
+                  href="/login"
+                  className="flex-1 rounded-full border px-4 py-2.5 text-center text-[13px] font-medium"
+                  style={{ borderColor: D.border, color: D.text }}
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="flex-1 rounded-full px-4 py-2.5 text-center text-[13px] font-semibold text-white"
+                  style={{ background: 'linear-gradient(135deg, #df6f38, #b84f1d)' }}
+                >
+                  Start free
+                </Link>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
@@ -320,7 +445,6 @@ function ConversationWidget() {
                   animationDelay: `${i * 0.08}s`,
                 }}
               >
-                {/* AI avatar */}
                 {!isClient && (
                   <div
                     className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center"
@@ -359,7 +483,6 @@ function ConversationWidget() {
                   </div>
                 </div>
 
-                {/* Client avatar */}
                 {isClient && (
                   <div
                     className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold"
@@ -469,9 +592,32 @@ export default function LandingPage() {
   return (
     <main>
       <style>{`
+        :root {
+          --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+          --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .ui-press {
+          transition: transform 160ms var(--ease-out-strong), opacity 160ms ease-out, box-shadow 220ms var(--ease-out-strong);
+          will-change: transform;
+        }
+        .ui-press:active {
+          transform: scale(0.97);
+        }
+        .ui-subtle {
+          transition: opacity 160ms ease-out;
+        }
+        @media (hover: hover) and (pointer: fine) {
+          .ui-subtle:hover {
+            opacity: 0.75;
+          }
+        }
         @keyframes progressFill {
           from { transform: translateX(-100%); }
           to { transform: translateX(0%); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.45; }
         }
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -481,11 +627,13 @@ export default function LandingPage() {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .fade-up { animation: fadeUp 0.7s ease both; }
-        .fade-up-1 { animation-delay: 0.1s; }
-        .fade-up-2 { animation-delay: 0.22s; }
-        .fade-up-3 { animation-delay: 0.34s; }
-        .fade-up-4 { animation-delay: 0.46s; }
+        @media (prefers-reduced-motion: reduce) {
+          .ambient-loop,
+          .float-loop {
+            animation: none !important;
+            transition: none !important;
+          }
+        }
       `}</style>
 
       <Nav />
@@ -495,17 +643,9 @@ export default function LandingPage() {
         className="relative min-h-screen flex flex-col justify-center overflow-hidden px-6 pt-24 pb-20"
         style={{ background: D.dark }}
       >
-        {/* Background mesh */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: [
-              'radial-gradient(ellipse at 12% 40%, rgba(223,111,56,0.18), transparent 38%)',
-              'radial-gradient(ellipse at 88% 25%, rgba(31,122,114,0.12), transparent 35%)',
-              'radial-gradient(ellipse at 55% 90%, rgba(183,130,47,0.08), transparent 40%)',
-            ].join(', '),
-          }}
-        />
+        {/* Aurora */}
+        <Aurora />
+
         {/* Noise overlay for texture */}
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.025]"
@@ -521,8 +661,11 @@ export default function LandingPage() {
 
             {/* Left copy */}
             <div>
-              <div
-                className="fade-up inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] mb-8"
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+                className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] mb-8"
                 style={{
                   borderColor: 'rgba(223,111,56,0.3)',
                   background: 'rgba(223,111,56,0.08)',
@@ -531,10 +674,13 @@ export default function LandingPage() {
               >
                 <Zap className="h-3 w-3" />
                 AI booking for service pros
-              </div>
+              </motion.div>
 
-              <h1
-                className="fade-up fade-up-1 text-[52px] font-bold leading-[1.0] tracking-[-0.04em] md:text-[68px] lg:text-[60px] xl:text-[72px]"
+              <motion.h1
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+                className="text-[52px] font-bold leading-[1.0] tracking-[-0.04em] md:text-[68px] lg:text-[60px] xl:text-[72px]"
                 style={{ color: D.darkText, fontFamily: 'var(--font-display)' }}
               >
                 Stop leaving
@@ -550,19 +696,27 @@ export default function LandingPage() {
                 >
                   your DMs.
                 </span>
-              </h1>
+              </motion.h1>
 
-              <p
-                className="fade-up fade-up-2 mt-7 text-[17px] leading-[1.7] max-w-lg"
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.28 }}
+                className="mt-7 text-[17px] leading-[1.7] max-w-lg"
                 style={{ color: D.darkDim }}
               >
                 Rezerve reads the message, quotes your service, books the slot, collects the deposit, and sends the reminder — while you're with a client.
-              </p>
+              </motion.p>
 
-              <div className="fade-up fade-up-3 mt-9 flex flex-col gap-3 sm:flex-row">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
+                className="mt-9 flex flex-col gap-3 sm:flex-row"
+              >
                 <Link
                   href="/signup"
-                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all hover:opacity-90 hover:translate-y-[-1px]"
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white ui-press"
                   style={{
                     background: 'linear-gradient(135deg, #df6f38, #b84f1d)',
                     boxShadow: '0 8px 24px rgba(184,79,29,0.4)',
@@ -573,7 +727,7 @@ export default function LandingPage() {
                 </Link>
                 <Link
                   href="#platform"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border px-7 py-3.5 text-[14px] font-medium transition-all hover:opacity-80"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border px-7 py-3.5 text-[14px] font-medium ui-subtle ui-press"
                   style={{
                     borderColor: 'rgba(255,255,255,0.12)',
                     color: D.darkDim,
@@ -582,10 +736,15 @@ export default function LandingPage() {
                 >
                   See how it works
                 </Link>
-              </div>
+              </motion.div>
 
               {/* Stat pills */}
-              <div className="fade-up fade-up-4 mt-10 flex flex-wrap gap-3">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.52 }}
+                className="mt-10 flex flex-wrap gap-3"
+              >
                 {[
                   { n: 24, suffix: '/7', label: 'response coverage' },
                   { n: 5, suffix: ' min', label: 'setup' },
@@ -610,56 +769,63 @@ export default function LandingPage() {
                     </p>
                   </div>
                 ))}
-              </div>
+              </motion.div>
             </div>
 
-            {/* Right widget */}
-            <div
-              className="fade-up fade-up-2"
-              style={{ animation: 'float 6s ease-in-out infinite', animationDelay: '1s' }}
+            {/* Right widget — floating */}
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
             >
-              <LiveWidget />
-            </div>
+              <motion.div
+                className="float-loop"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'linear', delay: 1 }}
+              >
+                <ConversationWidget />
+              </motion.div>
+            </motion.div>
           </div>
         </div>
 
         {/* Bottom fade to cream */}
         <div
           className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
-          style={{
-            background: `linear-gradient(to bottom, transparent, ${D.bg})`,
-          }}
+          style={{ background: `linear-gradient(to bottom, transparent, ${D.bg})` }}
         />
       </section>
 
       {/* ── SOCIAL PROOF BAR ──────────────────────────────────── */}
       <section style={{ background: D.bg }}>
-        <div
-          className="mx-auto max-w-6xl px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4"
-          style={{ borderBottom: `1px solid ${D.border}` }}
-        >
-          <p className="text-[13px]" style={{ color: D.dim }}>
-            Trusted by independent artists and studios across 40+ cities
-          </p>
-          <div className="flex items-center gap-6">
-            {[
-              { icon: Instagram, label: 'Instagram DMs' },
-              { icon: Phone, label: 'SMS / Text' },
-              { icon: MessageSquare, label: 'Website chat' },
-            ].map(c => (
-              <div key={c.label} className="flex items-center gap-1.5 text-[12px]" style={{ color: D.dim }}>
-                <c.icon className="h-3.5 w-3.5" />
-                {c.label}
-              </div>
-            ))}
+        <FadeIn>
+          <div
+            className="mx-auto max-w-6xl px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+            style={{ borderBottom: `1px solid ${D.border}` }}
+          >
+            <p className="text-[13px]" style={{ color: D.dim }}>
+              Trusted by independent artists and studios across 40+ cities
+            </p>
+            <div className="flex items-center gap-6">
+              {[
+                { icon: Instagram, label: 'Instagram DMs' },
+                { icon: Phone, label: 'SMS / Text' },
+                { icon: MessageSquare, label: 'Website chat' },
+              ].map(c => (
+                <div key={c.label} className="flex items-center gap-1.5 text-[12px]" style={{ color: D.dim }}>
+                  <c.icon className="h-3.5 w-3.5" />
+                  {c.label}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
       {/* ── FEATURES ──────────────────────────────────────────── */}
       <section id="platform" style={{ background: D.bg }}>
         <div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
-          <div className="mb-14 max-w-xl">
+          <FadeIn className="mb-14 max-w-xl">
             <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-4" style={{ color: D.accent }}>
               Platform
             </p>
@@ -669,32 +835,34 @@ export default function LandingPage() {
             >
               Everything a booking needs. Nothing it doesn't.
             </h2>
-          </div>
+          </FadeIn>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {FEATURES.map(f => (
-              <div
-                key={f.title}
-                className="rounded-[24px] p-6 group transition-all hover:translate-y-[-2px]"
-                style={{
-                  background: D.panel,
-                  border: `1px solid ${D.border}`,
-                  boxShadow: '0 1px 0 rgba(255,253,250,0.9) inset',
-                }}
-              >
-                <div
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl mb-5"
-                  style={{ background: f.bg }}
+            {FEATURES.map((f, i) => (
+              <FadeIn key={f.title} delay={i * 0.08}>
+                <motion.div
+                  className="rounded-[24px] p-6 h-full"
+                  style={{
+                    background: D.panel,
+                    border: `1px solid ${D.border}`,
+                    boxShadow: '0 1px 0 rgba(255,253,250,0.9) inset',
+                  }}
+                  whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
                 >
-                  <f.icon className="h-5 w-5" style={{ color: f.color }} />
-                </div>
-                <h3 className="text-[17px] font-semibold mb-2.5 leading-snug" style={{ color: D.text }}>
-                  {f.title}
-                </h3>
-                <p className="text-[14px] leading-[1.7]" style={{ color: D.dim }}>
-                  {f.desc}
-                </p>
-              </div>
+                  <div
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl mb-5"
+                    style={{ background: f.bg }}
+                  >
+                    <f.icon className="h-5 w-5" style={{ color: f.color }} />
+                  </div>
+                  <h3 className="text-[17px] font-semibold mb-2.5 leading-snug" style={{ color: D.text }}>
+                    {f.title}
+                  </h3>
+                  <p className="text-[14px] leading-[1.7]" style={{ color: D.dim }}>
+                    {f.desc}
+                  </p>
+                </motion.div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -707,7 +875,7 @@ export default function LandingPage() {
       >
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr] items-center">
-            <div>
+            <FadeIn>
               <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-4" style={{ color: D.accent }}>
                 Channels
               </p>
@@ -720,7 +888,7 @@ export default function LandingPage() {
               <p className="text-[15px] leading-[1.7]" style={{ color: D.dim }}>
                 Clients can start on Instagram, switch to text, and still land in the same scheduling flow with consistent pricing and instant confirmations.
               </p>
-            </div>
+            </FadeIn>
 
             <div className="grid gap-3 sm:grid-cols-2">
               {[
@@ -728,25 +896,27 @@ export default function LandingPage() {
                 { icon: Phone, label: 'SMS / Text', note: 'Keep confirmations and reminders direct.', color: D.teal, bg: 'rgba(31,122,114,0.07)' },
                 { icon: MessageSquare, label: 'Website widget', note: 'Convert traffic without manual work.', color: D.accent, bg: D.accentSoft },
                 { icon: Users, label: 'Waitlist fill', note: 'Refill cancelled slots before they go cold.', color: D.gold, bg: 'rgba(183,130,47,0.07)' },
-              ].map(item => (
-                <div
-                  key={item.label}
-                  className="rounded-[22px] p-5 transition-all hover:translate-y-[-1px]"
-                  style={{
-                    background: D.panel,
-                    border: `1px solid ${D.border}`,
-                    boxShadow: '0 2px 12px rgba(99,72,43,0.05)',
-                  }}
-                >
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-xl mb-4"
-                    style={{ background: item.bg }}
+              ].map((item, i) => (
+                <FadeIn key={item.label} delay={0.1 + i * 0.07}>
+                  <motion.div
+                    className="rounded-[22px] p-5 h-full"
+                    style={{
+                      background: D.panel,
+                      border: `1px solid ${D.border}`,
+                      boxShadow: '0 2px 12px rgba(99,72,43,0.05)',
+                    }}
+                    whileHover={{ y: -3, transition: { duration: 0.2, ease: 'easeOut' } }}
                   >
-                    <item.icon className="h-4.5 w-4.5 h-[18px] w-[18px]" style={{ color: item.color }} />
-                  </div>
-                  <p className="text-[15px] font-semibold mb-1" style={{ color: D.text }}>{item.label}</p>
-                  <p className="text-[13px] leading-[1.6]" style={{ color: D.dim }}>{item.note}</p>
-                </div>
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-xl mb-4"
+                      style={{ background: item.bg }}
+                    >
+                      <item.icon className="h-[18px] w-[18px]" style={{ color: item.color }} />
+                    </div>
+                    <p className="text-[15px] font-semibold mb-1" style={{ color: D.text }}>{item.label}</p>
+                    <p className="text-[13px] leading-[1.6]" style={{ color: D.dim }}>{item.note}</p>
+                  </motion.div>
+                </FadeIn>
               ))}
             </div>
           </div>
@@ -756,7 +926,7 @@ export default function LandingPage() {
       {/* ── WORKFLOW ──────────────────────────────────────────── */}
       <section id="workflow" className="px-6 py-20 md:py-28" style={{ background: D.bg }}>
         <div className="mx-auto max-w-6xl">
-          <div className="mb-14 max-w-xl">
+          <FadeIn className="mb-14 max-w-xl">
             <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-4" style={{ color: D.accent }}>
               Workflow
             </p>
@@ -766,7 +936,7 @@ export default function LandingPage() {
             >
               Three steps. Then it runs itself.
             </h2>
-          </div>
+          </FadeIn>
 
           <div className="grid gap-4 md:grid-cols-3">
             {[
@@ -792,39 +962,41 @@ export default function LandingPage() {
                 bg: 'rgba(183,130,47,0.1)',
               },
             ].map((step, i) => (
-              <div
-                key={step.n}
-                className="rounded-[28px] p-8 relative overflow-hidden"
-                style={{
-                  background: D.panel,
-                  border: `1px solid ${D.border}`,
-                  boxShadow: '0 4px 20px rgba(99,72,43,0.06)',
-                }}
-              >
-                <div
-                  className="absolute top-0 right-0 text-[80px] font-bold leading-none select-none pointer-events-none"
+              <FadeIn key={step.n} delay={i * 0.1}>
+                <motion.div
+                  className="rounded-[28px] p-8 relative overflow-hidden h-full"
                   style={{
-                    color: 'rgba(0,0,0,0.04)',
-                    fontFamily: 'var(--font-display)',
-                    lineHeight: 1,
-                    transform: 'translate(8px, -8px)',
+                    background: D.panel,
+                    border: `1px solid ${D.border}`,
+                    boxShadow: '0 4px 20px rgba(99,72,43,0.06)',
                   }}
+                  whileHover={{ y: -4, boxShadow: '0 8px 32px rgba(99,72,43,0.1)', transition: { duration: 0.25, ease: 'easeOut' } }}
                 >
-                  {step.n}
-                </div>
-                <div
-                  className="flex h-11 w-11 items-center justify-center rounded-full text-[13px] font-bold mb-6"
-                  style={{ background: step.bg, color: step.color }}
-                >
-                  {step.n}
-                </div>
-                <h3 className="text-[20px] font-bold mb-3 tracking-[-0.02em]" style={{ color: D.text }}>
-                  {step.title}
-                </h3>
-                <p className="text-[14px] leading-[1.7]" style={{ color: D.dim }}>
-                  {step.desc}
-                </p>
-              </div>
+                  <div
+                    className="absolute top-0 right-0 text-[80px] font-bold leading-none select-none pointer-events-none"
+                    style={{
+                      color: 'rgba(0,0,0,0.04)',
+                      fontFamily: 'var(--font-display)',
+                      lineHeight: 1,
+                      transform: 'translate(8px, -8px)',
+                    }}
+                  >
+                    {step.n}
+                  </div>
+                  <div
+                    className="flex h-11 w-11 items-center justify-center rounded-full text-[13px] font-bold mb-6"
+                    style={{ background: step.bg, color: step.color }}
+                  >
+                    {step.n}
+                  </div>
+                  <h3 className="text-[20px] font-bold mb-3 tracking-[-0.02em]" style={{ color: D.text }}>
+                    {step.title}
+                  </h3>
+                  <p className="text-[14px] leading-[1.7]" style={{ color: D.dim }}>
+                    {step.desc}
+                  </p>
+                </motion.div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -836,7 +1008,7 @@ export default function LandingPage() {
         style={{ background: D.dark, borderTop: `1px solid rgba(255,255,255,0.04)` }}
       >
         <div className="mx-auto max-w-6xl">
-          <div className="mb-12 text-center">
+          <FadeIn className="mb-12 text-center">
             <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-3" style={{ color: D.accent }}>
               Stories
             </p>
@@ -846,31 +1018,38 @@ export default function LandingPage() {
             >
               Real results, real studios.
             </h2>
-          </div>
+          </FadeIn>
 
           <div className="grid gap-4 md:grid-cols-3">
-            {TESTIMONIALS.map(t => (
-              <div
-                key={t.name}
-                className="rounded-[24px] p-7 flex flex-col"
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                }}
-              >
-                <div className="flex gap-0.5 mb-5">
-                  {Array.from({ length: t.stars }).map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-current" style={{ color: D.gold }} />
-                  ))}
-                </div>
-                <p className="text-[15px] leading-[1.7] flex-1 mb-6" style={{ color: D.darkDim }}>
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div>
-                  <p className="text-[13px] font-semibold" style={{ color: D.darkText }}>{t.name}</p>
-                  <p className="text-[12px] mt-0.5" style={{ color: 'rgba(245,240,234,0.35)' }}>{t.role}</p>
-                </div>
-              </div>
+            {TESTIMONIALS.map((t, i) => (
+              <FadeIn key={t.name} delay={i * 0.1}>
+                <motion.div
+                  className="rounded-[24px] p-7 flex flex-col h-full"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                  }}
+                  whileHover={{
+                    background: 'rgba(255,255,255,0.06)',
+                    borderColor: 'rgba(223,111,56,0.2)',
+                    y: -4,
+                    transition: { duration: 0.25, ease: 'easeOut' },
+                  }}
+                >
+                  <div className="flex gap-0.5 mb-5">
+                    {Array.from({ length: t.stars }).map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-current" style={{ color: D.gold }} />
+                    ))}
+                  </div>
+                  <p className="text-[15px] leading-[1.7] flex-1 mb-6" style={{ color: D.darkDim }}>
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                  <div>
+                    <p className="text-[13px] font-semibold" style={{ color: D.darkText }}>{t.name}</p>
+                    <p className="text-[12px] mt-0.5" style={{ color: 'rgba(245,240,234,0.35)' }}>{t.role}</p>
+                  </div>
+                </motion.div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -880,7 +1059,7 @@ export default function LandingPage() {
       <section id="faq" className="px-6 py-20 md:py-24" style={{ background: D.bg }}>
         <div className="mx-auto max-w-5xl">
           <div className="grid gap-12 lg:grid-cols-[1fr_1.3fr]">
-            <div>
+            <FadeIn>
               <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-4" style={{ color: D.accent }}>
                 FAQ
               </p>
@@ -893,18 +1072,20 @@ export default function LandingPage() {
               <p className="mt-4 text-[14px] leading-[1.7]" style={{ color: D.dim }}>
                 Rezerve is built to stay out of your way — and out of your clients' way.
               </p>
-            </div>
+            </FadeIn>
 
-            <div className="space-y-0">
-              {[
-                ['Can I review messages before they send?', 'Yes. Fully automate common flows, or require your approval for specific services, price thresholds, or new clients. You set the rules.'],
-                ['How does deposit collection work?', 'Rezerve sends a payment link after the client confirms. If the deposit isn\'t collected within your grace window, the slot stays open automatically.'],
-                ['Does it replace my booking software?', 'Think of it as the front of the funnel — it converts inbound messages into confirmed slots, then hands off to your existing calendar or booking tool.'],
-                ['What happens when I\'m mid-appointment?', 'The AI handles the inbox. You review the log when you come up for air. Edge cases queue for your attention without bothering the client.'],
-              ].map(([q, a], i) => (
-                <FaqItem key={i} q={q} a={a} />
-              ))}
-            </div>
+            <FadeIn delay={0.1}>
+              <div className="space-y-0">
+                {[
+                  ['Can I review messages before they send?', "Yes. Fully automate common flows, or require your approval for specific services, price thresholds, or new clients. You set the rules."],
+                  ['How does deposit collection work?', "Rezerve sends a payment link after the client confirms. If the deposit isn't collected within your grace window, the slot stays open automatically."],
+                  ['Does it replace my booking software?', "Think of it as the front of the funnel — it converts inbound messages into confirmed slots, then hands off to your existing calendar or booking tool."],
+                  ["What happens when I'm mid-appointment?", "The AI handles the inbox. You review the log when you come up for air. Edge cases queue for your attention without bothering the client."],
+                ].map(([q, a], i) => (
+                  <FaqItem key={i} q={q} a={a} />
+                ))}
+              </div>
+            </FadeIn>
           </div>
         </div>
       </section>
@@ -914,16 +1095,35 @@ export default function LandingPage() {
         className="relative px-6 py-20 md:py-28 overflow-hidden"
         style={{ background: D.dark }}
       >
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: [
-              'radial-gradient(ellipse at 30% 50%, rgba(223,111,56,0.2), transparent 50%)',
-              'radial-gradient(ellipse at 75% 40%, rgba(31,122,114,0.12), transparent 45%)',
-            ].join(', '),
-          }}
-        />
-        <div className="relative mx-auto max-w-3xl text-center">
+        {/* Subtle aurora in CTA */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <motion.div
+            className="absolute rounded-full ambient-loop"
+            style={{
+              width: '80vw', height: '80vw',
+              maxWidth: 900, maxHeight: 900,
+              background: 'radial-gradient(circle, rgba(223,111,56,0.16) 0%, transparent 65%)',
+              filter: 'blur(80px)',
+              top: '-30%', left: '-20%',
+            }}
+            animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.1, 1] }}
+            transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+          />
+          <motion.div
+            className="absolute rounded-full ambient-loop"
+            style={{
+              width: '60vw', height: '60vw',
+              maxWidth: 700, maxHeight: 700,
+              background: 'radial-gradient(circle, rgba(31,122,114,0.12) 0%, transparent 65%)',
+              filter: 'blur(80px)',
+              bottom: '-20%', right: '-10%',
+            }}
+            animate={{ x: [0, -30, 0], y: [0, 40, 0], scale: [1, 0.9, 1] }}
+            transition={{ duration: 22, repeat: Infinity, ease: 'linear', delay: 5 }}
+          />
+        </div>
+
+        <FadeIn className="relative mx-auto max-w-3xl text-center">
           <p className="text-[11px] uppercase tracking-[0.22em] font-semibold mb-5" style={{ color: D.accent }}>
             Get started
           </p>
@@ -939,7 +1139,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/signup"
-              className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-[15px] font-semibold text-white transition-all hover:opacity-90 hover:translate-y-[-1px]"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-[15px] font-semibold text-white ui-press"
               style={{
                 background: 'linear-gradient(135deg, #df6f38, #b84f1d)',
                 boxShadow: '0 8px 32px rgba(184,79,29,0.4)',
@@ -950,7 +1150,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 rounded-full border px-8 py-4 text-[15px] font-medium transition-all hover:opacity-80"
+              className="inline-flex items-center justify-center gap-2 rounded-full border px-8 py-4 text-[15px] font-medium ui-subtle ui-press"
               style={{
                 borderColor: 'rgba(255,255,255,0.12)',
                 color: D.darkDim,
@@ -960,7 +1160,7 @@ export default function LandingPage() {
               Sign in
             </Link>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
       {/* ── FOOTER ────────────────────────────────────────────── */}
@@ -1000,25 +1200,34 @@ function FaqItem({ q, a }: { q: string; a: string }) {
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between py-5 text-left gap-4"
+        className="w-full flex items-center justify-between py-5 text-left gap-4 ui-press"
       >
         <span className="text-[16px] font-semibold" style={{ color: D.text }}>{q}</span>
-        <div
-          className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-transform"
-          style={{
-            background: D.accentSoft,
-            color: D.accentStrong,
-            transform: open ? 'rotate(45deg)' : 'none',
-          }}
+        <motion.div
+          animate={{ rotate: open ? 45 : 0 }}
+          transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
+          className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
+          style={{ background: D.accentSoft, color: D.accentStrong }}
         >
           <span className="text-[14px] font-bold leading-none">+</span>
-        </div>
+        </motion.div>
       </button>
-      {open && (
-        <p className="pb-5 text-[14px] leading-[1.75]" style={{ color: D.dim }}>
-          {a}
-        </p>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="answer"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            style={{ overflow: 'hidden' }}
+          >
+            <p className="pb-5 text-[14px] leading-[1.75]" style={{ color: D.dim }}>
+              {a}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

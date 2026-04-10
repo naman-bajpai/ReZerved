@@ -41,18 +41,21 @@ function StatusBadge({ status }: { status: string }) {
 
 /* ─── Booking card ─────────────────────────────────────────── */
 function BookingCard({ booking, onStatusChange }: {
-  booking: Booking; onStatusChange: (id: string, status: 'confirmed' | 'cancelled' | 'no_show') => void;
+  booking: Booking; onStatusChange: (id: string, status: 'confirmed' | 'cancelled' | 'no_show') => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
   const [acting, setActing] = useState(false);
 
-  async function act(status: 'confirmed' | 'cancelled' | 'no_show') {
+  async function act(e: React.MouseEvent, status: 'confirmed' | 'cancelled' | 'no_show') {
+    e.stopPropagation();
     setActing(true);
     try {
       await onStatusChange(booking.id, status);
+      setOpen(false);
+    } catch {
+      // error already surfaced by onStatusChange
     } finally {
       setActing(false);
-      setOpen(false);
     }
   }
 
@@ -128,14 +131,14 @@ function BookingCard({ booking, onStatusChange }: {
             {booking.status === 'pending' && (
               <div className="flex gap-2 pl-[calc(4px+40px+16px)]">
                 <button
-                  onClick={() => act('confirmed')} disabled={acting}
+                  onClick={(e) => act(e, 'confirmed')} disabled={acting}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all"
                   style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.2)' }}
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" /> Confirm
                 </button>
                 <button
-                  onClick={() => act('cancelled')} disabled={acting}
+                  onClick={(e) => act(e, 'cancelled')} disabled={acting}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all"
                   style={{ background: 'rgba(220,38,38,0.07)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.2)' }}
                 >
@@ -146,14 +149,14 @@ function BookingCard({ booking, onStatusChange }: {
             {booking.status === 'confirmed' && (
               <div className="flex gap-2 pl-[calc(4px+40px+16px)]">
                 <button
-                  onClick={() => act('no_show')} disabled={acting}
+                  onClick={(e) => act(e, 'no_show')} disabled={acting}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all"
                   style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)' }}
                 >
                   <UserX className="w-3.5 h-3.5" /> Mark No-Show
                 </button>
                 <button
-                  onClick={() => act('cancelled')} disabled={acting}
+                  onClick={(e) => act(e, 'cancelled')} disabled={acting}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all"
                   style={{ background: 'rgba(220,38,38,0.07)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.2)' }}
                 >
@@ -189,23 +192,30 @@ export default function BookingsPage() {
   const [dateFilter, setDateFilter] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const fetchBookings = () => {
     setLoading(true);
     getBookings({ status: statusFilter || undefined, date: dateFilter || undefined })
       .then(d => setBookings(d.bookings))
-      .catch(console.error)
+      .catch((err) => {
+        console.error(err);
+        setActionError(err instanceof Error ? err.message : 'Failed to load bookings.');
+      })
       .finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchBookings(); }, [statusFilter, dateFilter]);
 
   async function handleStatusChange(id: string, status: 'confirmed' | 'cancelled' | 'no_show') {
+    setActionError(null);
     try {
       await updateBookingStatus(id, status);
       fetchBookings();
     } catch (err) {
-      console.error(err);
+      const message = err instanceof Error ? err.message : 'Failed to update booking status.';
+      setActionError(message);
+      throw err;
     }
   }
 
@@ -286,6 +296,23 @@ export default function BookingsPage() {
             />
           </div>
         </div>
+
+        {actionError && (
+          <div
+            className="rounded-xl px-4 py-3 text-[13px] flex items-center justify-between gap-3"
+            style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', color: '#fca5a5' }}
+          >
+            <span>{actionError}</span>
+            <button
+              type="button"
+              onClick={() => setActionError(null)}
+              className="text-[12px] font-semibold"
+              style={{ color: '#fecaca' }}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* List */}
         <div className="space-y-2">

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { format, addDays, startOfToday, isSameDay } from 'date-fns';
-import { ArrowLeft, CheckCircle, Clock, Mail, RefreshCw, X, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Mail, RefreshCw, X, Calendar, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -19,6 +19,16 @@ interface GuestBooking {
   ends_at: string;
   total_price: number;
   services?: { name: string; duration_mins: number };
+}
+
+interface Recommendation {
+  id: string;
+  kind: 'time' | 'service';
+  service: Service;
+  slot: Slot;
+  title: string;
+  subtitle: string;
+  reason: string;
 }
 
 type Step =
@@ -176,6 +186,29 @@ const BOOKING_PAGE_STYLES = `
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
 }
+
+.bk-suggestion-card {
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(240,169,107,0.16), transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgba(232,121,160,0.1), transparent 58%),
+    rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.bk-suggestion-item {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: border-color 180ms cubic-bezier(0.23, 1, 0.32, 1), transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .bk-suggestion-item:hover {
+    border-color: rgba(240,169,107,0.34);
+    transform: translateY(-1px);
+  }
+}
+.bk-chip {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+}
 `.trim();
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -201,6 +234,8 @@ export default function BookingPage() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [aiSuggestions, setAiSuggestions] = useState<Recommendation[]>([]);
+  const [loadingAiSuggestions, setLoadingAiSuggestions] = useState(false);
 
   const [step, setStep] = useState<Step>('loading');
   const [error, setError] = useState<string | null>(null);
@@ -324,6 +359,18 @@ export default function BookingPage() {
     }
   }
 
+  async function fetchSlotsForService(serviceId: string, date: Date): Promise<Slot[]> {
+    if (!guestToken) return [];
+    const day = format(date, 'yyyy-MM-dd');
+    const res = await fetch(
+      `/api/book/${slug}/slots?service_id=${serviceId}&date_from=${day}&date_to=${day}`,
+      { headers: { Authorization: `Bearer ${guestToken}` } }
+    );
+    if (!res.ok) return [];
+    const { slots: s } = await res.json();
+    return Array.isArray(s) ? s : [];
+  }
+
   function selectDate(date: Date) {
     setSelectedDate(date);
     if (selectedService) loadSlots(selectedService, date);
@@ -391,6 +438,106 @@ export default function BookingPage() {
   const pastBookings = myBookings.filter(
     (b) => !['confirmed', 'pending'].includes(b.status) || new Date(b.starts_at) <= new Date()
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRecommendations() {
+      if (step !== 'review' || !selectedService || !selectedSlot || !guestToken) {
+        setAiSuggestions([]);
+        return;
+      }
+
+      setLoadingAiSuggestions(true);
+      try {
+        const next: Recommendation[] = [];
+        const selectedMs = new Date(selectedSlot.startsAt).getTime();
+        const selectedDateObj = new Date(selectedSlot.startsAt);
+
+        const sameServiceAlternatives = slots
+          .filter((slot) => slot.startsAt !== selectedSlot.startsAt)
+          .sort(
+            (a, b) =>
+              Math.abs(new Date(a.startsAt).getTime() - selectedMs) -
+              Math.abs(new Date(b.startsAt).getTime() - selectedMs)
+          )
+          .slice(0, 2);
+
+        for (const alt of sameServiceAlternatives) {
+          next.push({
+            id: `time-${selectedService.id}-${alt.startsAt}`,
+            kind: 'time',
+            service: selectedService,
+            slot: alt,
+            title: `${format(new Date(alt.startsAt), 'h:mm a')} instead`,
+            subtitle: `${selectedService.name} · same day`,
+            reason: 'Closer to peak availability today',
+          });
+        }
+
+        const serviceCandidates = services
+          .filter((service) => service.id !== selectedService.id)
+          .sort((a, b) => {
+            const scoreA = Math.abs(a.duration_mins - selectedService.duration_mins) + Math.abs(a.price - selectedService.price) * 0.35;
+            const scoreB = Math.abs(b.duration_mins - selectedService.duration_mins) + Math.abs(b.price - selectedService.price) * 0.35;
+            return scoreA - scoreB;
+          })
+          .slice(0, 3);
+
+        const candidateSlots = await Promise.all(
+          serviceCandidates.map(async (service) => {
+            const available = await fetchSlotsForService(service.id, selectedDateObj);
+            const closest = available
+              .slice()
+              .sort(
+                (a, b) =>
+                  Math.abs(new Date(a.startsAt).getTime() - selectedMs) -
+                  Math.abs(new Date(b.startsAt).getTime() - selectedMs)
+              )[0];
+            return { service, slot: closest };
+          })
+        );
+
+        for (const candidate of candidateSlots) {
+          if (!candidate.slot) continue;
+          next.push({
+            id: `service-${candidate.service.id}-${candidate.slot.startsAt}`,
+            kind: 'service',
+            service: candidate.service,
+            slot: candidate.slot,
+            title: candidate.service.name,
+            subtitle: `${format(new Date(candidate.slot.startsAt), 'h:mm a')} · ${candidate.service.duration_mins} min`,
+            reason:
+              candidate.service.price >= selectedService.price
+                ? 'Likely better value for this visit'
+                : 'Similar fit with stronger availability',
+          });
+        }
+
+        if (!cancelled) {
+          const unique = next.filter(
+            (item, index, arr) => arr.findIndex((p) => p.service.id === item.service.id && p.slot.startsAt === item.slot.startsAt) === index
+          );
+          setAiSuggestions(unique.slice(0, 3));
+        }
+      } finally {
+        if (!cancelled) setLoadingAiSuggestions(false);
+      }
+    }
+
+    loadRecommendations();
+    return () => {
+      cancelled = true;
+    };
+  }, [step, selectedService, selectedSlot, slots, services, guestToken, slug]);
+
+  async function applySuggestion(item: Recommendation) {
+    setSelectedService(item.service);
+    setSelectedSlot(item.slot);
+    setSelectedDate(new Date(item.slot.startsAt));
+    const syncedSlots = await fetchSlotsForService(item.service.id, new Date(item.slot.startsAt));
+    if (syncedSlots.length) setSlots(syncedSlots);
+  }
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -890,6 +1037,18 @@ export default function BookingPage() {
                   <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Review your appointment details</p>
                 </div>
 
+                <div className="flex flex-wrap gap-2">
+                  <span className="bk-chip rounded-full px-2.5 py-1 text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    {format(new Date(selectedSlot.startsAt), 'EEE, MMM d')}
+                  </span>
+                  <span className="bk-chip rounded-full px-2.5 py-1 text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    {format(new Date(selectedSlot.startsAt), 'h:mm a')}
+                  </span>
+                  <span className="bk-chip rounded-full px-2.5 py-1 text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    {selectedService.duration_mins} min
+                  </span>
+                </div>
+
                 <div className="bk-glass rounded-2xl p-5 space-y-5">
                   <div className="flex items-start gap-4">
                     <div
@@ -944,6 +1103,56 @@ export default function BookingPage() {
                     <span className="font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>{guestName}</span>
                     {' '}({guestEmail})
                   </p>
+                </div>
+
+                <div className="bk-suggestion-card rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center"
+                      style={{ background: 'rgba(240,169,107,0.14)', border: '1px solid rgba(240,169,107,0.2)' }}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" style={{ color: '#f0a96b' }} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: '#fff' }}>AI recommended alternatives</p>
+                      <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                        Best fit based on availability + value
+                      </p>
+                    </div>
+                  </div>
+
+                  {loadingAiSuggestions ? (
+                    <div className="rounded-xl px-3 py-3 flex items-center gap-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div className="w-3.5 h-3.5 rounded-full border-2 bk-spin" style={{ borderColor: 'rgba(240,169,107,0.2)', borderTopColor: '#f0a96b' }} />
+                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>Checking nearby options…</p>
+                    </div>
+                  ) : aiSuggestions.length > 0 ? (
+                    <div className="space-y-2">
+                      {aiSuggestions.map((item) => (
+                        <div key={item.id} className="bk-suggestion-item rounded-xl p-3 flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-semibold truncate" style={{ color: '#fff' }}>{item.title}</p>
+                            <p className="text-[12px] truncate" style={{ color: 'rgba(255,255,255,0.5)' }}>{item.subtitle}</p>
+                            <p className="text-[11px] mt-0.5" style={{ color: 'rgba(240,169,107,0.78)' }}>{item.reason}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => applySuggestion(item)}
+                            className="rounded-lg px-3 py-1.5 text-xs font-medium flex-shrink-0"
+                            style={{ color: '#0a0a12', background: 'linear-gradient(135deg, #f0a96b, #e879a0)' }}
+                          >
+                            Switch
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl px-3 py-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                        Your current selection is already the best available match.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <button
