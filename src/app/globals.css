@@ -4,9 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Google Fonts ───────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 @layer base {
   :root {
     /* ── Light palette (landing page fallback) ── */
@@ -179,7 +176,7 @@ body > * {
 
 /* ─── Utility classes ─────────────────────────────────────────── */
 .font-mono-nums {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--font-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
 }
 

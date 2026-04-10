@@ -70,11 +70,9 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const BOOKING_PAGE_STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap');
-
 .bk-root * { box-sizing: border-box; }
-.bk-root { font-family: 'Outfit', system-ui, sans-serif; }
-.bk-serif { font-family: 'Cormorant', Georgia, serif; }
+.bk-root { font-family: var(--font-sans), system-ui, sans-serif; }
+.bk-serif { font-family: var(--font-display), Georgia, serif; }
 
 .bk-glass {
   background: rgba(255,255,255,0.04);
@@ -123,7 +121,7 @@ const BOOKING_PAGE_STYLES = `
   background: rgba(255,255,255,0.05);
   border: 1.5px solid rgba(255,255,255,0.12);
   color: #fff;
-  font-family: 'Outfit', monospace;
+  font-family: var(--font-mono), monospace;
   font-weight: 600;
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
@@ -257,8 +255,8 @@ export default function BookingPage() {
         setGuestToken(sess.token);
         setGuestEmail(sess.email);
         setGuestName(sess.name);
-        await fetchMyBookings(sess.token, biz.id, slug);
-        setStep('my-bookings');
+        const ok = await fetchMyBookings(sess.token, biz.id, slug);
+        setStep(ok ? 'my-bookings' : 'welcome');
       } else {
         setStep('welcome');
       }
@@ -269,17 +267,22 @@ export default function BookingPage() {
     })();
   }, [slug]);
 
-  async function fetchMyBookings(token: string, _bizId: string, s: string) {
+  async function fetchMyBookings(token: string, _bizId: string, s: string): Promise<boolean> {
     const res = await fetch(`/api/book/${s}/my-bookings`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
       const { bookings } = await res.json();
       setMyBookings(bookings ?? []);
-    } else {
-      const d = await res.json().catch(() => ({}));
-      console.error('[fetchMyBookings] failed', res.status, d);
+      return true;
     }
+    if (res.status === 401) {
+      // Session expired — wipe it so the user re-authenticates
+      clearSession(s);
+      setGuestToken(null);
+      return false;
+    }
+    return true; // other errors: keep session but show empty state
   }
 
   async function handleSendOtp(e: React.FormEvent) {
@@ -433,10 +436,10 @@ export default function BookingPage() {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startOfToday(), weekOffset * 7 + i));
 
   const upcomingBookings = myBookings.filter(
-    (b) => ['confirmed', 'pending'].includes(b.status) && new Date(b.starts_at) > new Date()
+    (b) => ['confirmed', 'pending'].includes(b.status) && new Date(b.ends_at) > new Date()
   );
   const pastBookings = myBookings.filter(
-    (b) => !['confirmed', 'pending'].includes(b.status) || new Date(b.starts_at) <= new Date()
+    (b) => !['confirmed', 'pending'].includes(b.status) || new Date(b.ends_at) <= new Date()
   );
 
   useEffect(() => {
@@ -581,7 +584,7 @@ export default function BookingPage() {
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ background: 'linear-gradient(135deg, #f0a96b, #e879a0)', boxShadow: '0 4px 16px rgba(240,169,107,0.3)' }}
               >
-                <span className="text-sm font-bold" style={{ color: '#0a0a12', fontFamily: 'Outfit, sans-serif' }}>
+                <span className="text-sm font-bold" style={{ color: '#0a0a12', fontFamily: 'var(--font-sans), sans-serif' }}>
                   {business?.name?.[0]?.toUpperCase() || 'B'}
                 </span>
               </div>

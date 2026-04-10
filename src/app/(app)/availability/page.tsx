@@ -99,10 +99,18 @@ export default function AvailabilityPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ schedule: Object.values(schedule) }),
       });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error || 'Failed to save');
-      }
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Failed to save');
+
+      // Sync local state with what was persisted so subsequent saves are consistent
+      const map: Record<number, DaySchedule> = {};
+      DAYS.forEach(day => {
+        map[day.dow] = { day_of_week: day.dow, is_active: false, ...DEFAULT_TIMES };
+      });
+      (d.schedule ?? []).forEach((r: DaySchedule) => {
+        map[r.day_of_week] = r;
+      });
+      setSchedule(map);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err: any) {

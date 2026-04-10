@@ -50,9 +50,8 @@ export default function BookPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@500;600&family=Outfit:wght@300;400;500;600&display=swap');
-        .bp-root { font-family: 'Outfit', system-ui, sans-serif; }
-        .bp-serif { font-family: 'Cormorant', Georgia, serif; }
+        .bp-root { font-family: var(--font-sans), system-ui, sans-serif; }
+        .bp-serif { font-family: var(--font-display), Georgia, serif; }
         .bp-input {
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.1);
@@ -105,7 +104,7 @@ export default function BookPage() {
                 boxShadow: '0 4px 14px rgba(240,169,107,0.3)',
               }}
             >
-              <span className="text-sm font-bold" style={{ color: '#0a0a12', fontFamily: 'Outfit, sans-serif' }}>B</span>
+              <span className="text-sm font-bold" style={{ color: '#0a0a12', fontFamily: 'var(--font-sans), sans-serif' }}>B</span>
             </div>
             <div>
               <p className="bp-serif text-base font-semibold" style={{ color: '#fff' }}>Booking Assistant</p>

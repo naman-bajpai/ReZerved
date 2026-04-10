@@ -1,6 +1,7 @@
 import { SidebarNav } from '@/components/sidebar-nav';
 import { AppShellGate } from '@/components/app-shell-gate';
 import { PageTransition } from '@/components/page-transition';
+import { DashboardAI } from '@/components/dashboard-ai';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,6 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
+      <DashboardAI />
     </AppShellGate>
   );
 }

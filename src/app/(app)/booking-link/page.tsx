@@ -115,8 +115,12 @@ export default function BookingLinkPage() {
                   </span>
                   <button
                     onClick={copyLink}
-                    className="flex-shrink-0 transition-colors"
-                    style={{ color: '#71717a' }}
+                    className="flex-shrink-0 transition-colors rounded-md p-1.5"
+                    style={{
+                      color: copied ? '#34d399' : '#f4f4f5',
+                      background: copied ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.07)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                    }}
                     title="Copy link"
                   >
                     {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -124,7 +128,14 @@ export default function BookingLinkPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button onClick={copyLink} className="flex-1">
+                  <Button
+                    onClick={copyLink}
+                    className="flex-1 border-0 text-white hover:opacity-95"
+                    style={{
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 45%, #ec4899 100%)',
+                      boxShadow: '0 8px 20px rgba(245,158,11,0.28)',
+                    }}
+                  >
                     {copied ? (
                       <><Check className="w-4 h-4 mr-1.5" /> Copied!</>
                     ) : (
@@ -163,7 +174,15 @@ export default function BookingLinkPage() {
                 <p className="text-sm" style={{ color: '#71717a' }}>
                   You don&apos;t have a booking link yet. Generate one to get started.
                 </p>
-                <Button onClick={generateSlug} disabled={generating}>
+                <Button
+                  onClick={generateSlug}
+                  disabled={generating}
+                  className="border-0 text-white hover:opacity-95"
+                  style={{
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 45%, #ec4899 100%)',
+                    boxShadow: '0 8px 20px rgba(245,158,11,0.28)',
+                  }}
+                >
                   {generating ? (
                     <><RefreshCw className="w-4 h-4 mr-1.5 animate-spin" /> Generating…</>
                   ) : (

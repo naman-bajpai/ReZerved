@@ -1,21 +1,20 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Plus_Jakarta_Sans, Fraunces, JetBrains_Mono } from 'next/font/google';
+import { Manrope, Bricolage_Grotesque, JetBrains_Mono } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { AppProviders } from '@/components/app-providers';
 
-const jakarta = Plus_Jakarta_Sans({
+const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-sans',
-  weight: ['300', '400', '500', '600', '700', '800'],
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
 });
 
-const fraunces = Fraunces({
+const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
   variable: '--font-display',
-  style: ['normal', 'italic'],
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
 });
 
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn(jakarta.variable, fraunces.variable, jetbrains.variable, 'dark')}>
+    <html lang="en" className={cn(manrope.variable, bricolage.variable, jetbrains.variable, 'dark')}>
       <body className="font-sans bg-background text-foreground antialiased min-h-screen">
         <AppProviders>{children}</AppProviders>
       </body>

@@ -6,10 +6,54 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
+function toCalDate(iso: string) {
+  // Converts ISO string → YYYYMMDDTHHmmssZ for Google / ICS
+  return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+function buildGoogleCalendarUrl(booking: BookingData) {
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: booking.services?.name ?? 'Appointment',
+    dates: `${toCalDate(booking.starts_at)}/${toCalDate(booking.ends_at)}`,
+    details: `Booking confirmed. Reference: ${booking.id.slice(0, 8).toUpperCase()}`,
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function downloadICS(booking: BookingData) {
+  const start = toCalDate(booking.starts_at);
+  const end = toCalDate(booking.ends_at);
+  const uid = `${booking.id}@bookedup`;
+  const summary = booking.services?.name ?? 'Appointment';
+  const description = `Booking confirmed. Reference: ${booking.id.slice(0, 8).toUpperCase()}`;
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//BookedUp//BookedUp//EN',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${summary}`,
+    `DESCRIPTION:${description}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'appointment.ics';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 const SUCCESS_PAGE_STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap');
-.sk-root { font-family: 'Outfit', system-ui, sans-serif; }
-.sk-serif { font-family: 'Cormorant', Georgia, serif; }
+.sk-root { font-family: var(--font-sans), system-ui, sans-serif; }
+.sk-serif { font-family: var(--font-display), Georgia, serif; }
 @keyframes sk-rise {
   from { opacity: 0; transform: translateY(24px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -49,7 +93,6 @@ export default function SuccessPage({ params }: { params: { slug: string } }) {
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const attemptsRef = useRef(0);
 
   useEffect(() => {
     if (!bookingId) { setError('No booking ID found.'); return; }
@@ -58,30 +101,34 @@ export default function SuccessPage({ params }: { params: { slug: string } }) {
     const token = raw ? JSON.parse(raw)?.token : null;
     if (!token) { setError('Session expired. Check your email for confirmation.'); return; }
 
-    async function fetchStatus() {
+    const sessionId = new URLSearchParams(window.location.search).get('session_id');
+
+    async function confirmAndLoad() {
       try {
+        // Confirm the booking immediately using the Stripe session ID.
+        // This is instant — no webhook delay.
+        const confirmRes = await fetch(`/api/book/${slug}/booking/${bookingId}/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ session_id: sessionId }),
+        });
+        // A non-ok response (e.g. already confirmed, or Stripe not set up) is
+        // non-fatal — we still fetch and display the booking below.
+
+        // Fetch the (now-confirmed) booking details
         const res = await fetch(`/api/book/${slug}/booking/${bookingId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) { setError('Could not load booking details.'); return; }
         const { booking: b } = await res.json();
         setBooking(b);
-
-        if (b.status === 'confirmed' || b.payment_status === 'paid') {
-          setConfirmed(true);
-        } else if (attemptsRef.current < 10) {
-          attemptsRef.current += 1;
-          pollRef.current = setTimeout(fetchStatus, 1500);
-        } else {
-          // After ~15s still not confirmed — show what we have anyway
-          setConfirmed(true);
-        }
+        setConfirmed(true);
       } catch {
         setError('Could not load booking details.');
       }
     }
 
-    fetchStatus();
+    confirmAndLoad();
     return () => { if (pollRef.current) clearTimeout(pollRef.current); };
   }, [bookingId, slug]);
 
@@ -254,6 +301,62 @@ export default function SuccessPage({ params }: { params: { slug: string } }) {
                   </p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Calendar CTAs — only shown once booking is confirmed */}
+          {confirmed && booking && (
+            <div className="flex flex-col gap-2.5 mb-5">
+              {/* Google Calendar */}
+              <a
+                href={buildGoogleCalendarUrl(booking)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 active:scale-[0.98]"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.09)',
+                  color: 'rgba(255,255,255,0.85)',
+                }}
+              >
+                {/* Google Calendar logo mark */}
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                  <rect x="6" y="10" width="36" height="32" rx="3" fill="#fff" />
+                  <path d="M32 6v8M16 6v8" stroke="#4285F4" strokeWidth="3" strokeLinecap="round" />
+                  <rect x="6" y="18" width="36" height="4" fill="#4285F4" />
+                  <text x="24" y="38" textAnchor="middle" fontFamily="Arial" fontSize="14" fontWeight="bold" fill="#4285F4">G</text>
+                </svg>
+                Add to Google Calendar
+                <svg className="ml-auto" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M3 7h8M7 3l4 4-4 4" stroke="rgba(255,255,255,0.3)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
+
+              {/* Apple Calendar */}
+              <button
+                onClick={() => downloadICS(booking)}
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 active:scale-[0.98] w-full text-left"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.09)',
+                  color: 'rgba(255,255,255,0.85)',
+                  cursor: 'pointer',
+                }}
+              >
+                {/* Apple Calendar icon */}
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                  <rect x="6" y="10" width="36" height="32" rx="4" fill="#fff" />
+                  <rect x="6" y="10" width="36" height="10" rx="4" fill="#F05138" />
+                  <rect x="6" y="16" width="36" height="4" fill="#F05138" />
+                  <text x="24" y="37" textAnchor="middle" fontFamily="Arial" fontSize="13" fontWeight="bold" fill="#1C1C1E">
+                    {new Date().getDate()}
+                  </text>
+                </svg>
+                Add to Apple Calendar
+                <svg className="ml-auto" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 2v7M4 6l3 3 3-3" stroke="rgba(255,255,255,0.3)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
           )}
 

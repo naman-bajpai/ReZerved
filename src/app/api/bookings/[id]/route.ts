@@ -40,23 +40,34 @@ export const PATCH = withBusiness(async (req, _profile, business, ctx) => {
       return NextResponse.json({ error: `Invalid transition: ${current.status} → ${status}` }, { status: 409 });
     }
 
-    const { data: booking, error: updateErr } = await supabase
+    const { error: updateErr } = await supabase
       .from('bookings')
       .update({ status })
       .eq('id', id)
-      .eq('business_id', businessId)
-      .select('*')
-      .single();
+      .eq('business_id', businessId);
 
-    if (updateErr || !booking) {
-      throw new Error(updateErr?.message || 'Failed to update booking status');
+    if (updateErr) {
+      console.error('[PATCH /api/bookings/:id] update error', updateErr);
+      throw new Error(updateErr.message || 'Failed to update booking status');
     }
 
-    // Best-effort note for no-shows; don't fail status update if note write fails.
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    // Best-effort note for no-shows; append rather than overwrite.
     if (status === 'no_show' && current.client_id) {
+      const { data: clientRow } = await supabase
+        .from('clients')
+        .select('notes')
+        .eq('id', current.client_id)
+        .single();
+      const existing = clientRow?.notes ? `${clientRow.notes}\n` : '';
       await supabase
         .from('clients')
-        .update({ notes: `[No-show ${new Date().toLocaleDateString()}]` })
+        .update({ notes: `${existing}[No-show ${new Date().toLocaleDateString()}]` })
         .eq('id', current.client_id)
         .eq('business_id', businessId);
     }

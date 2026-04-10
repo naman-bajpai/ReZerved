@@ -194,15 +194,17 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const fetchBookings = () => {
+  const fetchBookings = async () => {
     setLoading(true);
-    getBookings({ status: statusFilter || undefined, date: dateFilter || undefined })
-      .then(d => setBookings(d.bookings))
-      .catch((err) => {
-        console.error(err);
-        setActionError(err instanceof Error ? err.message : 'Failed to load bookings.');
-      })
-      .finally(() => setLoading(false));
+    try {
+      const d = await getBookings({ status: statusFilter || undefined, date: dateFilter || undefined });
+      setBookings(d.bookings);
+    } catch (err) {
+      console.error(err);
+      setActionError(err instanceof Error ? err.message : 'Failed to load bookings.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchBookings(); }, [statusFilter, dateFilter]);
@@ -211,7 +213,7 @@ export default function BookingsPage() {
     setActionError(null);
     try {
       await updateBookingStatus(id, status);
-      fetchBookings();
+      await fetchBookings();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update booking status.';
       setActionError(message);

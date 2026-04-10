@@ -35,9 +35,9 @@ export const GET = withBusiness(async (req, _profile, business) => {
         .gte('starts_at', since),
       supabase
         .from('bookings')
-        .select('starts_at, total_price, clients (name), services (name)')
+        .select('starts_at, total_price, clients (name), services (name), status')
         .eq('business_id', business.business_id)
-        .eq('status', 'confirmed')
+        .in('status', ['confirmed', 'pending'])
         .gte('starts_at', new Date().toISOString())
         .lte('starts_at', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())
         .order('starts_at'),
