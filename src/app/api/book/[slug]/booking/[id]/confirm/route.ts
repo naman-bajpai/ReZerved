@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const Stripe = require('stripe');
 import supabase from '@/lib/server/supabase';
 import { getGuestSession } from '@/lib/server/guest-auth';
+import { scheduleBookingReminders } from '@/lib/server/reminder-scheduler';
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' })
@@ -89,6 +90,10 @@ export async function POST(
   if (updateErr) {
     return NextResponse.json({ error: updateErr.message }, { status: 500 });
   }
+
+  scheduleBookingReminders(bookingId).catch((err) =>
+    console.error('[confirm route] reminder scheduling failed:', err)
+  );
 
   return NextResponse.json({ confirmed: true });
 }

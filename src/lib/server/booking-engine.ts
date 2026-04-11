@@ -4,6 +4,7 @@
 
 import supabase from './supabase';
 import { enqueueSlotFiller } from './queue';
+import { scheduleBookingReminders } from './reminder-scheduler';
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
   pending: ['confirmed', 'cancelled', 'expired'],
@@ -169,7 +170,12 @@ export async function createBooking(
 }
 
 export async function confirmBooking(bookingId: string, businessId: string) {
-  return transitionBooking(bookingId, businessId, 'confirmed');
+  const booking = await transitionBooking(bookingId, businessId, 'confirmed');
+  // Best-effort — reminder scheduling must not block or fail the booking flow
+  scheduleBookingReminders(bookingId).catch((err) =>
+    console.error('[booking-engine] reminder scheduling failed:', err)
+  );
+  return booking;
 }
 
 export async function cancelBooking(bookingId: string, businessId: string, reason = '') {

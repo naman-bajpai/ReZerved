@@ -98,7 +98,7 @@ export interface AdminUser {
 
 // ─── Bookings ─────────────────────────────────────────────────────────────────
 
-export async function getBookings(params: { status?: string; date?: string } = {}) {
+export async function getBookings(params: { status?: string; date?: string; date_from?: string; date_to?: string } = {}) {
   const q = new URLSearchParams(
     Object.fromEntries(Object.entries(params).filter(([, v]) => v != null)) as Record<string, string>
   ).toString();

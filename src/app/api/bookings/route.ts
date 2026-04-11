@@ -16,11 +16,18 @@ export const GET = withBusiness(async (req, _profile, business) => {
     .order('starts_at', { ascending: true })
     .range(offset, offset + limit - 1);
 
+  const dateFrom = searchParams.get('date_from');
+  const dateTo   = searchParams.get('date_to');
+
   if (status) query = query.eq('status', status);
   if (date) {
     query = query
       .gte('starts_at', `${date}T00:00:00`)
       .lte('starts_at', `${date}T23:59:59`);
+  } else if (dateFrom && dateTo) {
+    query = query
+      .gte('starts_at', `${dateFrom}T00:00:00`)
+      .lte('starts_at', `${dateTo}T23:59:59`);
   }
 
   const { data: bookings, error } = await query;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import supabase from '@/lib/server/supabase';
+import { scheduleBookingReminders } from '@/lib/server/reminder-scheduler';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Stripe = require('stripe');
@@ -46,6 +47,10 @@ export async function POST(req: NextRequest) {
 
       if (error) {
         console.error('[stripe webhook] failed to confirm booking:', error.message);
+      } else {
+        scheduleBookingReminders(bookingId).catch((err) =>
+          console.error('[stripe webhook] reminder scheduling failed:', err)
+        );
       }
     }
   }

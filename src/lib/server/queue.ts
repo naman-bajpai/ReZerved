@@ -37,16 +37,28 @@ export async function enqueueSlotFiller(
   );
 }
 
+/**
+ * Enqueue a notification job.
+ * @param delayMs  Optional delay in milliseconds (for scheduled reminders).
+ * @returns        BullMQ job id, or null if the queue is unreachable.
+ */
 export async function enqueueNotification(
   channel: string,
   to: string,
   message: string,
-  meta: Record<string, unknown> = {}
-) {
+  meta: Record<string, unknown> = {},
+  delayMs = 0
+): Promise<string | null> {
   const q = makeQueue('notifications');
-  await q.add(
+  const job = await q.add(
     'send-notification',
     { channel, to, message, meta },
-    { attempts: 5, backoff: { type: 'exponential', delay: 1000 }, removeOnComplete: 200 }
+    {
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 1000 },
+      removeOnComplete: 200,
+      ...(delayMs > 0 ? { delay: delayMs } : {}),
+    }
   );
+  return job.id ?? null;
 }

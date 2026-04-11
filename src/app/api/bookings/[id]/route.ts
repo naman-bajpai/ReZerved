@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withBusiness } from '@/lib/server/auth';
 import supabase from '@/lib/server/supabase';
+import { scheduleBookingReminders } from '@/lib/server/reminder-scheduler';
 
 export const PATCH = withBusiness(async (req, _profile, business, ctx) => {
   const id = ctx?.params?.id;
@@ -56,6 +57,12 @@ export const PATCH = withBusiness(async (req, _profile, business, ctx) => {
       .select('*')
       .eq('id', id)
       .single();
+
+    if (status === 'confirmed') {
+      scheduleBookingReminders(id).catch((err) =>
+        console.error('[PATCH /api/bookings/:id] reminder scheduling failed:', err)
+      );
+    }
 
     // Best-effort note for no-shows; append rather than overwrite.
     if (status === 'no_show' && current.client_id) {
