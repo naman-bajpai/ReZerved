@@ -47,7 +47,7 @@ export async function scheduleBookingReminders(bookingId: string): Promise<void>
       businesses ( name )
     `)
     .eq('id', bookingId)
-    .single();
+    .maybeSingle();
 
   if (bookErr || !booking) {
     console.error('[reminder-scheduler] booking not found:', bookingId, bookErr?.message);

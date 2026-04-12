@@ -123,9 +123,10 @@ export async function createBooking(
     .select('*')
     .eq('id', serviceId)
     .eq('business_id', businessId)
-    .single();
+    .maybeSingle();
 
-  if (svcErr || !service) throw new Error(`Service not found: ${serviceId}`);
+  if (svcErr) throw new Error(`DB error fetching service: ${svcErr.message}`);
+  if (!service) throw new Error(`Service not found: ${serviceId}`);
 
   const startsAtDate = new Date(startsAt);
   const endsAtDate = new Date(startsAtDate.getTime() + service.duration_mins * 60 * 1000);
@@ -277,9 +278,10 @@ async function transitionBooking(bookingId: string, businessId: string, newStatu
     .select('*')
     .eq('id', bookingId)
     .eq('business_id', businessId)
-    .single();
+    .maybeSingle();
 
-  if (fetchErr || !booking) throw new Error(`Booking not found: ${bookingId}`);
+  if (fetchErr) throw new Error(`DB error fetching booking: ${fetchErr.message}`);
+  if (!booking) throw new Error(`Booking not found: ${bookingId}`);
 
   const allowed = VALID_TRANSITIONS[booking.status] || [];
   if (!allowed.includes(newStatus)) {

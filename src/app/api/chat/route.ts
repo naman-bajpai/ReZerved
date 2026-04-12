@@ -48,22 +48,25 @@ const TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, sessionId } = await req.json();
+    const { message, sessionId, businessSlug } = await req.json();
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'message required' }, { status: 400 });
+    }
+    if (!businessSlug || typeof businessSlug !== 'string') {
+      return NextResponse.json({ error: 'businessSlug required' }, { status: 400 });
     }
 
     const sid = sessionId || 'default';
 
-    // Fetch first active business + services
+    // Fetch business by slug — never fall back to "first" row
     const { data: business } = await supabase
       .from('businesses')
       .select('*')
-      .limit(1)
+      .eq('slug', businessSlug)
       .single();
 
     if (!business) {
-      return NextResponse.json({ reply: "Sorry, no business is set up yet. Please check back later." });
+      return NextResponse.json({ error: `Business "${businessSlug}" not found` }, { status: 404 });
     }
 
     const { data: services } = await supabase

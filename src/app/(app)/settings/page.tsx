@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import {
-  Building2, Bell, Sparkles, Link2, Check, Loader2,
+  Building2, Bell, Sparkles, Link2, Check, Loader2, Code2, Copy,
 } from 'lucide-react';
 import { PageTransition } from '@/components/page-transition';
-import { getMe, updateSettings } from '@/lib/api';
+import { getMe, updateSettings, patchSlug } from '@/lib/api';
 
 const inputStyle = {
   background: 'rgba(255,255,255,0.05)',
@@ -96,6 +96,47 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
   );
 }
 
+function EmbedSnippetCard({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const snippet = `<script src="${origin}/embed.js" data-slug="${slug}"><\/script>`;
+
+  function handleCopy() {
+    navigator.clipboard.writeText(snippet).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
+
+  return (
+    <SettingCard title="Embed on your website" subtitle="Add the booking widget to Squarespace, Webflow, or any site" icon={Code2} color="#06b6d4" iconBg="rgba(6,182,212,0.08)">
+      <div className="py-4">
+        <p className="text-[12px] mb-3" style={{ color: '#71717a' }}>
+          Paste this snippet where you want the widget to appear. It renders a self-sizing iframe — no extra setup required.
+        </p>
+        <div
+          className="relative rounded-xl px-4 py-3 font-mono text-[11px] leading-5 select-all"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#a1a1aa', wordBreak: 'break-all' }}
+        >
+          {snippet}
+          <button
+            onClick={handleCopy}
+            className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all"
+            style={copied
+              ? { background: 'rgba(22,163,74,0.1)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.2)' }
+              : { background: 'rgba(255,255,255,0.07)', color: '#a1a1aa', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            {copied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
+          </button>
+        </div>
+        <p className="text-[11px] mt-3" style={{ color: '#3f3f46' }}>
+          Preview: <a href={`/embed/${slug}`} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#71717a' }}>/embed/{slug}</a>
+        </p>
+      </div>
+    </SettingCard>
+  );
+}
+
 export default function SettingsPage() {
   const [businessName, setBusinessName] = useState('');
   const [aiTone, setAiTone] = useState<'friendly' | 'professional' | 'casual'>('friendly');
@@ -108,11 +149,58 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // Slug state
+  const [slug, setSlug] = useState('');
+  const [savedSlug, setSavedSlug] = useState<string | null>(null); // last persisted slug
+  const [slugDirty, setSlugDirty] = useState(false);
+  const [slugSaving, setSlugSaving] = useState(false);
+  const [slugError, setSlugError] = useState<string | null>(null);
+  const [slugSaved, setSlugSaved] = useState(false);
+
   useEffect(() => {
     getMe().then((me) => {
       if (me.business?.name) setBusinessName(me.business.name);
+      const s = me.business?.slug ?? '';
+      setSlug(s);
+      setSavedSlug(s || null);
     }).catch(() => {});
   }, []);
+
+  function validateSlug(value: string): string | null {
+    if (!value) return 'Slug is required';
+    if (value.length < 3) return 'At least 3 characters';
+    if (value.length > 60) return 'Maximum 60 characters';
+    if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/.test(value)) {
+      return 'Lowercase letters, numbers, and hyphens only (no leading/trailing hyphens)';
+    }
+    return null;
+  }
+
+  function handleSlugChange(value: string) {
+    setSlug(value);
+    setSlugDirty(true);
+    setSlugError(null);
+    setSlugSaved(false);
+  }
+
+  async function handleSlugSave() {
+    const err = validateSlug(slug);
+    if (err) { setSlugError(err); return; }
+    setSlugSaving(true);
+    setSlugError(null);
+    try {
+      const res = await patchSlug(slug);
+      setSavedSlug(res.slug);
+      setSlug(res.slug);
+      setSlugDirty(false);
+      setSlugSaved(true);
+      setTimeout(() => setSlugSaved(false), 3000);
+    } catch (err) {
+      setSlugError(err instanceof Error ? err.message : 'Failed to update slug');
+    } finally {
+      setSlugSaving(false);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -172,12 +260,51 @@ export default function SettingsPage() {
               <TextInput value={businessName} onChange={setBusinessName} placeholder="Your business name" />
             </div>
           </SettingRow>
-          <SettingRow label="Booking slug" desc="Your unique booking link">
-            <div className="flex items-center gap-2 text-[12px]" style={{ color: '#7c3aed' }}>
-              <span>rezerve.app/</span>
-              <TextInput value="" onChange={() => {}} placeholder="yourname" />
+          <div className="py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium" style={{ color: '#d4d4d8' }}>Booking slug</p>
+                <p className="text-[11px] mt-0.5" style={{ color: '#52525b' }}>Your unique public booking link</p>
+              </div>
+              <div className="flex flex-col items-end gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[12px] whitespace-nowrap" style={{ color: '#7c3aed' }}>/book/</span>
+                  <div className="w-36">
+                    <TextInput value={slug} onChange={handleSlugChange} placeholder="your-slug" />
+                  </div>
+                  <button
+                    onClick={handleSlugSave}
+                    disabled={slugSaving || !slugDirty}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all disabled:opacity-50"
+                    style={slugSaved ? {
+                      background: 'rgba(22,163,74,0.08)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.2)',
+                    } : {
+                      background: 'rgba(124,58,237,0.1)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.25)',
+                    }}
+                  >
+                    {slugSaving ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : slugSaved ? (
+                      <><Check className="w-3 h-3" /> Saved</>
+                    ) : 'Update'}
+                  </button>
+                </div>
+                {slugError && (
+                  <p className="text-[11px]" style={{ color: '#f87171' }}>{slugError}</p>
+                )}
+                {slugSaved && savedSlug && (
+                  <p className="text-[11px]" style={{ color: '#a3e635' }}>
+                    Public URL: <span style={{ color: '#d4d4d8' }}>/book/{savedSlug}</span>
+                  </p>
+                )}
+                {!slugSaved && savedSlug && !slugDirty && (
+                  <p className="text-[11px]" style={{ color: '#52525b' }}>
+                    /book/<span style={{ color: '#a1a1aa' }}>{savedSlug}</span>
+                  </p>
+                )}
+              </div>
             </div>
-          </SettingRow>
+          </div>
         </SettingCard>
 
         {/* AI Agent */}
@@ -238,6 +365,9 @@ export default function SettingsPage() {
             </span>
           </SettingRow>
         </SettingCard>
+
+        {/* Embed widget */}
+        {savedSlug && <EmbedSnippetCard slug={savedSlug} />}
 
         {/* Danger zone */}
         <div className="rounded-2xl p-5" style={{ background: 'rgba(248,113,113,0.04)', border: '1px solid rgba(248,113,113,0.1)' }}>

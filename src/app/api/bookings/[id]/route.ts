@@ -23,9 +23,13 @@ export const PATCH = withBusiness(async (req, _profile, business, ctx) => {
       .select('id, status, client_id')
       .eq('id', id)
       .eq('business_id', businessId)
-      .single();
+      .maybeSingle();
 
-    if (currentErr || !current) {
+    if (currentErr) {
+      console.error('[PATCH /api/bookings/:id] lookup error', currentErr);
+      return NextResponse.json({ error: 'Failed to look up booking' }, { status: 500 });
+    }
+    if (!current) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
@@ -56,7 +60,7 @@ export const PATCH = withBusiness(async (req, _profile, business, ctx) => {
       .from('bookings')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (status === 'confirmed') {
       scheduleBookingReminders(id).catch((err) =>

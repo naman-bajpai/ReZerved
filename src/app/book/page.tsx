@@ -1,25 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Send } from 'lucide-react';
 
 type Message = { role: 'user' | 'bot'; text: string };
 
-const INITIAL: Message = {
-  role: 'bot',
-  text: "Hey! I'm the booking assistant. What service are you looking to book, and when works for you?",
-};
+function makeInitial(slug: string | null): Message {
+  return {
+    role: 'bot',
+    text: slug
+      ? "Hey! I'm the booking assistant. What service are you looking to book, and when works for you?"
+      : "No business specified. Please visit this page via your business's booking link (e.g. /book?slug=my-studio).",
+  };
+}
 
-export default function BookPage() {
-  const [messages, setMessages] = useState<Message[]>([INITIAL]);
-  const [input, setInput] = useState('');
-  const [sending, setSending] = useState(false);
+function ChatUI() {
+  const searchParams = useSearchParams();
+  const slug = searchParams.get('slug');
+
+  const sessionKey = `chat_sid_${slug ?? 'none'}`;
   const sessionId = typeof window !== 'undefined'
-    ? (sessionStorage.getItem('chat_sid') || (() => { const id = Math.random().toString(36).slice(2); sessionStorage.setItem('chat_sid', id); return id; })())
+    ? (sessionStorage.getItem(sessionKey) || (() => {
+        const id = Math.random().toString(36).slice(2);
+        sessionStorage.setItem(sessionKey, id);
+        return id;
+      })())
     : 'default';
 
+  const [messages, setMessages] = useState<Message[]>([makeInitial(slug)]);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+
   async function send() {
+    if (!slug) return;
     const text = input.trim();
     if (!text || sending) return;
     setInput('');
@@ -30,7 +45,7 @@ export default function BookPage() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, sessionId }),
+        body: JSON.stringify({ message: text, sessionId, businessSlug: slug }),
       });
       const data = await res.json();
       setMessages((prev) => [
@@ -170,22 +185,22 @@ export default function BookPage() {
           <div className="flex gap-2.5 items-center">
             <input
               className="bp-input flex-1 rounded-2xl px-4 py-3 text-sm"
-              placeholder="Type a message…"
+              placeholder={slug ? 'Type a message…' : 'No business selected'}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && send()}
-              disabled={sending}
+              disabled={sending || !slug}
             />
             <button
               onClick={send}
-              disabled={!input.trim() || sending}
+              disabled={!input.trim() || sending || !slug}
               className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
               style={{
-                background: input.trim() && !sending
+                background: input.trim() && !sending && slug
                   ? 'linear-gradient(135deg, #f0a96b, #e879a0)'
                   : 'rgba(255,255,255,0.06)',
-                color: input.trim() && !sending ? '#0a0a12' : 'rgba(255,255,255,0.2)',
-                boxShadow: input.trim() && !sending ? '0 4px 16px rgba(240,169,107,0.25)' : 'none',
+                color: input.trim() && !sending && slug ? '#0a0a12' : 'rgba(255,255,255,0.2)',
+                boxShadow: input.trim() && !sending && slug ? '0 4px 16px rgba(240,169,107,0.25)' : 'none',
               }}
             >
               <Send className="w-4 h-4" />
@@ -194,5 +209,13 @@ export default function BookPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function BookPage() {
+  return (
+    <Suspense>
+      <ChatUI />
+    </Suspense>
   );
 }

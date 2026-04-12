@@ -169,6 +169,13 @@ export async function updateService(
   });
 }
 
+export async function patchSlug(slug: string) {
+  return apiFetch<{ slug: string }>('/api/creator/slug', {
+    method: 'PATCH',
+    body: JSON.stringify({ slug }),
+  });
+}
+
 export async function updateSettings(body: { business_name?: string; timezone?: string }) {
   return apiFetch<{ business: { id: string; name: string; timezone: string } }>('/api/settings', {
     method: 'PATCH',
